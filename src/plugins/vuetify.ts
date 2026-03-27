@@ -3,7 +3,7 @@ import '@mdi/font/css/materialdesignicons.css'
 
 import { createVuetify } from 'vuetify'
 
-export default createVuetify({
+export const vuetify = createVuetify({
   theme: {
     defaultTheme: 'light',
     themes: {
