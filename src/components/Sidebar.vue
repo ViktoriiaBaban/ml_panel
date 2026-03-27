@@ -1,95 +1,73 @@
 <template>
-  <div
-    :class="[
-      'bg-[#1E1E1E] h-screen flex flex-col text-white transition-all duration-300 ease-in-out relative flex-shrink-0',
-      collapsed ? 'w-16' : 'w-64'
-    ]"
+  <v-navigation-drawer
+    :rail="collapsed"
+    permanent
+    color="#1E1E1E"
+    theme="dark"
+    width="272"
+    rail-width="72"
+    class="sidebar"
   >
-    <!-- Toggle button -->
-    <button
-      @click="toggleCollapsed"
-      class="absolute -right-3 top-7 z-10 w-6 h-6 bg-[#409EFF] rounded-full flex items-center justify-center shadow-md hover:bg-[#66B1FF] transition-colors"
-      :title="collapsed ? 'Развернуть меню' : 'Свернуть меню'"
-    >
-      <ChevronLeft
-        :class="['w-3.5 h-3.5 text-white transition-transform duration-300', collapsed ? 'rotate-180' : '']"
-      />
-    </button>
-
-    <!-- Logo -->
-    <div class="p-4 border-b border-white/10 overflow-hidden">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 bg-[#409EFF] rounded flex items-center justify-center flex-shrink-0">
-          <Brain class="w-5 h-5" />
-        </div>
-        <div
-          :class="['overflow-hidden transition-all duration-300 whitespace-nowrap', collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100']"
+    <template #prepend>
+      <div class="sidebar-top">
+        <v-btn
+          icon
+          size="small"
+          color="primary"
+          class="toggle-btn"
+          :title="collapsed ? 'Развернуть меню' : 'Свернуть меню'"
+          @click="toggleCollapsed"
         >
-          <div class="font-semibold text-sm">ML Control Panel</div>
+          <ChevronLeft :size="14" :class="{ 'rotated': collapsed }" />
+        </v-btn>
+
+        <div class="logo-row">
+          <div class="logo-icon">
+            <Brain :size="18" />
+          </div>
+          <span v-if="!collapsed" class="logo-title">ML Control Panel</span>
         </div>
       </div>
-    </div>
+    </template>
 
-    <!-- Menu Items -->
-    <nav class="flex-1 py-4 overflow-y-auto overflow-x-hidden">
-      <div
+    <v-list nav density="comfortable" class="menu-list">
+      <v-list-item
         v-for="item in menuItems"
         :key="item.id"
+        :title="item.label"
+        :active="item.id === activeSection"
+        color="primary"
+        rounded="lg"
         @click="$emit('navigate', item.id)"
-        :title="collapsed ? item.label : ''"
-        :class="[
-          'flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-l-4',
-          item.id === activeSection
-            ? 'bg-[#409EFF]/10 border-[#409EFF] text-white font-semibold'
-            : 'text-white/70 hover:text-white hover:bg-white/5 border-transparent'
-        ]"
       >
-        <component :is="item.icon" class="w-5 h-5 flex-shrink-0" />
-        <span
-          :class="[
-            'text-sm overflow-hidden whitespace-nowrap transition-all duration-300',
-            collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
-          ]"
-        >
-          {{ item.label }}
-        </span>
-      </div>
-    </nav>
+        <template #prepend>
+          <component :is="item.icon" :size="18" />
+        </template>
+      </v-list-item>
+    </v-list>
 
-    <!-- User Account -->
-    <div class="p-4 border-t border-white/10 overflow-hidden">
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-8 h-8 bg-[#409EFF] rounded-full flex items-center justify-center flex-shrink-0">
-          <User class="w-4 h-4" />
+    <template #append>
+      <div class="sidebar-bottom">
+        <div class="user-row">
+          <v-avatar color="primary" size="32">
+            <User :size="16" />
+          </v-avatar>
+          <div v-if="!collapsed" class="user-text">
+            <div class="user-name">Виктория</div>
+            <div class="user-role">ML-инженер</div>
+          </div>
         </div>
-        <div
-          :class="[
-            'flex-1 overflow-hidden transition-all duration-300 whitespace-nowrap',
-            collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
-          ]"
-        >
-          <div class="text-sm font-medium">Виктория</div>
-          <div class="text-xs text-white/70">ML-инженер</div>
+        <div class="actions-row" :class="{ stacked: collapsed }">
+          <v-btn icon variant="text" :title="collapsed ? 'Настройки' : ''">
+            <Settings :size="16" />
+          </v-btn>
+          <v-btn icon variant="text" :title="collapsed ? 'Выйти' : ''">
+            <LogOut :size="16" />
+          </v-btn>
         </div>
       </div>
-      <div
-        :class="['flex gap-2 transition-all duration-300', collapsed ? 'flex-col items-center' : '']"
-      >
-        <button
-          class="flex-1 p-2 hover:bg-white/10 rounded transition-colors"
-          :title="collapsed ? 'Настройки' : ''"
-        >
-          <Settings class="w-4 h-4 mx-auto" />
-        </button>
-        <button
-          class="flex-1 p-2 hover:bg-white/10 rounded transition-colors"
-          :title="collapsed ? 'Выйти' : ''"
-        >
-          <LogOut class="w-4 h-4 mx-auto" />
-        </button>
-      </div>
-    </div>
-  </div>
+    </template>
+  </v-navigation-drawer>
 </template>
 
 <script setup lang="ts">
@@ -119,3 +97,71 @@ const menuItems = [
   { icon: Shield,    label: 'Администрирование',              id: 'administration' },
 ]
 </script>
+
+<style scoped>
+.sidebar {
+  position: relative;
+}
+
+.sidebar-top,
+.sidebar-bottom {
+  padding: 16px;
+}
+
+.logo-row,
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #409eff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.menu-list {
+  padding-inline: 8px;
+}
+
+.toggle-btn {
+  position: absolute;
+  top: 20px;
+  right: -16px;
+  z-index: 20;
+}
+
+.rotated {
+  transform: rotate(180deg);
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.user-role {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.actions-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.actions-row.stacked {
+  flex-direction: column;
+}
+</style>

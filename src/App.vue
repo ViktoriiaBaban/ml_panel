@@ -1,44 +1,49 @@
 <template>
-  <div class="flex h-screen bg-[#F5F7FA]">
-    <Sidebar :activeSection="activeSection" @navigate="handleNavigate" />
-    <div class="flex-1 flex flex-col overflow-hidden">
-      <Header :title="headerProps.title" :breadcrumbs="headerProps.breadcrumbs" />
-      <div class="flex-1 overflow-y-auto">
-        <FileTable v-if="activeSection === 'storage'" />
-        <template v-else-if="activeSection === 'projects'">
-          <PipelinesView
-            v-if="projectsSubView === 'pipelines' && selectedProject"
-            :projectName="selectedProject.name"
-            @back="handleBackToProjects"
-          />
-          <ProjectsView v-else @navigate-to-pipelines="handleNavigateToPipelines" />
-        </template>
-        <template v-else-if="activeSection === 'inference'">
-          <InferenceMonitoringView
-            v-if="inferenceSubView === 'monitoring' && selectedService"
-            :serviceName="selectedService.name"
-            @back="handleBackToServices"
-          />
-          <InferenceServicesView v-else @navigate-to-monitoring="handleNavigateToMonitoring" />
-        </template>
-        <template v-else-if="activeSection === 'etl'">
-          <EtlFlowDetailView
-            v-if="etlSubView === 'detail' && selectedFlow"
-            :flowName="selectedFlow.name"
-            @back="handleBackToFlows"
-          />
-          <EtlFlowsView v-else @navigate-to-detail="handleNavigateToFlowDetail" />
-        </template>
-        <MonitoringSystemView v-else-if="activeSection === 'monitoring'" />
-        <AdministrationView v-else-if="activeSection === 'administration'" />
-        <div v-else class="flex-1 bg-[#F5F7FA] p-8">
-          <div class="bg-white rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.1)] p-12 text-center">
-            <p class="text-gray-500">Раздел "{{ activeSection }}" в разработке</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <v-app>
+    <v-layout class="app-layout">
+      <Sidebar :activeSection="activeSection" @navigate="handleNavigate" />
+
+      <v-main class="app-main">
+        <Header :title="headerProps.title" :breadcrumbs="headerProps.breadcrumbs" />
+
+        <v-container fluid class="content-container">
+          <FileTable v-if="activeSection === 'storage'" />
+          <template v-else-if="activeSection === 'projects'">
+            <PipelinesView
+              v-if="projectsSubView === 'pipelines' && selectedProject"
+              :projectName="selectedProject.name"
+              @back="handleBackToProjects"
+            />
+            <ProjectsView v-else @navigate-to-pipelines="handleNavigateToPipelines" />
+          </template>
+          <template v-else-if="activeSection === 'inference'">
+            <InferenceMonitoringView
+              v-if="inferenceSubView === 'monitoring' && selectedService"
+              :serviceName="selectedService.name"
+              @back="handleBackToServices"
+            />
+            <InferenceServicesView v-else @navigate-to-monitoring="handleNavigateToMonitoring" />
+          </template>
+          <template v-else-if="activeSection === 'etl'">
+            <EtlFlowDetailView
+              v-if="etlSubView === 'detail' && selectedFlow"
+              :flowName="selectedFlow.name"
+              @back="handleBackToFlows"
+            />
+            <EtlFlowsView v-else @navigate-to-detail="handleNavigateToFlowDetail" />
+          </template>
+          <MonitoringSystemView v-else-if="activeSection === 'monitoring'" />
+          <AdministrationView v-else-if="activeSection === 'administration'" />
+
+          <v-card v-else class="empty-state" elevation="2" rounded="lg">
+            <v-card-text class="text-center text-medium-emphasis">
+              Раздел "{{ activeSection }}" в разработке
+            </v-card-text>
+          </v-card>
+        </v-container>
+      </v-main>
+    </v-layout>
+  </v-app>
 </template>
 
 <script setup lang="ts">
@@ -118,3 +123,22 @@ const headerProps = computed(() => {
   }
 })
 </script>
+
+<style scoped>
+.app-layout {
+  min-height: 100vh;
+}
+
+.app-main {
+  background-color: #f5f7fa;
+}
+
+.content-container {
+  padding: 0;
+  max-width: 100%;
+}
+
+.empty-state {
+  margin: 32px;
+}
+</style>

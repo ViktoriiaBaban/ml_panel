@@ -15,10 +15,11 @@
     "format:check": "prettier . --check"
   },
   "dependencies": {
+    "@mdi/font": "^7.4.47",
     "lucide-vue-next": "^0.400.0",
     "recharts": "^2.13.0",
     "vue": "^3.4.0",
-    "vuetify": "^3.5.0"
+    "vuetify": "^3.7.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
@@ -37,6 +38,6 @@
     "vite": "^5.0.0",
     "vite-plugin-vuetify": "^2.0.3",
     "vue-eslint-parser": "^10.1.1",
-    "vue-tsc": "^2.0.0"
+    "vue-tsc": "^2.0.0",
   }
 }
