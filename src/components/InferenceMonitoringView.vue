@@ -4,9 +4,9 @@
     <div class="bg-white rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
       <!-- Header -->
       <div class="p-6 border-b border-gray-200">
-        <button @click="$emit('back')" class="flex items-center gap-2 text-[#409EFF] hover:underline mb-4">
+        <v-btn @click="$emit('back')" class="flex items-center gap-2 text-[#409EFF] hover:underline mb-4">
           <ArrowLeft class="w-4 h-4" />Назад к списку сервисов
-        </button>
+        </v-btn>
         <div class="flex items-start justify-between">
           <div>
             <h2 class="text-2xl font-semibold text-gray-900 mb-4">{{ serviceName }}</h2>
@@ -20,9 +20,9 @@
             </div>
           </div>
           <div class="flex gap-2">
-            <button class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center gap-2"><Play class="w-4 h-4" />Запустить</button>
-            <button class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center gap-2"><Square class="w-4 h-4" />Остановить</button>
-            <button class="px-4 py-2 bg-[#409EFF] text-white rounded hover:bg-[#3a8eef] transition-colors flex items-center gap-2"><RotateCw class="w-4 h-4" />Перезапустить</button>
+            <v-btn class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center gap-2"><Play class="w-4 h-4" />Запустить</v-btn>
+            <v-btn class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center gap-2"><Square class="w-4 h-4" />Остановить</v-btn>
+            <v-btn class="px-4 py-2 bg-[#409EFF] text-white rounded hover:bg-[#3a8eef] transition-colors flex items-center gap-2"><RotateCw class="w-4 h-4" />Перезапустить</v-btn>
           </div>
         </div>
       </div>
@@ -30,11 +30,11 @@
       <!-- Tabs -->
       <div class="border-b border-gray-200">
         <div class="flex gap-8 px-6">
-          <button v-for="tab in ['metrics','logs','model','integrations']" :key="tab" @click="activeTab = tab"
+          <v-btn v-for="tab in ['metrics','logs','model','integrations']" :key="tab" @click="activeTab = tab"
             :class="['py-4 text-sm font-medium transition-colors relative', activeTab === tab ? 'text-[#409EFF]' : 'text-gray-600 hover:text-gray-900']">
             {{ tabLabel(tab) }}
             <div v-if="activeTab === tab" class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#409EFF]"></div>
-          </button>
+          </v-btn>
         </div>
       </div>
 
@@ -89,18 +89,18 @@
         <div v-if="activeTab === 'logs'" class="space-y-4">
           <div class="flex gap-4">
             <div class="flex-1">
-              <input type="text" placeholder="Поиск по ключевым словам (error, timeout)…" v-model="logSearch"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]" />
+              <v-text-field type="text" placeholder="Поиск по ключевым словам (error, timeout)…" v-model="logSearch"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]"  variant="outlined" density="comfortable" hide-details />
             </div>
-            <select v-model="logFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]">
+            <v-select v-model="logFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]">
               <option value="all">Все уровни</option>
               <option value="error">ERROR</option>
               <option value="warning">WARNING</option>
               <option value="info">INFO</option>
-            </select>
-            <button class="px-4 py-2 bg-[#409EFF] text-white rounded-lg hover:bg-[#3a8eef] transition-colors flex items-center gap-2">
+            </v-select>
+            <v-btn class="px-4 py-2 bg-[#409EFF] text-white rounded-lg hover:bg-[#3a8eef] transition-colors flex items-center gap-2">
               <Download class="w-4 h-4" />Экспортировать
-            </button>
+            </v-btn>
           </div>
           <div class="border border-gray-200 rounded-lg bg-gray-50 p-4 max-h-96 overflow-y-auto font-mono text-sm space-y-2">
             <div v-for="log in filteredLogs" :key="log.id" class="flex gap-3 items-start">
@@ -151,7 +151,7 @@
               <div v-for="artifact in ['model.pkl','report.pdf','confusion_matrix.png']" :key="artifact"
                 class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
                 <span class="text-sm text-gray-900">{{ artifact }}</span>
-                <button class="text-[#409EFF] hover:underline text-sm">Скачать</button>
+                <v-btn class="text-[#409EFF] hover:underline text-sm">Скачать</v-btn>
               </div>
             </div>
           </div>
@@ -182,7 +182,7 @@
                     <div class="text-xs text-gray-500">{{ sys.desc }}</div>
                   </div>
                 </div>
-                <button class="text-[#409EFF] hover:underline text-sm">Перейти</button>
+                <v-btn class="text-[#409EFF] hover:underline text-sm">Перейти</v-btn>
               </div>
             </div>
           </div>

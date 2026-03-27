@@ -6,25 +6,25 @@
       <div class="border-b border-gray-200">
         <div class="flex items-center justify-between px-6 pt-4">
           <div class="flex gap-8">
-            <button v-for="tab in ['dashboard','alerts']" :key="tab" @click="activeTab = tab"
+            <v-btn v-for="tab in ['dashboard','alerts']" :key="tab" @click="activeTab = tab"
               :class="['pb-4 text-sm font-medium transition-colors relative', activeTab === tab ? 'text-[#409EFF]' : 'text-gray-600 hover:text-gray-900']">
               {{ tab === 'dashboard' ? 'Дашборд' : 'Алерты' }}
               <div v-if="activeTab === tab" class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#409EFF]"></div>
-            </button>
+            </v-btn>
           </div>
           <div v-if="activeTab === 'dashboard'" class="flex items-center gap-3 pb-4">
             <div class="flex items-center gap-2">
               <span class="text-sm text-gray-500">Обновление:</span>
-              <select v-model="refreshInterval" class="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#409EFF]">
+              <v-select v-model="refreshInterval" class="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#409EFF]">
                 <option value="off">Выкл</option>
                 <option value="10s">10 сек</option>
                 <option value="30s">30 сек</option>
                 <option value="1m">1 мин</option>
-              </select>
+              </v-select>
             </div>
             <div class="flex items-center gap-2">
               <span class="text-sm text-gray-500">Период:</span>
-              <select v-model="timeRange" class="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#409EFF]">
+              <v-select v-model="timeRange" class="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#409EFF]">
                 <option value="15m">15 мин</option>
                 <option value="30m">30 мин</option>
                 <option value="1h">1 час</option>
@@ -32,7 +32,7 @@
                 <option value="6h">6 часов</option>
                 <option value="24h">24 часа</option>
                 <option value="7d">7 дней</option>
-              </select>
+              </v-select>
             </div>
           </div>
         </div>
@@ -106,12 +106,12 @@
           <div class="flex items-center gap-4">
             <div class="flex-1 relative">
               <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input type="text" placeholder="Поиск по названию или описанию правила..." v-model="searchQuery"
-                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]" />
+              <v-text-field type="text" placeholder="Поиск по названию или описанию правила..." v-model="searchQuery"
+                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]"  variant="outlined" density="comfortable" hide-details />
             </div>
-            <button class="px-4 py-2 bg-[#409EFF] text-white rounded-lg hover:bg-[#3a8eef] transition-colors flex items-center gap-2">
+            <v-btn class="px-4 py-2 bg-[#409EFF] text-white rounded-lg hover:bg-[#3a8eef] transition-colors flex items-center gap-2">
               <Plus class="w-4 h-4" />Добавить правило
-            </button>
+            </v-btn>
           </div>
 
           <div class="overflow-x-auto border border-gray-200 rounded-lg">
@@ -150,16 +150,16 @@
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ alert.lastChanged }}</td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="relative">
-                      <button @click="openMenuId = openMenuId === alert.id ? null : alert.id"
+                      <v-btn @click="openMenuId = openMenuId === alert.id ? null : alert.id"
                         class="p-2 hover:bg-gray-100 rounded transition-colors">
                         <MoreVertical class="w-4 h-4 text-gray-600" />
-                      </button>
+                      </v-btn>
                       <div v-if="openMenuId === alert.id" class="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                        <button class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">Редактировать</button>
-                        <button class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">{{ alert.status === 'active' ? 'Приостановить' : 'Активировать' }}</button>
-                        <button class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">История срабатываний</button>
+                        <v-btn class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">Редактировать</v-btn>
+                        <v-btn class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">{{ alert.status === 'active' ? 'Приостановить' : 'Активировать' }}</v-btn>
+                        <v-btn class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">История срабатываний</v-btn>
                         <hr class="my-1 border-gray-200" />
-                        <button class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50">Удалить</button>
+                        <v-btn class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50">Удалить</v-btn>
                       </div>
                     </div>
                   </td>
