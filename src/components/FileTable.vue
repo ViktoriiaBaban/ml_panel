@@ -1,125 +1,113 @@
 <template>
-  <v-container fluid class="pa-0">
-  <div class="flex-1 bg-[#F5F7FA] p-8">
-    <div class="bg-white rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
-      <!-- Tabs -->
-      <div class="border-b border-gray-200">
-        <div class="flex gap-8 px-6">
-          <button
-            v-for="tab in tabs"
-            :key="tab"
-            @click="activeTab = tab"
-            :class="['py-4 text-sm font-medium transition-colors relative', activeTab === tab ? 'text-[#409EFF]' : 'text-gray-600 hover:text-gray-900']"
-          >
-            {{ tab }}
-            <div v-if="activeTab === tab" class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#409EFF]"></div>
-          </button>
-        </div>
-      </div>
+  <v-container fluid class="pa-8">
+    <v-card rounded="lg" elevation="2">
+      <v-tabs v-model="activeTab" color="primary" align-tabs="start" class="px-4 border-b">
+        <v-tab v-for="tab in tabs" :key="tab" :value="tab" class="text-none">{{ tab }}</v-tab>
+      </v-tabs>
 
-      <!-- Files Tab -->
       <template v-if="activeTab === 'Files'">
-        <!-- Toolbar -->
-        <div class="p-6 border-b border-gray-200 flex items-center gap-4">
-          <div class="flex-1 relative">
-            <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Поиск по имени или проекту…"
-              v-model="searchTerm"
-              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF] focus:border-transparent"
-            />
-          </div>
-          <select v-model="filterType" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]">
-            <option>Все типы</option>
-            <option>Разметка</option>
-            <option>Датасеты</option>
-            <option>Артефакты</option>
-          </select>
-          <button class="px-6 py-2 bg-[#409EFF] text-white rounded-lg hover:bg-[#3a8eef] transition-colors flex items-center gap-2">
-            <Upload class="w-4 h-4" />
+        <div class="pa-6 d-flex align-center ga-4 border-b flex-wrap">
+          <v-text-field
+            v-model="searchTerm"
+            placeholder="Поиск по имени или проекту…"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            rounded="lg"
+            class="flex-1"
+          >
+            <template #prepend-inner>
+              <Search :size="18" class="text-medium-emphasis" />
+            </template>
+          </v-text-field>
+
+          <v-select
+            v-model="filterType"
+            :items="filterItems"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            rounded="lg"
+            class="filter-select"
+          />
+
+          <v-btn color="primary" rounded="lg" class="text-none">
+            <Upload :size="16" class="mr-2" />
             Загрузить файл
-          </button>
+          </v-btn>
         </div>
 
-        <!-- Table -->
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead class="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th v-for="col in columns" :key="col.key" @click="handleSort(col.key)"
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700">
-                  <div class="flex items-center gap-1">
-                    {{ col.label }}
-                    <span v-if="sortField === col.key" class="text-[#409EFF]">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
-                  </div>
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="file in filteredAndSortedFiles" :key="file.id" class="hover:bg-gray-50 transition-colors">
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center gap-3">
-                    <component :is="fileTypeIcons[file.type]" class="w-5 h-5 text-[#409EFF]" />
-                    <span class="text-sm text-gray-900">{{ file.name }}</span>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span :class="['px-3 py-1 text-xs font-medium rounded-full', typeBadgeClass(file.type)]">{{ file.type }}</span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ file.size }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ file.date }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ file.project }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                  <div class="relative">
-                    <button @click="activeMenu = activeMenu === file.id ? null : file.id" class="p-1 hover:bg-gray-100 rounded transition-colors">
-                      <MoreVertical class="w-5 h-5" />
-                    </button>
-                    <div v-if="activeMenu === file.id" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                      <button class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 rounded-t-lg">
-                        <Eye class="w-4 h-4" /> Просмотреть
-                      </button>
-                      <button class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2">
-                        <Download class="w-4 h-4" /> Скачать
-                      </button>
-                      <button class="w-full px-4 py-2 text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-2 rounded-b-lg">
-                        <Trash2 class="w-4 h-4" /> Удалить
-                      </button>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <v-table class="text-no-wrap">
+          <thead>
+            <tr>
+              <th v-for="col in columns" :key="col.key" @click="handleSort(col.key)" class="cursor-pointer">
+                <div class="d-flex align-center ga-1">
+                  {{ col.label }}
+                  <span v-if="sortField === col.key" class="text-primary">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                </div>
+              </th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="file in pagedFiles" :key="file.id">
+              <td>
+                <div class="d-flex align-center ga-3">
+                  <component :is="fileTypeIcons[file.type]" :size="18" color="#409EFF" />
+                  <span>{{ file.name }}</span>
+                </div>
+              </td>
+              <td>
+                <v-chip size="small" :class="typeBadgeClass(file.type)">{{ file.type }}</v-chip>
+              </td>
+              <td>{{ file.size }}</td>
+              <td>{{ file.date }}</td>
+              <td>{{ file.project }}</td>
+              <td>
+                <v-menu location="bottom end">
+                  <template #activator="{ props }">
+                    <v-btn icon variant="text" size="small" v-bind="props">
+                      <MoreVertical :size="18" />
+                    </v-btn>
+                  </template>
+                  <v-list density="compact">
+                    <v-list-item title="Просмотреть">
+                      <template #prepend><Eye :size="16" /></template>
+                    </v-list-item>
+                    <v-list-item title="Скачать">
+                      <template #prepend><Download :size="16" /></template>
+                    </v-list-item>
+                    <v-list-item title="Удалить" base-color="error">
+                      <template #prepend><Trash2 :size="16" /></template>
+                    </v-list-item>
+                  </v-list>
+                </v-menu>
+              </td>
+            </tr>
+          </tbody>
+        </v-table>
 
-        <!-- Pagination -->
-        <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-          <div class="text-sm text-gray-600">
-            Показано {{ filteredAndSortedFiles.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0 }}–{{ Math.min(currentPage * itemsPerPage, filteredAndSortedFiles.length) }} из {{ filteredAndSortedFiles.length }}
+        <div class="px-6 py-4 d-flex align-center justify-space-between border-t flex-wrap ga-2">
+          <div class="text-body-2 text-medium-emphasis">
+            Показано {{ pagedStart }}–{{ pagedEnd }} из {{ filteredAndSortedFiles.length }}
           </div>
-          <div class="flex items-center gap-2">
-            <button @click="currentPage = Math.max(1, currentPage - 1)" :disabled="currentPage === 1"
-              class="p-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-              <ChevronLeft class="w-4 h-4" />
-            </button>
-            <span class="px-4 py-2 text-sm text-gray-700">Страница {{ currentPage }} из {{ Math.max(1, Math.ceil(filteredAndSortedFiles.length / itemsPerPage)) }}</span>
-            <button @click="currentPage = Math.min(Math.ceil(filteredAndSortedFiles.length / itemsPerPage), currentPage + 1)"
-              :disabled="currentPage >= Math.ceil(filteredAndSortedFiles.length / itemsPerPage)"
-              class="p-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-              <ChevronRight class="w-4 h-4" />
-            </button>
+
+          <div class="d-flex align-center ga-2">
+            <v-btn icon variant="outlined" size="small" :disabled="currentPage === 1" @click="currentPage = Math.max(1, currentPage - 1)">
+              <ChevronLeft :size="16" />
+            </v-btn>
+            <span class="text-body-2">Страница {{ currentPage }} из {{ totalPages }}</span>
+            <v-btn icon variant="outlined" size="small" :disabled="currentPage >= totalPages" @click="currentPage = Math.min(totalPages, currentPage + 1)">
+              <ChevronRight :size="16" />
+            </v-btn>
           </div>
         </div>
       </template>
 
-      <!-- Other tabs placeholder -->
-      <div v-else class="p-12 text-center text-gray-500">
-        <p>Содержимое вкладки "{{ activeTab }}" будет отображено здесь</p>
-      </div>
-    </div>
-  </div>
+      <v-card-text v-else class="py-12 text-center text-medium-emphasis">
+        Содержимое вкладки "{{ activeTab }}" будет отображено здесь
+      </v-card-text>
+    </v-card>
   </v-container>
 </template>
 
@@ -134,8 +122,9 @@ const searchTerm = ref('')
 const filterType = ref('Все типы')
 const sortField = ref<string | null>(null)
 const sortDirection = ref<'asc' | 'desc'>('asc')
-const activeMenu = ref<number | null>(null)
 const itemsPerPage = 10
+
+const filterItems = ['Все типы', 'Разметка', 'Датасеты', 'Артефакты']
 
 type FileType = 'Разметка' | 'Датасет' | 'Артефакт модели'
 interface FileItem { id: number; name: string; type: FileType; size: string; date: string; project: string }
@@ -189,4 +178,26 @@ const filteredAndSortedFiles = computed(() => {
   }
   return files
 })
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredAndSortedFiles.value.length / itemsPerPage)))
+const pagedFiles = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  return filteredAndSortedFiles.value.slice(start, start + itemsPerPage)
+})
+const pagedStart = computed(() => filteredAndSortedFiles.value.length === 0 ? 0 : (currentPage.value - 1) * itemsPerPage + 1)
+const pagedEnd = computed(() => Math.min(currentPage.value * itemsPerPage, filteredAndSortedFiles.value.length))
 </script>
+
+<style scoped>
+.filter-select {
+  min-width: 180px;
+}
+
+.border-b {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.border-t {
+  border-top: 1px solid #e5e7eb;
+}
+</style>

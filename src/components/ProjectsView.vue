@@ -1,67 +1,81 @@
 <template>
-  <v-container fluid class="pa-0">
-  <div class="p-8">
-    <!-- Filters -->
-    <div class="mb-6 flex items-center gap-4">
-      <div class="flex-1 relative">
-        <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-        <input type="text" placeholder="Поиск по названию проекта..." v-model="searchTerm"
-          class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF] focus:border-transparent bg-white" />
-      </div>
-      <select v-model="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF] bg-white">
-        <option value="all">Все</option>
-        <option value="active">С активными пайплайнами</option>
-        <option value="errors">С недавними ошибками</option>
-      </select>
+  <v-container fluid class="pa-8">
+    <div class="mb-6 d-flex align-center ga-4">
+      <v-text-field
+        v-model="searchTerm"
+        placeholder="Поиск по названию проекта..."
+        variant="outlined"
+        density="comfortable"
+        hide-details
+        rounded="lg"
+        bg-color="white"
+        class="flex-1"
+      >
+        <template #prepend-inner>
+          <Search :size="18" class="text-medium-emphasis" />
+        </template>
+      </v-text-field>
+
+      <v-select
+        v-model="statusFilter"
+        :items="statusOptions"
+        item-title="label"
+        item-value="value"
+        variant="outlined"
+        density="comfortable"
+        hide-details
+        rounded="lg"
+        bg-color="white"
+        class="status-select"
+      />
     </div>
 
-    <!-- Projects Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div v-for="project in filteredProjects" :key="project.id"
-        class="bg-white rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.1)] p-6 hover:shadow-lg transition-shadow">
-        <!-- Header -->
-        <div class="flex items-start justify-between mb-3">
-          <div class="flex items-center gap-2">
-            <GitBranch class="w-5 h-5 text-[#409EFF]" />
-            <h3 class="font-semibold text-gray-900">{{ project.name }}</h3>
-          </div>
-          <span :class="['px-2 py-1 text-xs font-medium rounded-full', statusConfig[project.pipelineStatus].color]">
-            <component :is="statusConfig[project.pipelineStatus].icon" class="w-3 h-3" /> {{ statusConfig[project.pipelineStatus].label }}
-          </span>
-        </div>
-        <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ project.description }}</p>
-        <div class="space-y-2 mb-4">
-          <div class="flex items-center gap-2 text-sm text-gray-500">
-            <span class="font-medium">Группа:</span><span>{{ project.namespace }}</span>
-          </div>
-          <div class="flex items-center gap-2 text-sm text-gray-500">
-            <span class="font-medium">Последний коммит:</span>
-            <span>{{ project.lastCommit.author }}, {{ project.lastCommit.time }}</span>
-          </div>
-        </div>
-        <div class="flex flex-wrap gap-2 mb-4">
-          <div v-for="type in project.types" :key="type"
-            class="flex items-center gap-1 px-3 py-1 bg-gray-50 rounded-full text-xs">
-            <component :is="typeIcons[type].icon" :class="['w-4 h-4', typeIcons[type].color]" />
-            <span class="text-gray-700">{{ typeIcons[type].label }}</span>
-          </div>
-        </div>
-        <div class="flex gap-2 pt-4 border-t border-gray-200">
-          <button class="flex-1 px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
-            <ExternalLink class="w-4 h-4" /> Открыть в GitLab
-          </button>
-          <button @click="$emit('navigate-to-pipelines', project.id, project.name)"
-            class="flex-1 px-4 py-2 text-sm bg-[#409EFF] text-white rounded-lg hover:bg-[#3a8eef] transition-colors flex items-center justify-center gap-2">
-            <PlayCircle class="w-4 h-4" /> Пайплайны
-          </button>
-        </div>
-      </div>
-    </div>
+    <v-row>
+      <v-col v-for="project in filteredProjects" :key="project.id" cols="12" md="6" lg="4">
+        <v-card rounded="lg" class="project-card" elevation="2">
+          <v-card-text class="pa-6">
+            <div class="d-flex align-start justify-space-between mb-3">
+              <div class="d-flex align-center ga-2">
+                <GitBranch :size="20" color="#409EFF" />
+                <h3 class="font-weight-semibold text-grey-darken-4">{{ project.name }}</h3>
+              </div>
 
-    <div v-if="filteredProjects.length === 0" class="text-center py-12">
-      <p class="text-gray-500">Проекты не найдены</p>
-    </div>
-  </div>
+              <v-chip size="small" :color="statusConfig[project.pipelineStatus].chipColor" variant="tonal" class="font-weight-medium">
+                <component :is="statusConfig[project.pipelineStatus].icon" :size="12" class="mr-1" />
+                {{ statusConfig[project.pipelineStatus].label }}
+              </v-chip>
+            </div>
+
+            <p class="text-body-2 text-medium-emphasis mb-4">{{ project.description }}</p>
+
+            <div class="mb-4 text-body-2 text-medium-emphasis">
+              <div><span class="font-weight-medium">Группа:</span> {{ project.namespace }}</div>
+              <div><span class="font-weight-medium">Последний коммит:</span> {{ project.lastCommit.author }}, {{ project.lastCommit.time }}</div>
+            </div>
+
+            <div class="d-flex flex-wrap ga-2 mb-4">
+              <v-chip v-for="type in project.types" :key="type" size="small" variant="outlined" class="type-chip">
+                <component :is="typeIcons[type].icon" :size="14" :class="typeIcons[type].colorClass" class="mr-1" />
+                {{ typeIcons[type].label }}
+              </v-chip>
+            </div>
+
+            <div class="d-flex ga-2 pt-4 border-top">
+              <v-btn variant="outlined" class="flex-1 text-none" rounded="lg">
+                <ExternalLink :size="16" class="mr-2" /> Открыть в GitLab
+              </v-btn>
+              <v-btn color="primary" class="flex-1 text-none" rounded="lg" @click="$emit('navigate-to-pipelines', project.id, project.name)">
+                <PlayCircle :size="16" class="mr-2" /> Пайплайны
+              </v-btn>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <v-card v-if="filteredProjects.length === 0" class="py-10 text-center" variant="tonal" color="grey-lighten-4">
+      <v-card-text class="text-medium-emphasis">Проекты не найдены</v-card-text>
+    </v-card>
   </v-container>
 </template>
 
@@ -73,6 +87,12 @@ defineEmits<{ 'navigate-to-pipelines': [id: number, name: string] }>()
 
 const searchTerm = ref('')
 const statusFilter = ref('all')
+
+const statusOptions = [
+  { label: 'Все', value: 'all' },
+  { label: 'С активными пайплайнами', value: 'active' },
+  { label: 'С недавними ошибками', value: 'errors' },
+]
 
 type PipelineStatus = 'success' | 'failed' | 'running'
 type ProjectType = 'training' | 'inference' | 'etl'
@@ -92,16 +112,16 @@ const mockProjects: Project[] = [
   { id: 6, name: 'image-recognition', description: 'Распознавание объектов на изображениях', namespace: 'ml-team/vision', lastCommit: { author: 'volkov', time: '6 ч назад' }, pipelineStatus: 'running', types: ['training', 'inference'] },
 ]
 
-const statusConfig: Record<PipelineStatus, { label: string; color: string; icon: any }> = {
-  success: { label: 'Успешен', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-  failed: { label: 'Ошибка', color: 'bg-red-100 text-red-800', icon: XCircle },
-  running: { label: 'В процессе', color: 'bg-blue-100 text-blue-800', icon: RefreshCw },
+const statusConfig: Record<PipelineStatus, { label: string; chipColor: string; icon: any }> = {
+  success: { label: 'Успешен', chipColor: 'green', icon: CheckCircle },
+  failed: { label: 'Ошибка', chipColor: 'red', icon: XCircle },
+  running: { label: 'В процессе', chipColor: 'blue', icon: RefreshCw },
 }
 
-const typeIcons: Record<ProjectType, { icon: any; label: string; color: string }> = {
-  training: { icon: FlaskConical, label: 'Обучение', color: 'text-blue-600' },
-  inference: { icon: Bot, label: 'Инференс', color: 'text-purple-600' },
-  etl: { icon: Repeat, label: 'ETL', color: 'text-green-600' },
+const typeIcons: Record<ProjectType, { icon: any; label: string; colorClass: string }> = {
+  training: { icon: FlaskConical, label: 'Обучение', colorClass: 'text-blue-600' },
+  inference: { icon: Bot, label: 'Инференс', colorClass: 'text-purple-600' },
+  etl: { icon: Repeat, label: 'ETL', colorClass: 'text-green-600' },
 }
 
 const filteredProjects = computed(() => mockProjects.filter(p => {
@@ -112,3 +132,25 @@ const filteredProjects = computed(() => mockProjects.filter(p => {
   return matchSearch && matchStatus
 }))
 </script>
+
+<style scoped>
+.status-select {
+  max-width: 320px;
+}
+
+.project-card {
+  transition: box-shadow 0.2s;
+}
+
+.project-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12) !important;
+}
+
+.type-chip {
+  background: #f9fafb;
+}
+
+.border-top {
+  border-top: 1px solid #e5e7eb;
+}
+</style>
