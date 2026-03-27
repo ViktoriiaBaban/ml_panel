@@ -1,4 +1,5 @@
 <template>
+  <v-container fluid class="pa-0">
   <div class="p-8">
     <!-- Filters -->
     <div class="mb-6 flex items-center gap-4">
@@ -61,6 +62,7 @@
       <p class="text-gray-500">Проекты не найдены</p>
     </div>
   </div>
+  </v-container>
 </template>
 
 <script setup lang="ts">

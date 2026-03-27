@@ -1,4 +1,5 @@
 <template>
+  <v-container fluid class="pa-0">
   <div class="flex-1 bg-[#F5F7FA] p-8">
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -98,6 +99,7 @@
       </div>
     </div>
   </div>
+  </v-container>
 </template>
 
 <script setup lang="ts">

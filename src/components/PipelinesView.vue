@@ -1,4 +1,5 @@
 <template>
+  <v-container fluid class="pa-0">
   <div class="p-8">
     <!-- Breadcrumbs -->
     <div class="flex items-center gap-2 text-sm text-gray-600 mb-6">
@@ -120,6 +121,7 @@
       <p class="text-gray-500">Пайплайны не найдены</p>
     </div>
   </div>
+  </v-container>
 </template>
 
 <script setup lang="ts">

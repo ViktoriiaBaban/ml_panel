@@ -1,35 +1,80 @@
 <template>
-  <div class="bg-white border-b border-gray-200 px-8 py-4">
-    <div class="flex items-center justify-between">
+  <v-app-bar flat color="white" border="b" height="76">
+    <div class="header-wrap">
       <div>
-        <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
+        <div class="breadcrumbs">
           <template v-for="(crumb, index) in breadcrumbs" :key="index">
-            <ChevronRight v-if="index > 0" class="w-4 h-4" />
-            <span :class="index === breadcrumbs.length - 1 ? 'text-gray-900' : 'hover:text-gray-900 cursor-pointer'">
+            <ChevronRight v-if="index > 0" :size="14" class="crumb-icon" />
+            <span :class="['crumb', { 'crumb-last': index === breadcrumbs.length - 1 }]">
               {{ crumb }}
             </span>
           </template>
         </div>
-        <h1 class="text-xl font-medium text-[#333333]">{{ title }}</h1>
+        <h1 class="header-title">{{ title }}</h1>
       </div>
-      <div class="flex items-center gap-3">
-        <button class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-          <HelpCircle class="w-5 h-5 text-gray-600" />
-        </button>
-        <button class="p-2 hover:bg-gray-100 rounded-lg transition-colors relative">
-          <Bell class="w-5 h-5 text-gray-600" />
-          <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-        </button>
+
+      <div class="header-actions">
+        <v-btn icon variant="text">
+          <HelpCircle :size="20" />
+        </v-btn>
+        <v-badge dot color="error" location="top end">
+          <v-btn icon variant="text">
+            <Bell :size="20" />
+          </v-btn>
+        </v-badge>
       </div>
     </div>
-  </div>
+  </v-app-bar>
 </template>
 
 <script setup lang="ts">
 import { ChevronRight, HelpCircle, Bell } from 'lucide-vue-next'
 
-defineProps<{
+withDefaults(defineProps<{
   title?: string
   breadcrumbs?: string[]
-}>()
+}>(), {
+  title: '',
+  breadcrumbs: () => [],
+})
 </script>
+
+<style scoped>
+.header-wrap {
+  width: 100%;
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.crumb {
+  transition: color 0.2s;
+}
+
+.crumb-last {
+  color: #111827;
+}
+
+.header-title {
+  font-size: 24px;
+  font-weight: 500;
+  color: #333;
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+</style>

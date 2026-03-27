@@ -1,4 +1,5 @@
 <template>
+  <v-container fluid class="pa-0">
   <div class="flex-1 bg-[#F5F7FA] p-8">
     <div class="bg-white rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
       <!-- Tabs + Filters -->
@@ -179,6 +180,7 @@
       </div>
     </div>
   </div>
+  </v-container>
 </template>
 
 <script setup lang="ts">
