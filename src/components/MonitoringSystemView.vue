@@ -15,24 +15,29 @@
           <div v-if="activeTab === 'dashboard'" class="flex items-center gap-3 pb-4">
             <div class="flex items-center gap-2">
               <span class="text-sm text-gray-500">Обновление:</span>
-              <v-select v-model="refreshInterval" class="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#409EFF]">
-                <option value="off">Выкл</option>
-                <option value="10s">10 сек</option>
-                <option value="30s">30 сек</option>
-                <option value="1m">1 мин</option>
-              </v-select>
+              <v-select
+                v-model="refreshInterval"
+                :items="refreshIntervalOptions"
+                item-title="label"
+                item-value="value"
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="min-w-[120px]"
+              />
             </div>
             <div class="flex items-center gap-2">
               <span class="text-sm text-gray-500">Период:</span>
-              <v-select v-model="timeRange" class="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#409EFF]">
-                <option value="15m">15 мин</option>
-                <option value="30m">30 мин</option>
-                <option value="1h">1 час</option>
-                <option value="3h">3 часа</option>
-                <option value="6h">6 часов</option>
-                <option value="24h">24 часа</option>
-                <option value="7d">7 дней</option>
-              </v-select>
+              <v-select
+                v-model="timeRange"
+                :items="timeRangeOptions"
+                item-title="label"
+                item-value="value"
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="min-w-[130px]"
+              />
             </div>
           </div>
         </div>
@@ -190,6 +195,21 @@ import { Search, Plus, MoreVertical, AlertTriangle, CheckCircle, XCircle, Activi
 const activeTab = ref('dashboard')
 const refreshInterval = ref('30s')
 const timeRange = ref('1h')
+const refreshIntervalOptions = [
+  { label: 'Выкл', value: 'off' },
+  { label: '10 сек', value: '10s' },
+  { label: '30 сек', value: '30s' },
+  { label: '1 мин', value: '1m' },
+]
+const timeRangeOptions = [
+  { label: '15 мин', value: '15m' },
+  { label: '30 мин', value: '30m' },
+  { label: '1 час', value: '1h' },
+  { label: '3 часа', value: '3h' },
+  { label: '6 часов', value: '6h' },
+  { label: '24 часа', value: '24h' },
+  { label: '7 дней', value: '7d' },
+]
 const searchQuery = ref('')
 const openMenuId = ref<number | null>(null)
 

@@ -162,10 +162,16 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Роль</label>
-            <v-select v-model="newUser.role" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]">
-              <option value="user">Обычный пользователь</option>
-              <option value="admin">Администратор</option>
-            </v-select>
+            <v-select
+              v-model="newUser.role"
+              :items="roleOptions"
+              item-title="label"
+              item-value="value"
+              variant="outlined"
+              density="comfortable"
+              hide-details
+              class="w-full"
+            />
           </div>
         </div>
         <div class="p-6 border-t border-gray-200 flex gap-3 justify-end">
@@ -187,6 +193,10 @@ const showAddUserModal = ref(false)
 const expandedIntegration = ref<string | null>(null)
 const checkingIntegration = ref<string | null>(null)
 const newUser = reactive({ email: '', name: '', role: 'user' as 'user' | 'admin' })
+const roleOptions = [
+  { label: 'Обычный пользователь', value: 'user' },
+  { label: 'Администратор', value: 'admin' },
+]
 
 type UserStatus = 'active' | 'blocked'
 interface User { id: number; email: string; name: string; role: 'user' | 'admin'; status: UserStatus; registrationDate: string; lastLogin: string }

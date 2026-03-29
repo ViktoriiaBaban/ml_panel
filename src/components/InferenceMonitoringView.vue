@@ -92,12 +92,16 @@
               <v-text-field type="text" placeholder="Поиск по ключевым словам (error, timeout)…" v-model="logSearch"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]"  variant="outlined" density="comfortable" hide-details />
             </div>
-            <v-select v-model="logFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]">
-              <option value="all">Все уровни</option>
-              <option value="error">ERROR</option>
-              <option value="warning">WARNING</option>
-              <option value="info">INFO</option>
-            </v-select>
+            <v-select
+              v-model="logFilter"
+              :items="logFilterOptions"
+              item-title="label"
+              item-value="value"
+              variant="outlined"
+              density="comfortable"
+              hide-details
+              class="px-4"
+            />
             <v-btn class="px-4 py-2 bg-[#409EFF] text-white rounded-lg hover:bg-[#3a8eef] transition-colors flex items-center gap-2">
               <Download class="w-4 h-4" />Экспортировать
             </v-btn>
@@ -206,6 +210,12 @@ defineEmits<{ back: [] }>()
 
 const activeTab = ref('metrics')
 const logFilter = ref('all')
+const logFilterOptions = [
+  { label: 'Все уровни', value: 'all' },
+  { label: 'ERROR', value: 'error' },
+  { label: 'WARNING', value: 'warning' },
+  { label: 'INFO', value: 'info' },
+]
 const logSearch = ref('')
 
 function tabLabel(t: string) {
