@@ -38,11 +38,9 @@
         :active="item.id === activeSection"
         color="primary"
         rounded="lg"
-        :title="collapsed ? item.label : undefined"
+        :title="item.label"
         @click="$emit('navigate', item.id)"
-      >
-        <v-list-item-title v-if="!collapsed">{{ item.label }}</v-list-item-title>
-      </v-list-item>
+      />
     </v-list>
 
     <template #append>
@@ -85,14 +83,14 @@ function toggleCollapsed() {
 }
 
 const menuItems = [
-  { icon: 'mdi-home-outline', label: 'Главная панель',                id: 'home' },
-  { icon: 'mdi-database-outline', label: 'Данные и хранилища',             id: 'storage' },
-  { icon: 'mdi-source-branch', label: 'Проекты и пайплайны',            id: 'projects' },
-  { icon: 'mdi-brain', label: 'Эксперименты и обучение',        id: 'experiments' },
-  { icon: 'mdi-flash-outline', label: 'Инференс и сервисы',             id: 'inference' },
-  { icon: 'mdi-source-merge', label: 'Потоки данных и ETL',            id: 'etl' },
-  { icon: 'mdi-pulse', label: 'Мониторинг и состояние системы', id: 'monitoring' },
-  { icon: 'mdi-shield-outline', label: 'Администрирование',              id: 'administration' },
+  { icon: 'mdi-home-outline', label: 'Главная панель',           id: 'home' },
+  { icon: 'mdi-database-outline', label: 'Данные и хранилища',   id: 'storage' },
+  { icon: 'mdi-source-branch', label: 'Проекты и пайплайны',     id: 'projects' },
+  { icon: 'mdi-brain', label: 'Эксперименты и обучение',         id: 'experiments' },
+  { icon: 'mdi-flash-outline', label: 'Инференс и сервисы',      id: 'inference' },
+  { icon: 'mdi-source-merge', label: 'Потоки данных и ETL',      id: 'etl' },
+  { icon: 'mdi-pulse', label: 'Мониторинг и состояние системы',  id: 'monitoring' },
+  { icon: 'mdi-shield-outline', label: 'Администрирование',      id: 'administration' },
 ]
 </script>
 
