@@ -142,11 +142,14 @@ const headerProps = computed(() => {
 
 <style scoped>
 .app-layout {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .app-main {
   background-color: #f5f7fa;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .content-container {

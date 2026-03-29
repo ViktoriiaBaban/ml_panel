@@ -34,15 +34,14 @@
       <v-list-item
         v-for="item in menuItems"
         :key="item.id"
-        :title="item.label"
+        :prepend-icon="item.icon"
         :active="item.id === activeSection"
         color="primary"
         rounded="lg"
+        :title="collapsed ? item.label : undefined"
         @click="$emit('navigate', item.id)"
       >
-        <template #prepend>
-          <component :is="item.icon" :size="18" />
-        </template>
+        <v-list-item-title v-if="!collapsed">{{ item.label }}</v-list-item-title>
       </v-list-item>
     </v-list>
 
@@ -73,8 +72,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import {
-  Home, Database, GitBranch, Brain, Zap, GitMerge,
-  Activity, Settings, User, LogOut, Shield, ChevronLeft
+  Brain, Settings, User, LogOut, ChevronLeft
 } from 'lucide-vue-next'
 
 defineProps<{ activeSection?: string }>()
@@ -87,20 +85,28 @@ function toggleCollapsed() {
 }
 
 const menuItems = [
-  { icon: Home,      label: 'Главная панель',                id: 'home' },
-  { icon: Database,  label: 'Данные и хранилища',             id: 'storage' },
-  { icon: GitBranch, label: 'Проекты и пайплайны',            id: 'projects' },
-  { icon: Brain,     label: 'Эксперименты и обучение',        id: 'experiments' },
-  { icon: Zap,       label: 'Инференс и сервисы',             id: 'inference' },
-  { icon: GitMerge,  label: 'Потоки данных и ETL',            id: 'etl' },
-  { icon: Activity,  label: 'Мониторинг и состояние системы', id: 'monitoring' },
-  { icon: Shield,    label: 'Администрирование',              id: 'administration' },
+  { icon: 'mdi-home-outline', label: 'Главная панель',                id: 'home' },
+  { icon: 'mdi-database-outline', label: 'Данные и хранилища',             id: 'storage' },
+  { icon: 'mdi-source-branch', label: 'Проекты и пайплайны',            id: 'projects' },
+  { icon: 'mdi-brain', label: 'Эксперименты и обучение',        id: 'experiments' },
+  { icon: 'mdi-flash-outline', label: 'Инференс и сервисы',             id: 'inference' },
+  { icon: 'mdi-source-merge', label: 'Потоки данных и ETL',            id: 'etl' },
+  { icon: 'mdi-pulse', label: 'Мониторинг и состояние системы', id: 'monitoring' },
+  { icon: 'mdi-shield-outline', label: 'Администрирование',              id: 'administration' },
 ]
 </script>
 
 <style scoped>
 .sidebar {
   position: relative;
+  height: 100vh !important;
+  max-height: 100vh !important;
+}
+
+.sidebar :deep(.v-navigation-drawer__content) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .sidebar-top,
@@ -131,6 +137,9 @@ const menuItems = [
 }
 
 .menu-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding-inline: 8px;
 }
 
