@@ -34,15 +34,16 @@
       <v-list-item
         v-for="item in menuItems"
         :key="item.id"
-        :title="item.label"
         :active="item.id === activeSection"
         color="primary"
         rounded="lg"
+        :title="collapsed ? item.label : undefined"
         @click="$emit('navigate', item.id)"
       >
         <template #prepend>
           <component :is="item.icon" :size="18" />
         </template>
+        <v-list-item-title v-if="!collapsed">{{ item.label }}</v-list-item-title>
       </v-list-item>
     </v-list>
 
@@ -103,6 +104,12 @@ const menuItems = [
   position: relative;
 }
 
+.sidebar :deep(.v-navigation-drawer__content) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .sidebar-top,
 .sidebar-bottom {
   padding: 16px;
@@ -131,6 +138,9 @@ const menuItems = [
 }
 
 .menu-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding-inline: 8px;
 }
 
