@@ -47,7 +47,7 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="flow in mockFlows" :key="flow.id" class="hover:bg-gray-50 transition-colors">
+            <tr v-for="flow in etlStore.flows" :key="flow.id" class="hover:bg-gray-50 transition-colors">
               <td class="px-6 py-4 whitespace-nowrap">
                 <v-btn @click="$emit('navigate-to-detail', flow)"
                   class="text-[#409EFF] hover:underline font-medium">{{ flow.name }}</v-btn>
@@ -91,7 +91,7 @@
       </div>
 
       <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
-        <p class="text-sm text-gray-500">Показано {{ mockFlows.length }} потоков данных</p>
+        <p class="text-sm text-gray-500">Показано {{ etlStore.flows.length }} потоков данных</p>
         <div class="flex items-center gap-2 text-sm text-gray-500">
           <RefreshCw class="w-3.5 h-3.5" />
           <span>Данные обновляются каждые 10 секунд</span>
@@ -105,25 +105,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Search, Play, Square, RotateCw, Activity, TrendingUp, AlertTriangle, CheckCircle, XCircle, MinusCircle, RefreshCw } from 'lucide-vue-next'
+import { useEtlStore, type EtlFlow, type FlowStatus } from '@/stores/etl'
 
-defineEmits<{ 'navigate-to-detail': [flow: Flow] }>()
+defineEmits<{ 'navigate-to-detail': [flow: EtlFlow] }>()
 
-type FlowStatus = 'running' | 'stopped' | 'error'
-
-interface Flow {
-  id: number; name: string; status: FlowStatus; processGroups: number
-  activeThreads: number; queuedItems: number; throughput: number; lastUpdated: string
-  source: string; destination: string; owner: string; schedule: string; description: string
-}
-
-const mockFlows: Flow[] = [
-  { id: 1, name: 'fraud-inference-pipeline', status: 'running', processGroups: 12, activeThreads: 8, queuedItems: 234, throughput: 1240, lastUpdated: '2026-03-25 14:23:45', source: 'Kafka: fraud-transactions', destination: 'Octopus: fraud_labels', owner: 'ml-team/fraud', schedule: 'Real-time', description: 'Поток скоринга транзакций в режиме реального времени' },
-  { id: 2, name: 'data-ingestion-kafka', status: 'running', processGroups: 8, activeThreads: 5, queuedItems: 567, throughput: 2340, lastUpdated: '2026-03-25 14:23:40', source: 'S3: raw-events', destination: 'Kafka: events-normalized', owner: 'data-platform/ingestion', schedule: 'Каждые 5 минут', description: 'Нормализация и загрузка событий в Kafka' },
-  { id: 3, name: 'model-training-etl', status: 'stopped', processGroups: 15, activeThreads: 0, queuedItems: 0, throughput: 0, lastUpdated: '2026-03-25 12:10:23', source: 'PostgreSQL: training_samples', destination: 'MLflow Artifacts', owner: 'ml-team/training', schedule: 'Каждую ночь в 02:00', description: 'Подготовка обучающей выборки и публикация артефактов' },
-  { id: 4, name: 'feature-extraction-pipeline', status: 'running', processGroups: 10, activeThreads: 6, queuedItems: 128, throughput: 890, lastUpdated: '2026-03-25 14:23:38', source: 'Kafka: clickstream', destination: 'Redis: feature_store', owner: 'ml-team/recommendations', schedule: 'Real-time', description: 'Извлечение и агрегация фичей для рекомендаций' },
-  { id: 5, name: 'data-validation-flow', status: 'error', processGroups: 6, activeThreads: 2, queuedItems: 1024, throughput: 45, lastUpdated: '2026-03-25 14:20:12', source: 'MinIO: incoming-datasets', destination: 'Nexus: validation-reports', owner: 'data-quality', schedule: 'Каждый час', description: 'Проверка качества входных датасетов и формирование отчётов' },
-  { id: 6, name: 'realtime-aggregation', status: 'running', processGroups: 9, activeThreads: 7, queuedItems: 345, throughput: 1560, lastUpdated: '2026-03-25 14:23:42', source: 'Kafka: telemetry', destination: 'ClickHouse: telemetry_agg', owner: 'analytics-platform', schedule: 'Real-time', description: 'Агрегация телеметрии для мониторинговых дашбордов' },
-]
+const etlStore = useEtlStore()
+etlStore.fetchFlows()
 const flowHeaders = ['Название потока', 'Статус', 'Группы процессов', 'Активные потоки', 'В очереди', 'Throughput', 'Обновлено', 'Действия']
 
 function statusBadgeClass(s: FlowStatus) {
@@ -133,8 +120,8 @@ function statusIcon(s: FlowStatus) { return { running: CheckCircle, stopped: Min
 function statusText(s: FlowStatus) { return { running: 'Работает', stopped: 'Остановлен', error: 'Ошибка' }[s] }
 
 const stats = computed(() => ({
-  running: mockFlows.filter(f => f.status === 'running').length,
-  stopped: mockFlows.filter(f => f.status === 'stopped').length,
-  error: mockFlows.filter(f => f.status === 'error').length,
+  running: etlStore.flows.filter(f => f.status === 'running').length,
+  stopped: etlStore.flows.filter(f => f.status === 'stopped').length,
+  error: etlStore.flows.filter(f => f.status === 'error').length,
 }))
 </script>

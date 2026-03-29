@@ -174,7 +174,7 @@
           </div>
 
           <div class="flex items-center justify-between">
-            <p class="text-sm text-gray-500">Показано {{ filteredAlerts.length }} из {{ mockAlerts.length }} правил</p>
+            <p class="text-sm text-gray-500">Показано {{ filteredAlerts.length }} правил</p>
             <p class="text-sm text-gray-500">{{ filteredAlerts.filter(a => a.state === 'firing').length }} активных алертов</p>
           </div>
           <div class="flex items-center gap-2 text-sm text-gray-500">
@@ -189,8 +189,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Search, Plus, MoreVertical, AlertTriangle, CheckCircle, XCircle, Activity, Cpu, HardDrive, Network, TrendingUp, TrendingDown, Info, AlertCircle } from 'lucide-vue-next'
+import { useMonitoringStore } from '@/stores/monitoring'
 
 const activeTab = ref('dashboard')
 const tabs = [
@@ -217,12 +218,9 @@ const timeRangeOptions = [
 const searchQuery = ref('')
 const openMenuId = ref<number | null>(null)
 
-const keyMetrics = [
-  { icon: Cpu, label: 'CPU Usage', value: '54.3%', sub: 'Avg across 8 nodes', trend: 'up', trendColor: 'text-blue-600', bgClass: 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200', iconBg: 'bg-blue-600' },
-  { icon: HardDrive, label: 'Memory Usage', value: '67.8%', sub: '42.3 GB / 64 GB', trend: 'down', trendColor: 'text-green-600', bgClass: 'bg-gradient-to-br from-green-50 to-green-100 border-green-200', iconBg: 'bg-green-600' },
-  { icon: Network, label: 'Network Traffic', value: '85.4 MB/s', sub: 'In: 52.3 / Out: 33.1', trend: 'up', trendColor: 'text-purple-600', bgClass: 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200', iconBg: 'bg-purple-600' },
-  { icon: Activity, label: 'Requests/sec', value: '1,247', sub: 'Peak: 1,580 req/s', trend: 'up', trendColor: 'text-orange-600', bgClass: 'bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200', iconBg: 'bg-orange-600' },
-]
+const monitoringStore = useMonitoringStore()
+monitoringStore.fetchOverview()
+monitoringStore.fetchAlerts('')
 
 const chartRows = [
   [
@@ -235,13 +233,6 @@ const chartRows = [
   ],
 ]
 
-const servicesStatus = [
-  { name: 'PostgreSQL', status: 95 },
-  { name: 'NiFi', status: 98 },
-  { name: 'Kafka', status: 92 },
-  { name: 'BentoML', status: 88 },
-  { name: 'MLflow', status: 96 },
-]
 const alertHeaders = ['Название', 'Статус', 'Состояние', 'Критичность', 'Последнее изменение', 'Действия']
 
 type AlertState = 'firing' | 'ok' | 'pending'
@@ -249,16 +240,7 @@ type AlertSeverity = 'critical' | 'warning' | 'info'
 interface Alert { id: number; name: string; status: string; state: AlertState; severity: AlertSeverity; lastChanged: string; description: string }
 const severityLabels: Record<AlertSeverity, string> = { critical: 'Критично', warning: 'Предупреждение', info: 'Информация' }
 
-const mockAlerts: Alert[] = [
-  { id: 1, name: 'High CPU Usage', status: 'active', state: 'firing', severity: 'critical', lastChanged: '2026-03-25 14:15:30', description: 'CPU usage > 80% for 5 minutes' },
-  { id: 2, name: 'Memory Usage Warning', status: 'active', state: 'ok', severity: 'warning', lastChanged: '2026-03-25 13:45:12', description: 'Memory usage > 75%' },
-  { id: 3, name: 'Service Down Alert', status: 'active', state: 'firing', severity: 'critical', lastChanged: '2026-03-25 14:20:45', description: 'Service not responding for 1 minute' },
-  { id: 4, name: 'Disk Space Low', status: 'active', state: 'pending', severity: 'warning', lastChanged: '2026-03-25 12:30:00', description: 'Disk usage > 85%' },
-  { id: 5, name: 'High Error Rate', status: 'active', state: 'ok', severity: 'warning', lastChanged: '2026-03-25 11:15:23', description: 'Error rate > 5% for 10 minutes' },
-  { id: 6, name: 'Database Connection Pool', status: 'paused', state: 'ok', severity: 'info', lastChanged: '2026-03-24 18:20:15', description: 'Connection pool usage > 90%' },
-  { id: 7, name: 'Kafka Lag Alert', status: 'active', state: 'firing', severity: 'warning', lastChanged: '2026-03-25 14:18:20', description: 'Consumer lag > 10000 messages' },
-  { id: 8, name: 'Model Inference Latency', status: 'active', state: 'ok', severity: 'info', lastChanged: '2026-03-25 10:05:40', description: 'P95 latency > 500ms' },
-]
+watch(searchQuery, (q) => monitoringStore.fetchAlerts(q))
 
 function stateBadgeClass(state: AlertState) {
   return { firing: 'bg-red-100 text-red-800', ok: 'bg-green-100 text-green-800', pending: 'bg-yellow-100 text-yellow-800' }[state]
@@ -268,9 +250,34 @@ function stateLabel(state: AlertState) { return { firing: 'Активен', ok: 
 function severityColor(s: AlertSeverity) { return { critical: 'text-red-600', warning: 'text-yellow-600', info: 'text-blue-600' }[s] }
 function severityIcon(s: AlertSeverity) { return { critical: XCircle, warning: AlertTriangle, info: AlertCircle }[s] }
 
-const filteredAlerts = computed(() => mockAlerts.filter(a =>
-  searchQuery.value === '' ||
-  a.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-  a.description.toLowerCase().includes(searchQuery.value.toLowerCase())
-))
+const filteredAlerts = computed<Alert[]>(() => monitoringStore.alerts as any)
+
+const keyMetrics = computed(() => {
+  const iconMap = { CPU: Cpu, Memory: HardDrive, Network, Requests: Activity } as const
+  return monitoringStore.keyMetrics.map((m) => {
+    const base = {
+      label: m.label,
+      value: m.value,
+      sub: m.sub,
+      trend: m.trend,
+      trendColor: m.trend === 'up' ? 'text-blue-600' : 'text-green-600',
+    }
+    const icon =
+      m.label.toLowerCase().includes('cpu') ? iconMap.CPU :
+      m.label.toLowerCase().includes('memory') ? iconMap.Memory :
+      m.label.toLowerCase().includes('network') ? iconMap.Network :
+      iconMap.Requests
+    const styles =
+      m.label.toLowerCase().includes('cpu')
+        ? { bgClass: 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200', iconBg: 'bg-blue-600' }
+        : m.label.toLowerCase().includes('memory')
+          ? { bgClass: 'bg-gradient-to-br from-green-50 to-green-100 border-green-200', iconBg: 'bg-green-600' }
+          : m.label.toLowerCase().includes('network')
+            ? { bgClass: 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200', iconBg: 'bg-purple-600' }
+            : { bgClass: 'bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200', iconBg: 'bg-orange-600' }
+    return { icon, iconBg: styles.iconBg, bgClass: styles.bgClass, ...base }
+  })
+})
+
+const servicesStatus = computed(() => monitoringStore.servicesStatus)
 </script>

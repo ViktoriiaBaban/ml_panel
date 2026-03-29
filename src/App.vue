@@ -11,6 +11,7 @@
           <template v-else-if="activeSection === 'projects'">
             <PipelinesView
               v-if="projectsSubView === 'pipelines' && selectedProject"
+              :projectId="selectedProject.id"
               :projectName="selectedProject.name"
               @back="handleBackToProjects"
             />
@@ -19,6 +20,7 @@
           <template v-else-if="activeSection === 'inference'">
             <InferenceMonitoringView
               v-if="inferenceSubView === 'monitoring' && selectedService"
+              :serviceId="selectedService.id"
               :serviceName="selectedService.name"
               @back="handleBackToServices"
             />

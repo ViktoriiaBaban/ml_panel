@@ -30,7 +30,7 @@
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="user in users" :key="user.id" class="hover:bg-gray-50 transition-colors">
+              <tr v-for="user in adminStore.users" :key="user.id" class="hover:bg-gray-50 transition-colors">
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ user.email }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ user.name }}</td>
                 <td class="px-6 py-4 whitespace-nowrap">
@@ -68,7 +68,7 @@
             </tbody>
           </table>
         </div>
-        <div class="px-6 py-4 border-t border-gray-200 text-sm text-gray-600">Всего пользователей: {{ users.length }}</div>
+        <div class="px-6 py-4 border-t border-gray-200 text-sm text-gray-600">Всего пользователей: {{ adminStore.users.length }}</div>
       </template>
 
       <!-- Integrations Tab -->
@@ -84,7 +84,7 @@
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
-                <template v-for="integration in integrations" :key="integration.id">
+                <template v-for="integration in adminStore.integrations" :key="integration.id">
                   <tr class="hover:bg-gray-50 transition-colors">
                     <td class="px-6 py-4 whitespace-nowrap">
                       <v-btn @click="expandedIntegration = expandedIntegration === integration.id ? null : integration.id"
@@ -128,7 +128,7 @@
           <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h4 class="text-sm font-semibold text-gray-900 mb-2">Health-check проверки:</h4>
             <div class="text-sm text-gray-600 space-y-1">
-              <div v-for="check in healthChecks" :key="check.name"><strong>{{ check.name }}:</strong> {{ check.command }}</div>
+              <div v-for="check in adminStore.healthChecks" :key="check.name"><strong>{{ check.name }}:</strong> {{ check.command }}</div>
             </div>
           </div>
         </div>
@@ -180,8 +180,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import { Plus, Lock, Unlock, Trash2, Edit, RefreshCw, X, AlertCircle, CheckCircle, AlertTriangle, Crown, User as UserIcon } from 'lucide-vue-next'
+import { useAdminStore } from '@/stores/admin'
 
 const activeTab = ref('users')
 const tabs = [
@@ -191,14 +192,6 @@ const tabs = [
 const userHeaders = ['Логин / Email', 'ФИО / Имя', 'Роль', 'Статус', 'Дата регистрации', 'Последний вход', 'Действия']
 const integrationHeaders = ['Компонент', 'Статус', 'Последняя проверка', 'Действия']
 const integrationStatusLabels = { working: 'Работает', warning: 'Проблемы с записью', error: 'Не отвечает' } as const
-const healthChecks = [
-  { name: 'GitLab', command: 'GET /version + GET /projects?membership=true' },
-  { name: 'MLflow', command: 'GET /api/2.0/mlflow/experiments/list' },
-  { name: 'MinIO', command: 'mc ls mlflow-artifacts + mc cp test.txt ...' },
-  { name: 'NiFi', command: 'GET /nifi-api/flow/status' },
-  { name: 'Nexus', command: 'GET /v2/_catalog (Docker registry)' },
-  { name: 'BentoML', command: 'GET /docs или bentoml list через CLI' },
-]
 const showAddUserModal = ref(false)
 const expandedIntegration = ref<string | null>(null)
 const checkingIntegration = ref<string | null>(null)
@@ -208,63 +201,32 @@ const roleOptions = [
   { label: 'Администратор', value: 'admin' },
 ]
 
-type UserStatus = 'active' | 'blocked'
-interface User { id: number; email: string; name: string; role: 'user' | 'admin'; status: UserStatus; registrationDate: string; lastLogin: string }
-
-const users = ref<User[]>([
-  { id: 1, email: 'ivanov@example.com', name: 'Иванов Иван', role: 'user', status: 'active', registrationDate: '2025-11-03', lastLogin: '2026-01-16 09:45' },
-  { id: 2, email: 'petrova@example.com', name: 'Петрова Мария', role: 'admin', status: 'active', registrationDate: '2025-10-15', lastLogin: '2026-01-16 10:20' },
-  { id: 3, email: 'sidorov@example.com', name: 'Сидоров Петр', role: 'user', status: 'blocked', registrationDate: '2025-12-01', lastLogin: '2026-01-10 14:30' },
-  { id: 4, email: 'victoria@example.com', name: 'Виктория', role: 'user', status: 'active', registrationDate: '2025-09-20', lastLogin: '2026-01-16 10:30' },
-  { id: 5, email: 'kozlov@example.com', name: 'Козлов Андрей', role: 'user', status: 'active', registrationDate: '2025-11-18', lastLogin: '2026-01-15 18:15' },
-])
-
-type IntegrationStatus = 'working' | 'warning' | 'error'
-interface Integration { id: string; name: string; status: IntegrationStatus; lastCheck: string; details?: { url?: string; version?: string; error?: string; lastSuccessfulCall?: string } }
-
-const integrations = ref<Integration[]>([
-  { id: 'gitlab', name: 'GitLab CE', status: 'working', lastCheck: '2026-01-16 10:45', details: { url: 'https://gitlab.internal', version: 'v4' } },
-  { id: 'mlflow', name: 'MLflow Tracking Server', status: 'working', lastCheck: '2026-01-16 10:44', details: { url: 'http://mlflow.internal:5000' } },
-  { id: 'minio', name: 'MinIO (Object Storage)', status: 'warning', lastCheck: '2026-01-16 10:40', details: { url: 'minio.internal:9000', error: 'Проблемы с записью: AccessDenied' } },
-  { id: 'nifi', name: 'Apache NiFi', status: 'working', lastCheck: '2026-01-16 10:45', details: { url: 'http://nifi.internal:8080' } },
-  { id: 'nexus', name: 'Nexus Repository (Docker)', status: 'working', lastCheck: '2026-01-16 10:30', details: { url: 'nexus.internal:8081' } },
-  { id: 'bentoml', name: 'BentoML (Deployment)', status: 'error', lastCheck: '2026-01-16 10:20', details: { url: 'http://bentoml-api:3000', error: 'Connection timeout', lastSuccessfulCall: '2026-01-16 09:15' } },
-])
+const adminStore = useAdminStore()
+adminStore.fetchUsers()
+watch(activeTab, (tab) => {
+  if (tab === 'integrations') adminStore.fetchIntegrations()
+})
 
 function toggleUserStatus(id: number) {
-  const user = users.value.find(u => u.id === id)
-  if (user) user.status = user.status === 'active' ? 'blocked' : 'active'
+  adminStore.toggleUserStatus(id)
 }
 
 function deleteUser(id: number) {
   if (confirm('Вы уверены, что хотите удалить этого пользователя?')) {
-    users.value = users.value.filter(u => u.id !== id)
+    adminStore.deleteUser(id)
   }
 }
 
 function addUser() {
   if (!newUser.email) return
-  users.value.push({
-    id: Math.max(...users.value.map(u => u.id)) + 1,
-    email: newUser.email,
-    name: newUser.name || newUser.email.split('@')[0],
-    role: newUser.role,
-    status: 'active',
-    registrationDate: new Date().toISOString().split('T')[0],
-    lastLogin: '—',
-  })
+  adminStore.addUser({ email: newUser.email, name: newUser.name, role: newUser.role })
   showAddUserModal.value = false
   newUser.email = ''; newUser.name = ''; newUser.role = 'user'
 }
 
 async function checkIntegration(id: string) {
   checkingIntegration.value = id
-  await new Promise(r => setTimeout(r, 1500))
-  const integration = integrations.value.find(i => i.id === id)
-  if (integration) {
-    integration.status = Math.random() > 0.3 ? 'working' : 'warning'
-    integration.lastCheck = new Date().toLocaleString('ru-RU').replace(',', '')
-  }
+  await adminStore.checkIntegration(id)
   checkingIntegration.value = null
 }
 </script>

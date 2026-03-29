@@ -204,9 +204,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { ArrowLeft, Play, Square, RotateCw, Download, CheckCircle, Info, RefreshCw, Database, FlaskConical } from 'lucide-vue-next'
+import { useInferenceMonitoringStore } from '@/stores/inferenceMonitoring'
 
-defineProps<{ serviceName: string }>()
+const props = defineProps<{ serviceId: number; serviceName: string }>()
 defineEmits<{ back: [] }>()
+
+const monitoringStore = useInferenceMonitoringStore()
+monitoringStore.fetchAll(props.serviceId)
 
 const activeTab = ref('metrics')
 const tabs = [
@@ -215,7 +219,6 @@ const tabs = [
   { value: 'model', label: 'Модель' },
   { value: 'integrations', label: 'Интеграции' },
 ]
-const modelArtifacts = ['model.pkl', 'report.pdf', 'confusion_matrix.png']
 const logFilter = ref('all')
 const logFilterOptions = [
   { label: 'Все уровни', value: 'all' },
@@ -225,49 +228,29 @@ const logFilterOptions = [
 ]
 const logSearch = ref('')
 
-const charts = [
-  { title: 'Latency (p50, p95)', color: 'bg-[#409EFF]', data: Array.from({ length: 24 }, () => ({ pct: 20 + Math.random() * 60 })) },
-  { title: 'Throughput (RPS)', color: 'bg-purple-500', data: Array.from({ length: 24 }, () => ({ pct: 30 + Math.random() * 50 })) },
-  { title: 'Error Rate (%)', color: 'bg-red-400', data: Array.from({ length: 24 }, () => ({ pct: Math.random() * 15 })) },
-]
+const charts = computed(() => monitoringStore.monitoring?.charts ?? [])
+const recentCalls = computed(() => monitoringStore.monitoring?.recentCalls ?? [])
+const modelArtifacts = computed(() => monitoringStore.monitoring?.modelArtifacts ?? [])
 
-const recentCalls = [
-  { id: 1, time: '2026-01-15 14:23:45', latency: 124, status: 'success' },
-  { id: 2, time: '2026-01-15 14:23:43', latency: 98, status: 'success' },
-  { id: 3, time: '2026-01-15 14:23:41', latency: 156, status: 'success' },
-  { id: 4, time: '2026-01-15 14:23:39', latency: 203, status: 'success' },
-  { id: 5, time: '2026-01-15 14:23:37', latency: 87, status: 'success' },
-  { id: 6, time: '2026-01-15 14:23:35', latency: 312, status: 'error' },
-  { id: 7, time: '2026-01-15 14:23:33', latency: 142, status: 'success' },
-  { id: 8, time: '2026-01-15 14:23:31', latency: 95, status: 'success' },
-  { id: 9, time: '2026-01-15 14:23:29', latency: 178, status: 'success' },
-  { id: 10, time: '2026-01-15 14:23:27', latency: 134, status: 'success' },
-]
-
-const mockLogs = [
-  { id: 1, timestamp: '2026-01-15 14:23:45', level: 'INFO', message: 'Prediction request processed successfully' },
-  { id: 2, timestamp: '2026-01-15 14:23:40', level: 'INFO', message: 'Model inference completed in 124ms' },
-  { id: 3, timestamp: '2026-01-15 14:23:35', level: 'ERROR', message: 'Timeout while processing request: connection pool exhausted' },
-  { id: 4, timestamp: '2026-01-15 14:23:30', level: 'WARNING', message: 'High memory usage detected: 85%' },
-  { id: 5, timestamp: '2026-01-15 14:23:25', level: 'INFO', message: 'Batch prediction started for 128 items' },
-  { id: 6, timestamp: '2026-01-15 14:23:20', level: 'INFO', message: 'Health check passed' },
-  { id: 7, timestamp: '2026-01-15 14:23:15', level: 'ERROR', message: 'Failed to deserialize input payload' },
-  { id: 8, timestamp: '2026-01-15 14:23:10', level: 'INFO', message: 'Prediction request processed successfully' },
-]
-
-const relatedSystems = [
-  { icon: RefreshCw, name: 'NiFi Flow: fraud-inference-pipeline', desc: 'Вызывает сервис для real-time инференса' },
-  { icon: Database, name: 'Octopus: fraud_labels', desc: 'Сохранение результатов инференса' },
-  { icon: FlaskConical, name: 'MLflow: run-abc123', desc: 'Исходная модель из эксперимента' },
-]
+const relatedSystems = computed(() => {
+  const list = monitoringStore.monitoring?.relatedSystems ?? []
+  const iconMap = { RefreshCw, Database, FlaskConical } as const
+  return list.map((s) => ({ ...s, icon: iconMap[s.icon] }))
+})
 
 function levelBadgeClass(level: string) {
   return { ERROR: 'bg-red-100 text-red-800', WARNING: 'bg-yellow-100 text-yellow-800', INFO: 'bg-blue-100 text-blue-800' }[level] ?? 'bg-gray-100 text-gray-800'
 }
 
-const filteredLogs = computed(() => mockLogs.filter(log => {
-  const matchFilter = logFilter.value === 'all' || log.level.toLowerCase() === logFilter.value.toLowerCase()
-  const matchSearch = logSearch.value === '' || log.message.toLowerCase().includes(logSearch.value.toLowerCase()) || log.level.toLowerCase().includes(logSearch.value.toLowerCase())
-  return matchFilter && matchSearch
-}))
+const filteredLogs = computed(() => {
+  const logs = monitoringStore.monitoring?.logs ?? []
+  return logs.filter((log) => {
+    const matchFilter = logFilter.value === 'all' || log.level.toLowerCase() === logFilter.value.toLowerCase()
+    const matchSearch =
+      logSearch.value === '' ||
+      log.message.toLowerCase().includes(logSearch.value.toLowerCase()) ||
+      log.level.toLowerCase().includes(logSearch.value.toLowerCase())
+    return matchFilter && matchSearch
+  })
+})
 </script>

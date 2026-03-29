@@ -117,29 +117,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { ChevronDown, ChevronUp, ExternalLink, Clock, User, GitBranch, Tag, Check, X, RefreshCw, Pause, AlertTriangle } from 'lucide-vue-next'
+import { usePipelinesStore, type Pipeline, type PipelineStatus, type StageStatus } from '@/stores/pipelines'
 
-defineProps<{ projectName: string }>()
+const props = defineProps<{ projectId: number; projectName: string }>()
 defineEmits<{ back: [] }>()
 
 const expandedPipeline = ref<number | null>(null)
 const branchFilter = ref('all')
 const statusFilter = ref('all')
 
-type StageStatus = 'success' | 'failed' | 'running' | 'pending' | 'warning'
-type PipelineStatus = 'success' | 'failed' | 'running' | 'partial'
-
-interface PipelineStage { name: string; status: StageStatus; duration?: string; mlflowRun?: string; bentoService?: string; nifiFlow?: string }
-interface Pipeline { id: number; pipelineId: string; branch: string; tag?: string; author: string; startTime: string; stages: PipelineStage[]; duration: string; status: PipelineStatus }
-
-const mockPipelines: Pipeline[] = [
-  { id: 1, pipelineId: '#1428', branch: 'main', tag: 'v1.2.0', author: 'petrov', startTime: '2026-01-14 14:30', duration: '12 мин 34 сек', status: 'partial', stages: [{ name: 'data_prep', status: 'success', duration: '2 мин 15 сек' }, { name: 'train', status: 'success', duration: '8 мин 45 сек', mlflowRun: 'run-abc123' }, { name: 'deploy', status: 'warning', duration: '1 мин 34 сек', bentoService: 'fraud-v3' }] },
-  { id: 2, pipelineId: '#1427', branch: 'dev', author: 'ivanov', startTime: '2026-01-14 12:15', duration: '10 мин 20 сек', status: 'success', stages: [{ name: 'data_prep', status: 'success', duration: '2 мин 10 сек' }, { name: 'train', status: 'success', duration: '7 мин 30 сек', mlflowRun: 'run-def456' }, { name: 'test', status: 'success', duration: '40 сек' }] },
-  { id: 3, pipelineId: '#1426', branch: 'feature/new-model', author: 'sidorova', startTime: '2026-01-14 10:00', duration: '15 мин 45 сек', status: 'failed', stages: [{ name: 'data_prep', status: 'success', duration: '2 мин 20 сек' }, { name: 'train', status: 'failed', duration: '5 мин 15 сек', mlflowRun: 'run-ghi789' }, { name: 'deploy', status: 'pending' }] },
-  { id: 4, pipelineId: '#1425', branch: 'main', tag: 'v1.1.5', author: 'kuznetsov', startTime: '2026-01-13 16:45', duration: '11 мин 10 сек', status: 'success', stages: [{ name: 'etl', status: 'success', duration: '3 мин 30 сек', nifiFlow: 'flow-etl-001' }, { name: 'data_prep', status: 'success', duration: '2 мин 05 сек' }, { name: 'train', status: 'success', duration: '5 мин 35 сек', mlflowRun: 'run-jkl012' }] },
-  { id: 5, pipelineId: '#1424', branch: 'main', author: 'volkov', startTime: '2026-01-13 14:20', duration: '9 мин 55 сек', status: 'running', stages: [{ name: 'data_prep', status: 'success', duration: '2 мин 15 сек' }, { name: 'train', status: 'running', mlflowRun: 'run-mno345' }, { name: 'deploy', status: 'pending' }] },
-]
+const pipelinesStore = usePipelinesStore()
+pipelinesStore.fetchPipelines({ projectId: props.projectId, branch: 'all', status: 'all' })
 
 const stageStatusConfig: Record<StageStatus, { icon: any; color: string; label: string }> = {
   success: { icon: Check, color: 'green', label: 'Успешно' },
@@ -167,7 +157,15 @@ function stageBadgeClass(status: StageStatus) {
   return map[status]
 }
 
-const branches = computed(() => ['all', ...new Set(mockPipelines.map(p => p.branch))])
+watch([branchFilter, statusFilter], () => {
+  pipelinesStore.fetchPipelines({
+    projectId: props.projectId,
+    branch: branchFilter.value,
+    status: statusFilter.value,
+  })
+})
+
+const branches = computed(() => ['all', ...new Set(pipelinesStore.items.map(p => p.branch))])
 const branchItems = computed(() => branches.value.map(branch => ({ label: branch === 'all' ? 'Все ветки' : branch, value: branch })))
 const statusItems = [
   { label: 'Все статусы', value: 'all' },
@@ -177,11 +175,7 @@ const statusItems = [
   { label: 'Частичный успех', value: 'partial' },
 ]
 
-const filteredPipelines = computed(() => mockPipelines.filter(p => {
-  const matchBranch = branchFilter.value === 'all' || p.branch === branchFilter.value
-  const matchStatus = statusFilter.value === 'all' || p.status === statusFilter.value
-  return matchBranch && matchStatus
-}))
+const filteredPipelines = computed<Pipeline[]>(() => pipelinesStore.items)
 </script>
 
 <style scoped>

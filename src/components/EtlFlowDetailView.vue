@@ -82,7 +82,7 @@
             </div>
           </div>
           <div class="space-y-3">
-            <div v-for="variable in mockVariables" :key="variable.key"
+            <div v-for="variable in variables" :key="variable.key"
               class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
               <div class="font-medium text-gray-900 mb-1">{{ variable.key }}</div>
               <div class="text-xs text-gray-500 mb-2">{{ variable.description }}</div>
@@ -93,7 +93,7 @@
               <div v-else class="flex items-center gap-2">
                 <v-text-field type="text" v-model="variableValues[variable.key]"
                   class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#409EFF]"  variant="outlined" density="comfortable" hide-details />
-                <v-btn @click="editingVariable = null" class="px-3 py-2 bg-[#409EFF] text-white rounded hover:bg-[#3a8eef] transition-colors flex items-center gap-1">
+                <v-btn @click="saveVariable(variable.key)" class="px-3 py-2 bg-[#409EFF] text-white rounded hover:bg-[#3a8eef] transition-colors flex items-center gap-1">
                   <Save class="w-4 h-4" />Сохранить
                 </v-btn>
                 <v-btn @click="variableValues[variable.key] = variable.value; editingVariable = null"
@@ -123,7 +123,7 @@
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="c in mockComponents" :key="c.id" class="hover:bg-gray-50">
+                <tr v-for="c in components" :key="c.id" class="hover:bg-gray-50">
                   <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ c.name }}</td>
                   <td class="px-4 py-3 text-sm text-gray-500">{{ c.type }}</td>
                   <td class="px-4 py-3 text-sm">
@@ -150,7 +150,7 @@
             <p class="text-sm text-gray-500">Последние изменения и события потока {{ flow.name }}</p>
           </div>
           <div class="space-y-3">
-            <div v-for="item in mockHistory" :key="item.id" class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+            <div v-for="item in historyItems" :key="item.id" class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
               <div class="flex items-center gap-2 mb-2">
                 <span class="text-sm text-gray-500">{{ item.timestamp }}</span>
                 <span :class="item.status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="px-2 py-0.5 text-xs font-medium rounded">
@@ -173,10 +173,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { ArrowLeft, Play, Square, RotateCw, Save, X, AlertCircle, Activity, Database, Clock, Settings, CheckCircle, Info, XCircle, MinusCircle } from 'lucide-vue-next'
+import { useEtlStore, type FlowVariable, type FlowStatus } from '@/stores/etl'
 
-type FlowStatus = 'running' | 'stopped' | 'error'
 interface FlowDetail {
   id: number
   name: string
@@ -195,6 +195,11 @@ interface FlowDetail {
 
 const { flow } = defineProps<{ flow: FlowDetail }>()
 defineEmits<{ back: [] }>()
+
+const etlStore = useEtlStore()
+etlStore.fetchVariables(flow.id)
+etlStore.fetchComponents(flow.id)
+etlStore.fetchHistory(flow.id)
 
 const activeTab = ref('metrics')
 const editingVariable = ref<string | null>(null)
@@ -215,18 +220,15 @@ function statusLabel(status: FlowStatus) {
   return { running: 'Работает', stopped: 'Остановлен', error: 'Ошибка' }[status]
 }
 
-const mockVariables = [
-  { key: 'kafka.topic', value: 'transactions', description: 'Топик Kafka для чтения данных' },
-  { key: 'kafka.group.id', value: 'fraud-pipeline-consumer', description: 'Consumer group ID' },
-  { key: 'api.endpoint', value: 'http://bento-fraud:3000/predict', description: 'Endpoint для инференса модели' },
-  { key: 'api.timeout', value: '5000', description: 'Таймаут API в миллисекундах' },
-  { key: 'batch.size', value: '100', description: 'Размер батча для обработки' },
-  { key: 'octopus.table', value: 'fraud_labels', description: 'Таблица для сохранения результатов' },
-  { key: 'octopus.connection', value: 'jdbc:postgresql://octopus:5432/ml_data', description: 'Connection string для Octopus' },
-  { key: 'error.retry.count', value: '3', description: 'Количество повторных попыток при ошибке' },
-]
-
-const variableValues = reactive<Record<string, string>>(Object.fromEntries(mockVariables.map(v => [v.key, v.value])))
+const variables = computed<FlowVariable[]>(() => etlStore.variablesByFlowId[flow.id] ?? [])
+const variableValues = reactive<Record<string, string>>({})
+watch(
+  variables,
+  (vars) => {
+    for (const v of vars) variableValues[v.key] = v.value
+  },
+  { immediate: true },
+)
 
 const summaryStats = [
   { icon: Activity, color: 'text-[#409EFF]', label: 'Throughput', value: '1,240', unit: 'items/sec' },
@@ -241,21 +243,11 @@ const charts = [
   { title: 'Использование потоков', color: 'bg-purple-500', data: Array.from({ length: 48 }, () => 40 + Math.random() * 40) },
 ]
 
-const mockComponents = [
-  { id: 1, name: 'FetchKafka', type: 'Processor', status: 'running', threadsActive: 2, tasksCompleted: 12340 },
-  { id: 2, name: 'ValidateJSON', type: 'Processor', status: 'running', threadsActive: 1, tasksCompleted: 12340 },
-  { id: 3, name: 'RouteOnAttribute', type: 'Processor', status: 'running', threadsActive: 1, tasksCompleted: 12340 },
-  { id: 4, name: 'InvokeHTTP', type: 'Processor', status: 'running', threadsActive: 3, tasksCompleted: 11280 },
-  { id: 5, name: 'PutOctopus', type: 'Processor', status: 'running', threadsActive: 2, tasksCompleted: 11280 },
-  { id: 6, name: 'ErrorHandling', type: 'Process Group', status: 'running', threadsActive: 1, tasksCompleted: 1060 },
-]
+const components = computed(() => etlStore.componentsByFlowId[flow.id] ?? [])
+const historyItems = computed(() => etlStore.historyByFlowId[flow.id] ?? [])
 
-const mockHistory = [
-  { id: 1, timestamp: '2026-03-25 14:23:45', action: 'Flow started', user: 'Виктория', status: 'success' },
-  { id: 2, timestamp: '2026-03-25 12:10:20', action: 'Flow stopped', user: 'Виктория', status: 'success' },
-  { id: 3, timestamp: '2026-03-25 09:45:12', action: 'Variable updated: kafka.topic = "transactions"', user: 'Игорь', status: 'success' },
-  { id: 4, timestamp: '2026-03-24 16:30:05', action: 'Flow configuration changed', user: 'Виктория', status: 'success' },
-  { id: 5, timestamp: '2026-03-24 14:15:33', action: 'Flow error: Connection timeout', user: 'System', status: 'error' },
-  { id: 6, timestamp: '2026-03-24 10:20:18', action: 'Flow started', user: 'Виктория', status: 'success' },
-]
+async function saveVariable(key: string) {
+  await etlStore.updateVariable(flow.id, key, variableValues[key] ?? '')
+  editingVariable.value = null
+}
 </script>

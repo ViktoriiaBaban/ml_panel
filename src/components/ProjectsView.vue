@@ -80,8 +80,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Search, GitBranch, ExternalLink, PlayCircle, FlaskConical, Bot, Repeat, CheckCircle, XCircle, RefreshCw } from 'lucide-vue-next'
+import { useProjectsStore } from '@/stores/projects'
 
 defineEmits<{ 'navigate-to-pipelines': [id: number, name: string] }>()
 
@@ -97,20 +98,8 @@ const statusOptions = [
 type PipelineStatus = 'success' | 'failed' | 'running'
 type ProjectType = 'training' | 'inference' | 'etl'
 
-interface Project {
-  id: number; name: string; description: string; namespace: string
-  lastCommit: { author: string; time: string }
-  pipelineStatus: PipelineStatus; types: ProjectType[]
-}
-
-const mockProjects: Project[] = [
-  { id: 1, name: 'fraud-detection', description: 'Модель для детекции мошенничества в транзакциях', namespace: 'ml-team/fraud', lastCommit: { author: 'ivanov', time: '2 ч назад' }, pipelineStatus: 'success', types: ['training', 'inference'] },
-  { id: 2, name: 'customer-segmentation', description: 'Сегментация клиентов для маркетинга', namespace: 'ml-team/marketing', lastCommit: { author: 'petrova', time: '5 ч назад' }, pipelineStatus: 'running', types: ['training'] },
-  { id: 3, name: 'recommendation-engine', description: 'Рекомендательная система для продуктов', namespace: 'ml-team/recommendations', lastCommit: { author: 'sidorov', time: '1 день назад' }, pipelineStatus: 'success', types: ['training', 'inference'] },
-  { id: 4, name: 'text-classification', description: 'Классификация текстовых документов', namespace: 'ml-team/nlp', lastCommit: { author: 'kuznetsov', time: '3 ч назад' }, pipelineStatus: 'failed', types: ['training', 'inference'] },
-  { id: 5, name: 'data-pipeline-etl', description: 'ETL пайплайн для подготовки данных', namespace: 'data-engineering/pipelines', lastCommit: { author: 'sokolova', time: '12 ч назад' }, pipelineStatus: 'success', types: ['etl'] },
-  { id: 6, name: 'image-recognition', description: 'Распознавание объектов на изображениях', namespace: 'ml-team/vision', lastCommit: { author: 'volkov', time: '6 ч назад' }, pipelineStatus: 'running', types: ['training', 'inference'] },
-]
+const projectsStore = useProjectsStore()
+projectsStore.fetchProjects({ search: '', status: 'all' })
 
 const statusConfig: Record<PipelineStatus, { label: string; chipColor: string; icon: any }> = {
   success: { label: 'Успешен', chipColor: 'green', icon: CheckCircle },
@@ -124,13 +113,11 @@ const typeIcons: Record<ProjectType, { icon: any; label: string; colorClass: str
   etl: { icon: Repeat, label: 'ETL', colorClass: 'text-green-600' },
 }
 
-const filteredProjects = computed(() => mockProjects.filter(p => {
-  const matchSearch = p.name.toLowerCase().includes(searchTerm.value.toLowerCase()) || p.description.toLowerCase().includes(searchTerm.value.toLowerCase())
-  const matchStatus = statusFilter.value === 'all' ||
-    (statusFilter.value === 'active' && p.pipelineStatus === 'running') ||
-    (statusFilter.value === 'errors' && p.pipelineStatus === 'failed')
-  return matchSearch && matchStatus
-}))
+watch([searchTerm, statusFilter], () => {
+  projectsStore.fetchProjects({ search: searchTerm.value, status: statusFilter.value as any })
+})
+
+const filteredProjects = computed(() => projectsStore.items)
 </script>
 
 <style scoped>

@@ -91,7 +91,7 @@
       </div>
 
       <div class="px-6 py-4 border-t border-gray-200">
-        <div class="text-sm text-gray-600">Показано {{ filteredServices.length }} из {{ mockServices.length }} сервисов</div>
+        <div class="text-sm text-gray-600">Показано {{ filteredServices.length }} сервисов</div>
       </div>
     </div>
   </div>
@@ -99,30 +99,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Search, Play, Square, RotateCw, Bot, CheckCircle, XCircle, MinusCircle } from 'lucide-vue-next'
+import { useInferenceServicesStore, type ServiceStatus } from '@/stores/inferenceServices'
 
 defineEmits<{ 'navigate-to-monitoring': [id: number, name: string] }>()
-
-type ServiceStatus = 'running' | 'stopped' | 'error'
-
-interface InferenceService {
-  id: number; name: string; project: string; model: string; endpoint: string; version: string
-  status: ServiceStatus; rps: number; latencyP95: number; errorRate: number
-}
 
 const searchTerm = ref('')
 const statusFilter = ref('all')
 const projectFilter = ref('all')
 
-const mockServices: InferenceService[] = [
-  { id: 1, name: 'fraud-detection-v3', project: 'ml-team/fraud', model: 'run-abc123', endpoint: 'http://bento-fraud:3000/predict', version: 'fraud-detection:20260114-1430', status: 'running', rps: 24.3, latencyP95: 127, errorRate: 0.2 },
-  { id: 2, name: 'recommendation-engine', project: 'ml-team/recommendations', model: 'run-xyz789', endpoint: 'http://bento-rec:3000/recommend', version: 'recommendation-engine:20260113-0920', status: 'running', rps: 45.7, latencyP95: 89, errorRate: 0.1 },
-  { id: 3, name: 'sentiment-analyzer', project: 'nlp-team/sentiment', model: 'run-def456', endpoint: 'http://bento-sentiment:3000/analyze', version: 'sentiment-analyzer:20260112-1615', status: 'stopped', rps: 0, latencyP95: 0, errorRate: 0 },
-  { id: 4, name: 'image-classifier-v2', project: 'cv-team/classification', model: 'run-ghi321', endpoint: 'http://bento-img:3000/classify', version: 'image-classifier:20260111-1045', status: 'error', rps: 0, latencyP95: 0, errorRate: 100 },
-  { id: 5, name: 'churn-predictor', project: 'ml-team/churn', model: 'run-jkl654', endpoint: 'http://bento-churn:3000/predict', version: 'churn-predictor:20260110-1330', status: 'running', rps: 12.5, latencyP95: 156, errorRate: 0.3 },
-  { id: 6, name: 'price-optimizer', project: 'ml-team/pricing', model: 'run-mno987', endpoint: 'http://bento-price:3000/optimize', version: 'price-optimizer:20260109-1720', status: 'running', rps: 8.9, latencyP95: 203, errorRate: 0.5 },
-]
+const servicesStore = useInferenceServicesStore()
+servicesStore.fetchServices({ search: '', status: 'all', project: 'all' })
 const serviceHeaders = ['Название', 'Проект', 'Модель', 'Endpoint', 'Версия', 'Статус', 'RPS', 'Latency (p95)', 'Ошибки (%)', 'Действия']
 
 function statusIcon(s: ServiceStatus) { return s === 'running' ? CheckCircle : s === 'stopped' ? MinusCircle : XCircle }
@@ -130,7 +118,11 @@ function statusIconColor(s: ServiceStatus) { return s === 'running' ? 'text-gree
 function statusText(s: ServiceStatus) { return s === 'running' ? 'Работает' : s === 'stopped' ? 'Остановлен' : 'Ошибка' }
 function latencyColor(l: number) { if (l === 0) return 'text-gray-400'; if (l < 200) return 'text-green-600'; if (l < 500) return 'text-yellow-600'; return 'text-red-600' }
 
-const uniqueProjects = computed(() => [...new Set(mockServices.map(s => s.project))])
+watch([searchTerm, statusFilter, projectFilter], () => {
+  servicesStore.fetchServices({ search: searchTerm.value, status: statusFilter.value, project: projectFilter.value })
+})
+
+const uniqueProjects = computed(() => servicesStore.uniqueProjects)
 const statusOptions = [
   { label: 'Все статусы', value: 'all' },
   { label: 'Работает', value: 'running' },
@@ -138,10 +130,5 @@ const statusOptions = [
   { label: 'Ошибка', value: 'error' },
 ]
 const projectOptions = computed(() => [{ label: 'Все проекты', value: 'all' }, ...uniqueProjects.value.map(project => ({ label: project, value: project }))])
-const filteredServices = computed(() => mockServices.filter(s => {
-  const matchSearch = s.name.toLowerCase().includes(searchTerm.value.toLowerCase()) || s.project.toLowerCase().includes(searchTerm.value.toLowerCase()) || s.model.toLowerCase().includes(searchTerm.value.toLowerCase())
-  const matchStatus = statusFilter.value === 'all' || s.status === statusFilter.value
-  const matchProject = projectFilter.value === 'all' || s.project === projectFilter.value
-  return matchSearch && matchStatus && matchProject
-}))
+const filteredServices = computed(() => servicesStore.items)
 </script>
