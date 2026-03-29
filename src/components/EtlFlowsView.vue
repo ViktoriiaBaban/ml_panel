@@ -42,14 +42,14 @@
         <table class="w-full">
           <thead class="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th v-for="h in ['Название потока','Статус','Группы процессов','Активные потоки','В очереди','Throughput','Обновлено','Действия']" :key="h"
+              <th v-for="h in flowHeaders" :key="h"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ h }}</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="flow in mockFlows" :key="flow.id" class="hover:bg-gray-50 transition-colors">
               <td class="px-6 py-4 whitespace-nowrap">
-                <v-btn @click="$emit('navigate-to-detail', flow.id, flow.name)"
+                <v-btn @click="$emit('navigate-to-detail', flow)"
                   class="text-[#409EFF] hover:underline font-medium">{{ flow.name }}</v-btn>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -106,23 +106,25 @@
 import { computed } from 'vue'
 import { Search, Play, Square, RotateCw, Activity, TrendingUp, AlertTriangle, CheckCircle, XCircle, MinusCircle, RefreshCw } from 'lucide-vue-next'
 
-defineEmits<{ 'navigate-to-detail': [id: number, name: string] }>()
+defineEmits<{ 'navigate-to-detail': [flow: Flow] }>()
 
 type FlowStatus = 'running' | 'stopped' | 'error'
 
 interface Flow {
   id: number; name: string; status: FlowStatus; processGroups: number
   activeThreads: number; queuedItems: number; throughput: number; lastUpdated: string
+  source: string; destination: string; owner: string; schedule: string; description: string
 }
 
 const mockFlows: Flow[] = [
-  { id: 1, name: 'fraud-inference-pipeline', status: 'running', processGroups: 12, activeThreads: 8, queuedItems: 234, throughput: 1240, lastUpdated: '2026-03-25 14:23:45' },
-  { id: 2, name: 'data-ingestion-kafka', status: 'running', processGroups: 8, activeThreads: 5, queuedItems: 567, throughput: 2340, lastUpdated: '2026-03-25 14:23:40' },
-  { id: 3, name: 'model-training-etl', status: 'stopped', processGroups: 15, activeThreads: 0, queuedItems: 0, throughput: 0, lastUpdated: '2026-03-25 12:10:23' },
-  { id: 4, name: 'feature-extraction-pipeline', status: 'running', processGroups: 10, activeThreads: 6, queuedItems: 128, throughput: 890, lastUpdated: '2026-03-25 14:23:38' },
-  { id: 5, name: 'data-validation-flow', status: 'error', processGroups: 6, activeThreads: 2, queuedItems: 1024, throughput: 45, lastUpdated: '2026-03-25 14:20:12' },
-  { id: 6, name: 'realtime-aggregation', status: 'running', processGroups: 9, activeThreads: 7, queuedItems: 345, throughput: 1560, lastUpdated: '2026-03-25 14:23:42' },
+  { id: 1, name: 'fraud-inference-pipeline', status: 'running', processGroups: 12, activeThreads: 8, queuedItems: 234, throughput: 1240, lastUpdated: '2026-03-25 14:23:45', source: 'Kafka: fraud-transactions', destination: 'Octopus: fraud_labels', owner: 'ml-team/fraud', schedule: 'Real-time', description: 'Поток скоринга транзакций в режиме реального времени' },
+  { id: 2, name: 'data-ingestion-kafka', status: 'running', processGroups: 8, activeThreads: 5, queuedItems: 567, throughput: 2340, lastUpdated: '2026-03-25 14:23:40', source: 'S3: raw-events', destination: 'Kafka: events-normalized', owner: 'data-platform/ingestion', schedule: 'Каждые 5 минут', description: 'Нормализация и загрузка событий в Kafka' },
+  { id: 3, name: 'model-training-etl', status: 'stopped', processGroups: 15, activeThreads: 0, queuedItems: 0, throughput: 0, lastUpdated: '2026-03-25 12:10:23', source: 'PostgreSQL: training_samples', destination: 'MLflow Artifacts', owner: 'ml-team/training', schedule: 'Каждую ночь в 02:00', description: 'Подготовка обучающей выборки и публикация артефактов' },
+  { id: 4, name: 'feature-extraction-pipeline', status: 'running', processGroups: 10, activeThreads: 6, queuedItems: 128, throughput: 890, lastUpdated: '2026-03-25 14:23:38', source: 'Kafka: clickstream', destination: 'Redis: feature_store', owner: 'ml-team/recommendations', schedule: 'Real-time', description: 'Извлечение и агрегация фичей для рекомендаций' },
+  { id: 5, name: 'data-validation-flow', status: 'error', processGroups: 6, activeThreads: 2, queuedItems: 1024, throughput: 45, lastUpdated: '2026-03-25 14:20:12', source: 'MinIO: incoming-datasets', destination: 'Nexus: validation-reports', owner: 'data-quality', schedule: 'Каждый час', description: 'Проверка качества входных датасетов и формирование отчётов' },
+  { id: 6, name: 'realtime-aggregation', status: 'running', processGroups: 9, activeThreads: 7, queuedItems: 345, throughput: 1560, lastUpdated: '2026-03-25 14:23:42', source: 'Kafka: telemetry', destination: 'ClickHouse: telemetry_agg', owner: 'analytics-platform', schedule: 'Real-time', description: 'Агрегация телеметрии для мониторинговых дашбордов' },
 ]
+const flowHeaders = ['Название потока', 'Статус', 'Группы процессов', 'Активные потоки', 'В очереди', 'Throughput', 'Обновлено', 'Действия']
 
 function statusBadgeClass(s: FlowStatus) {
   return { running: 'bg-green-100 text-green-800', stopped: 'bg-gray-100 text-gray-800', error: 'bg-red-100 text-red-800' }[s]

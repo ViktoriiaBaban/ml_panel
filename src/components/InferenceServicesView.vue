@@ -38,7 +38,7 @@
         <table class="w-full">
           <thead class="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th v-for="h in ['Название','Проект','Модель','Endpoint','Версия','Статус','RPS','Latency (p95)','Ошибки (%)','Действия']" :key="h"
+              <th v-for="h in serviceHeaders" :key="h"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ h }}</th>
             </tr>
           </thead>
@@ -123,6 +123,7 @@ const mockServices: InferenceService[] = [
   { id: 5, name: 'churn-predictor', project: 'ml-team/churn', model: 'run-jkl654', endpoint: 'http://bento-churn:3000/predict', version: 'churn-predictor:20260110-1330', status: 'running', rps: 12.5, latencyP95: 156, errorRate: 0.3 },
   { id: 6, name: 'price-optimizer', project: 'ml-team/pricing', model: 'run-mno987', endpoint: 'http://bento-price:3000/optimize', version: 'price-optimizer:20260109-1720', status: 'running', rps: 8.9, latencyP95: 203, errorRate: 0.5 },
 ]
+const serviceHeaders = ['Название', 'Проект', 'Модель', 'Endpoint', 'Версия', 'Статус', 'RPS', 'Latency (p95)', 'Ошибки (%)', 'Действия']
 
 function statusIcon(s: ServiceStatus) { return s === 'running' ? CheckCircle : s === 'stopped' ? MinusCircle : XCircle }
 function statusIconColor(s: ServiceStatus) { return s === 'running' ? 'text-green-600' : s === 'stopped' ? 'text-gray-400' : 'text-red-600' }

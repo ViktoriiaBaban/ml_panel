@@ -27,7 +27,7 @@
           <template v-else-if="activeSection === 'etl'">
             <EtlFlowDetailView
               v-if="etlSubView === 'detail' && selectedFlow"
-              :flowName="selectedFlow.name"
+              :flow="selectedFlow"
               @back="handleBackToFlows"
             />
             <EtlFlowsView v-else @navigate-to-detail="handleNavigateToFlowDetail" />
@@ -64,6 +64,22 @@ type Section = 'storage' | 'projects' | 'home' | 'experiments' | 'inference' | '
 type ProjectsSubView = 'list' | 'pipelines'
 type InferenceSubView = 'list' | 'monitoring'
 type EtlSubView = 'list' | 'detail'
+type EtlFlowStatus = 'running' | 'stopped' | 'error'
+interface EtlFlow {
+  id: number
+  name: string
+  status: EtlFlowStatus
+  processGroups: number
+  activeThreads: number
+  queuedItems: number
+  throughput: number
+  lastUpdated: string
+  source: string
+  destination: string
+  owner: string
+  schedule: string
+  description: string
+}
 
 const activeSection = ref<Section>('storage')
 const projectsSubView = ref<ProjectsSubView>('list')
@@ -71,7 +87,7 @@ const selectedProject = ref<{ id: number; name: string } | null>(null)
 const inferenceSubView = ref<InferenceSubView>('list')
 const selectedService = ref<{ id: number; name: string } | null>(null)
 const etlSubView = ref<EtlSubView>('list')
-const selectedFlow = ref<{ id: number; name: string } | null>(null)
+const selectedFlow = ref<EtlFlow | null>(null)
 
 function handleNavigate(sectionId: string) {
   activeSection.value = sectionId as Section
@@ -92,8 +108,8 @@ function handleNavigateToMonitoring(serviceId: number, serviceName: string) {
 }
 function handleBackToServices() { inferenceSubView.value = 'list'; selectedService.value = null }
 
-function handleNavigateToFlowDetail(flowId: number, flowName: string) {
-  selectedFlow.value = { id: flowId, name: flowName }
+function handleNavigateToFlowDetail(flow: EtlFlow) {
+  selectedFlow.value = flow
   etlSubView.value = 'detail'
 }
 function handleBackToFlows() { etlSubView.value = 'list'; selectedFlow.value = null }
