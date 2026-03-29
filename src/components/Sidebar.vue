@@ -102,6 +102,8 @@ const menuItems = [
 <style scoped>
 .sidebar {
   position: relative;
+  height: 100vh !important;
+  max-height: 100vh !important;
 }
 
 .sidebar :deep(.v-navigation-drawer__content) {
