@@ -52,36 +52,18 @@
 import { ref, computed } from 'vue'
 import Sidebar from './components/Sidebar.vue'
 import Header from './components/Header.vue'
-import FileTable from './components/FileTable.vue'
-import ProjectsView from './components/ProjectsView.vue'
-import PipelinesView from './components/PipelinesView.vue'
-import InferenceServicesView from './components/InferenceServicesView.vue'
-import InferenceMonitoringView from './components/InferenceMonitoringView.vue'
-import AdministrationView from './components/AdministrationView.vue'
-import EtlFlowsView from './components/EtlFlowsView.vue'
-import EtlFlowDetailView from './components/EtlFlowDetailView.vue'
-import MonitoringSystemView from './components/MonitoringSystemView.vue'
+import FileTable from './views/FileTable.vue'
+import ProjectsView from './views/ProjectsView.vue'
+import PipelinesView from './views/PipelinesView.vue'
+import InferenceServicesView from './views/InferenceServicesView.vue'
+import InferenceMonitoringView from './views/InferenceMonitoringView.vue'
+import AdministrationView from './views/AdministrationView.vue'
+import EtlFlowsView from './views/EtlFlowsView.vue'
+import EtlFlowDetailView from './views/EtlFlowDetailView.vue'
+import MonitoringSystemView from './views/MonitoringSystemView.vue'
 
-type Section = 'storage' | 'projects' | 'home' | 'experiments' | 'inference' | 'etl' | 'monitoring' | 'settings' | 'administration'
-type ProjectsSubView = 'list' | 'pipelines'
-type InferenceSubView = 'list' | 'monitoring'
-type EtlSubView = 'list' | 'detail'
-type EtlFlowStatus = 'running' | 'stopped' | 'error'
-interface EtlFlow {
-  id: number
-  name: string
-  status: EtlFlowStatus
-  processGroups: number
-  activeThreads: number
-  queuedItems: number
-  throughput: number
-  lastUpdated: string
-  source: string
-  destination: string
-  owner: string
-  schedule: string
-  description: string
-}
+import type { EtlFlow } from './stores/etl'
+import type { EtlSubView, InferenceSubView, ProjectsSubView, Section } from './types/app'
 
 const activeSection = ref<Section>('storage')
 const projectsSubView = ref<ProjectsSubView>('list')
