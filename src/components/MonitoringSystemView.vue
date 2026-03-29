@@ -6,10 +6,10 @@
       <div class="border-b border-gray-200">
         <div class="flex items-center justify-between px-6 pt-4">
           <div class="flex gap-8">
-            <v-btn v-for="tab in ['dashboard','alerts']" :key="tab" @click="activeTab = tab"
-              :class="['pb-4 text-sm font-medium transition-colors relative', activeTab === tab ? 'text-[#409EFF]' : 'text-gray-600 hover:text-gray-900']">
-              {{ tab === 'dashboard' ? 'Дашборд' : 'Алерты' }}
-              <div v-if="activeTab === tab" class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#409EFF]"></div>
+            <v-btn v-for="tab in tabs" :key="tab.value" @click="activeTab = tab.value"
+              :class="['pb-4 text-sm font-medium transition-colors relative', activeTab === tab.value ? 'text-[#409EFF]' : 'text-gray-600 hover:text-gray-900']">
+              {{ tab.label }}
+              <div v-if="activeTab === tab.value" class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#409EFF]"></div>
             </v-btn>
           </div>
           <div v-if="activeTab === 'dashboard'" class="flex items-center gap-3 pb-4">
@@ -123,7 +123,7 @@
             <table class="w-full">
               <thead class="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th v-for="h in ['Название','Статус','Состояние','Критичность','Последнее изменение','Действия']" :key="h"
+                  <th v-for="h in alertHeaders" :key="h"
                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ h }}</th>
                 </tr>
               </thead>
@@ -148,7 +148,7 @@
                     <div class="flex items-center gap-1.5">
                       <component :is="severityIcon(alert.severity)" :class="severityColor(alert.severity)" class="w-4 h-4" />
                       <span :class="severityColor(alert.severity)" class="text-sm font-medium">
-                        {{ { critical: 'Критично', warning: 'Предупреждение', info: 'Информация' }[alert.severity] }}
+                        {{ severityLabels[alert.severity] }}
                       </span>
                     </div>
                   </td>
@@ -193,6 +193,10 @@ import { ref, computed } from 'vue'
 import { Search, Plus, MoreVertical, AlertTriangle, CheckCircle, XCircle, Activity, Cpu, HardDrive, Network, TrendingUp, TrendingDown, Info, AlertCircle } from 'lucide-vue-next'
 
 const activeTab = ref('dashboard')
+const tabs = [
+  { value: 'dashboard', label: 'Дашборд' },
+  { value: 'alerts', label: 'Алерты' },
+]
 const refreshInterval = ref('30s')
 const timeRange = ref('1h')
 const refreshIntervalOptions = [
@@ -238,10 +242,12 @@ const servicesStatus = [
   { name: 'BentoML', status: 88 },
   { name: 'MLflow', status: 96 },
 ]
+const alertHeaders = ['Название', 'Статус', 'Состояние', 'Критичность', 'Последнее изменение', 'Действия']
 
 type AlertState = 'firing' | 'ok' | 'pending'
 type AlertSeverity = 'critical' | 'warning' | 'info'
 interface Alert { id: number; name: string; status: string; state: AlertState; severity: AlertSeverity; lastChanged: string; description: string }
+const severityLabels: Record<AlertSeverity, string> = { critical: 'Критично', warning: 'Предупреждение', info: 'Информация' }
 
 const mockAlerts: Alert[] = [
   { id: 1, name: 'High CPU Usage', status: 'active', state: 'firing', severity: 'critical', lastChanged: '2026-03-25 14:15:30', description: 'CPU usage > 80% for 5 minutes' },

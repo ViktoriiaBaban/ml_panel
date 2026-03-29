@@ -30,10 +30,10 @@
       <!-- Tabs -->
       <div class="border-b border-gray-200">
         <div class="flex gap-8 px-6">
-          <v-btn v-for="tab in ['metrics','variables','components','history']" :key="tab" @click="activeTab = tab"
-            :class="['py-4 text-sm font-medium transition-colors relative', activeTab === tab ? 'text-[#409EFF]' : 'text-gray-600 hover:text-gray-900']">
-            {{ { metrics: 'Метрики', variables: 'Переменные', components: 'Компоненты', history: 'История' }[tab] }}
-            <div v-if="activeTab === tab" class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#409EFF]"></div>
+          <v-btn v-for="tab in tabs" :key="tab.value" @click="activeTab = tab.value"
+            :class="['py-4 text-sm font-medium transition-colors relative', activeTab === tab.value ? 'text-[#409EFF]' : 'text-gray-600 hover:text-gray-900']">
+            {{ tab.label }}
+            <div v-if="activeTab === tab.value" class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#409EFF]"></div>
           </v-btn>
         </div>
       </div>
@@ -114,7 +114,7 @@
             <table class="w-full">
               <thead class="bg-gray-50">
                 <tr>
-                  <th v-for="h in ['Название','Тип','Статус','Активные потоки','Выполнено задач']" :key="h" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ h }}</th>
+                  <th v-for="h in componentHeaders" :key="h" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ h }}</th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
@@ -176,6 +176,13 @@ defineEmits<{ back: [] }>()
 
 const activeTab = ref('metrics')
 const editingVariable = ref<string | null>(null)
+const tabs = [
+  { value: 'metrics', label: 'Метрики' },
+  { value: 'variables', label: 'Переменные' },
+  { value: 'components', label: 'Компоненты' },
+  { value: 'history', label: 'История' },
+]
+const componentHeaders = ['Название', 'Тип', 'Статус', 'Активные потоки', 'Выполнено задач']
 
 const mockVariables = [
   { key: 'kafka.topic', value: 'transactions', description: 'Топик Kafka для чтения данных' },

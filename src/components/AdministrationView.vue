@@ -5,10 +5,10 @@
       <!-- Tabs -->
       <div class="border-b border-gray-200">
         <div class="flex gap-8 px-6">
-          <v-btn v-for="tab in ['users','integrations']" :key="tab" @click="activeTab = tab"
-            :class="['py-4 text-sm font-medium transition-colors relative', activeTab === tab ? 'text-[#409EFF]' : 'text-gray-600 hover:text-gray-900']">
-            {{ tab === 'users' ? 'Пользователи' : 'Системные интеграции' }}
-            <div v-if="activeTab === tab" class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#409EFF]"></div>
+          <v-btn v-for="tab in tabs" :key="tab.value" @click="activeTab = tab.value"
+            :class="['py-4 text-sm font-medium transition-colors relative', activeTab === tab.value ? 'text-[#409EFF]' : 'text-gray-600 hover:text-gray-900']">
+            {{ tab.label }}
+            <div v-if="activeTab === tab.value" class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#409EFF]"></div>
           </v-btn>
         </div>
       </div>
@@ -25,7 +25,7 @@
           <table class="w-full">
             <thead class="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th v-for="h in ['Логин / Email','ФИО / Имя','Роль','Статус','Дата регистрации','Последний вход','Действия']" :key="h"
+                <th v-for="h in userHeaders" :key="h"
                   class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ h }}</th>
               </tr>
             </thead>
@@ -79,7 +79,7 @@
             <table class="w-full">
               <thead class="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th v-for="h in ['Компонент','Статус','Последняя проверка','Действия']" :key="h"
+                  <th v-for="h in integrationHeaders" :key="h"
                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ h }}</th>
                 </tr>
               </thead>
@@ -96,7 +96,7 @@
                         <AlertTriangle v-else-if="integration.status === 'warning'" class="w-5 h-5 text-yellow-600" />
                         <AlertCircle v-else class="w-5 h-5 text-red-600" />
                         <span :class="integration.status === 'working' ? 'text-green-600' : integration.status === 'warning' ? 'text-yellow-600' : 'text-red-600'" class="font-medium text-sm">
-                          {{ { working: 'Работает', warning: 'Проблемы с записью', error: 'Не отвечает' }[integration.status] }}
+                          {{ integrationStatusLabels[integration.status] }}
                         </span>
                       </div>
                     </td>
@@ -128,12 +128,7 @@
           <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h4 class="text-sm font-semibold text-gray-900 mb-2">Health-check проверки:</h4>
             <div class="text-sm text-gray-600 space-y-1">
-              <div><strong>GitLab:</strong> GET /version + GET /projects?membership=true</div>
-              <div><strong>MLflow:</strong> GET /api/2.0/mlflow/experiments/list</div>
-              <div><strong>MinIO:</strong> mc ls mlflow-artifacts + mc cp test.txt ...</div>
-              <div><strong>NiFi:</strong> GET /nifi-api/flow/status</div>
-              <div><strong>Nexus:</strong> GET /v2/_catalog (Docker registry)</div>
-              <div><strong>BentoML:</strong> GET /docs или bentoml list через CLI</div>
+              <div v-for="check in healthChecks" :key="check.name"><strong>{{ check.name }}:</strong> {{ check.command }}</div>
             </div>
           </div>
         </div>
@@ -189,6 +184,21 @@ import { ref, reactive } from 'vue'
 import { Plus, Lock, Unlock, Trash2, Edit, RefreshCw, X, AlertCircle, CheckCircle, AlertTriangle, Crown, User as UserIcon } from 'lucide-vue-next'
 
 const activeTab = ref('users')
+const tabs = [
+  { value: 'users', label: 'Пользователи' },
+  { value: 'integrations', label: 'Системные интеграции' },
+]
+const userHeaders = ['Логин / Email', 'ФИО / Имя', 'Роль', 'Статус', 'Дата регистрации', 'Последний вход', 'Действия']
+const integrationHeaders = ['Компонент', 'Статус', 'Последняя проверка', 'Действия']
+const integrationStatusLabels = { working: 'Работает', warning: 'Проблемы с записью', error: 'Не отвечает' } as const
+const healthChecks = [
+  { name: 'GitLab', command: 'GET /version + GET /projects?membership=true' },
+  { name: 'MLflow', command: 'GET /api/2.0/mlflow/experiments/list' },
+  { name: 'MinIO', command: 'mc ls mlflow-artifacts + mc cp test.txt ...' },
+  { name: 'NiFi', command: 'GET /nifi-api/flow/status' },
+  { name: 'Nexus', command: 'GET /v2/_catalog (Docker registry)' },
+  { name: 'BentoML', command: 'GET /docs или bentoml list через CLI' },
+]
 const showAddUserModal = ref(false)
 const expandedIntegration = ref<string | null>(null)
 const checkingIntegration = ref<string | null>(null)

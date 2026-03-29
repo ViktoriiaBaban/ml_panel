@@ -30,10 +30,10 @@
       <!-- Tabs -->
       <div class="border-b border-gray-200">
         <div class="flex gap-8 px-6">
-          <v-btn v-for="tab in ['metrics','logs','model','integrations']" :key="tab" @click="activeTab = tab"
-            :class="['py-4 text-sm font-medium transition-colors relative', activeTab === tab ? 'text-[#409EFF]' : 'text-gray-600 hover:text-gray-900']">
-            {{ tabLabel(tab) }}
-            <div v-if="activeTab === tab" class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#409EFF]"></div>
+          <v-btn v-for="tab in tabs" :key="tab.value" @click="activeTab = tab.value"
+            :class="['py-4 text-sm font-medium transition-colors relative', activeTab === tab.value ? 'text-[#409EFF]' : 'text-gray-600 hover:text-gray-900']">
+            {{ tab.label }}
+            <div v-if="activeTab === tab.value" class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#409EFF]"></div>
           </v-btn>
         </div>
       </div>
@@ -152,7 +152,7 @@
           <div>
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Артефакты</h3>
             <div class="space-y-2">
-              <div v-for="artifact in ['model.pkl','report.pdf','confusion_matrix.png']" :key="artifact"
+              <div v-for="artifact in modelArtifacts" :key="artifact"
                 class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
                 <span class="text-sm text-gray-900">{{ artifact }}</span>
                 <v-btn class="text-[#409EFF] hover:underline text-sm">Скачать</v-btn>
@@ -209,6 +209,13 @@ defineProps<{ serviceName: string }>()
 defineEmits<{ back: [] }>()
 
 const activeTab = ref('metrics')
+const tabs = [
+  { value: 'metrics', label: 'Метрики' },
+  { value: 'logs', label: 'Логи' },
+  { value: 'model', label: 'Модель' },
+  { value: 'integrations', label: 'Интеграции' },
+]
+const modelArtifacts = ['model.pkl', 'report.pdf', 'confusion_matrix.png']
 const logFilter = ref('all')
 const logFilterOptions = [
   { label: 'Все уровни', value: 'all' },
@@ -217,10 +224,6 @@ const logFilterOptions = [
   { label: 'INFO', value: 'info' },
 ]
 const logSearch = ref('')
-
-function tabLabel(t: string) {
-  return { metrics: 'Метрики', logs: 'Логи', model: 'Модель', integrations: 'Интеграции' }[t] ?? t
-}
 
 const charts = [
   { title: 'Latency (p50, p95)', color: 'bg-[#409EFF]', data: Array.from({ length: 24 }, () => ({ pct: 20 + Math.random() * 60 })) },

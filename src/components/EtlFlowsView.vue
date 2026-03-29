@@ -42,7 +42,7 @@
         <table class="w-full">
           <thead class="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th v-for="h in ['Название потока','Статус','Группы процессов','Активные потоки','В очереди','Throughput','Обновлено','Действия']" :key="h"
+              <th v-for="h in flowHeaders" :key="h"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ h }}</th>
             </tr>
           </thead>
@@ -123,6 +123,7 @@ const mockFlows: Flow[] = [
   { id: 5, name: 'data-validation-flow', status: 'error', processGroups: 6, activeThreads: 2, queuedItems: 1024, throughput: 45, lastUpdated: '2026-03-25 14:20:12' },
   { id: 6, name: 'realtime-aggregation', status: 'running', processGroups: 9, activeThreads: 7, queuedItems: 345, throughput: 1560, lastUpdated: '2026-03-25 14:23:42' },
 ]
+const flowHeaders = ['Название потока', 'Статус', 'Группы процессов', 'Активные потоки', 'В очереди', 'Throughput', 'Обновлено', 'Действия']
 
 function statusBadgeClass(s: FlowStatus) {
   return { running: 'bg-green-100 text-green-800', stopped: 'bg-gray-100 text-gray-800', error: 'bg-red-100 text-red-800' }[s]
