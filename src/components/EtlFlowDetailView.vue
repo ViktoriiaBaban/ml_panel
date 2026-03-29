@@ -9,14 +9,19 @@
         </v-btn>
         <div class="flex items-start justify-between">
           <div>
-            <h2 class="text-2xl font-semibold text-gray-900 mb-4">{{ flowName }}</h2>
+            <h2 class="text-2xl font-semibold text-gray-900 mb-2">{{ flow.name }}</h2>
+            <p class="text-sm text-gray-500 mb-4">{{ flow.description }}</p>
             <div class="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
-              <div><span class="text-gray-500">Статус:</span><span class="ml-2 inline-flex items-center gap-1"><CheckCircle class="w-4 h-4 text-green-500" /><span class="text-gray-900 font-medium">Работает</span></span></div>
-              <div><span class="text-gray-500">Группы процессов:</span><span class="ml-2 text-gray-900">12</span></div>
-              <div><span class="text-gray-500">Активные потоки:</span><span class="ml-2 text-gray-900">8 / 10</span></div>
-              <div><span class="text-gray-500">В очереди:</span><span class="ml-2 text-gray-900 font-medium">234 items</span></div>
-              <div><span class="text-gray-500">Throughput:</span><span class="ml-2 text-green-600 font-medium">1,240 items/s</span></div>
-              <div><span class="text-gray-500">Последнее обновление:</span><span class="ml-2 text-gray-900">2026-03-25 14:23:45</span></div>
+              <div><span class="text-gray-500">Статус:</span><span class="ml-2 inline-flex items-center gap-1"><component :is="statusIcon(flow.status)" :class="statusIconClass(flow.status)" class="w-4 h-4" /><span class="text-gray-900 font-medium">{{ statusLabel(flow.status) }}</span></span></div>
+              <div><span class="text-gray-500">Группы процессов:</span><span class="ml-2 text-gray-900">{{ flow.processGroups }}</span></div>
+              <div><span class="text-gray-500">Активные потоки:</span><span class="ml-2 text-gray-900">{{ flow.activeThreads }} / {{ flow.processGroups }}</span></div>
+              <div><span class="text-gray-500">В очереди:</span><span class="ml-2 text-gray-900 font-medium">{{ flow.queuedItems.toLocaleString() }} items</span></div>
+              <div><span class="text-gray-500">Throughput:</span><span class="ml-2 text-green-600 font-medium">{{ flow.throughput.toLocaleString() }} items/s</span></div>
+              <div><span class="text-gray-500">Последнее обновление:</span><span class="ml-2 text-gray-900">{{ flow.lastUpdated }}</span></div>
+              <div><span class="text-gray-500">Источник:</span><span class="ml-2 text-gray-900">{{ flow.source }}</span></div>
+              <div><span class="text-gray-500">Назначение:</span><span class="ml-2 text-gray-900">{{ flow.destination }}</span></div>
+              <div><span class="text-gray-500">Владелец:</span><span class="ml-2 text-gray-900">{{ flow.owner }}</span></div>
+              <div><span class="text-gray-500">Расписание:</span><span class="ml-2 text-gray-900">{{ flow.schedule }}</span></div>
             </div>
           </div>
           <div class="flex gap-2">
@@ -73,7 +78,7 @@
           <div class="flex items-center justify-between mb-4">
             <div>
               <h3 class="text-lg font-semibold text-gray-900">Переменные потока</h3>
-              <p class="text-sm text-gray-500">Настройки и параметры для {{ flowName }}</p>
+              <p class="text-sm text-gray-500">Настройки и параметры для {{ flow.name }}</p>
             </div>
           </div>
           <div class="space-y-3">
@@ -108,7 +113,7 @@
         <div v-if="activeTab === 'components'">
           <div class="mb-4">
             <h3 class="text-lg font-semibold text-gray-900">Компоненты потока</h3>
-            <p class="text-sm text-gray-500">Процессоры и группы процессов в {{ flowName }}</p>
+            <p class="text-sm text-gray-500">Процессоры и группы процессов в {{ flow.name }}</p>
           </div>
           <div class="overflow-x-auto border border-gray-200 rounded-lg">
             <table class="w-full">
@@ -142,7 +147,7 @@
         <div v-if="activeTab === 'history'">
           <div class="mb-4">
             <h3 class="text-lg font-semibold text-gray-900">История действий</h3>
-            <p class="text-sm text-gray-500">Последние изменения и события потока {{ flowName }}</p>
+            <p class="text-sm text-gray-500">Последние изменения и события потока {{ flow.name }}</p>
           </div>
           <div class="space-y-3">
             <div v-for="item in mockHistory" :key="item.id" class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
@@ -169,9 +174,26 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { ArrowLeft, Play, Square, RotateCw, Save, X, AlertCircle, Activity, Database, Clock, Settings, CheckCircle, Info } from 'lucide-vue-next'
+import { ArrowLeft, Play, Square, RotateCw, Save, X, AlertCircle, Activity, Database, Clock, Settings, CheckCircle, Info, XCircle, MinusCircle } from 'lucide-vue-next'
 
-defineProps<{ flowName: string }>()
+type FlowStatus = 'running' | 'stopped' | 'error'
+interface FlowDetail {
+  id: number
+  name: string
+  status: FlowStatus
+  processGroups: number
+  activeThreads: number
+  queuedItems: number
+  throughput: number
+  lastUpdated: string
+  source: string
+  destination: string
+  owner: string
+  schedule: string
+  description: string
+}
+
+const { flow } = defineProps<{ flow: FlowDetail }>()
 defineEmits<{ back: [] }>()
 
 const activeTab = ref('metrics')
@@ -183,6 +205,15 @@ const tabs = [
   { value: 'history', label: 'История' },
 ]
 const componentHeaders = ['Название', 'Тип', 'Статус', 'Активные потоки', 'Выполнено задач']
+function statusIcon(status: FlowStatus) {
+  return { running: CheckCircle, stopped: MinusCircle, error: XCircle }[status]
+}
+function statusIconClass(status: FlowStatus) {
+  return { running: 'text-green-500', stopped: 'text-gray-500', error: 'text-red-500' }[status]
+}
+function statusLabel(status: FlowStatus) {
+  return { running: 'Работает', stopped: 'Остановлен', error: 'Ошибка' }[status]
+}
 
 const mockVariables = [
   { key: 'kafka.topic', value: 'transactions', description: 'Топик Kafka для чтения данных' },
