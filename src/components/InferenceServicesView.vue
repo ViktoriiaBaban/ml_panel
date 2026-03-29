@@ -1,4 +1,5 @@
 <template>
+  <v-container fluid class="pa-0">
   <div class="flex-1 bg-[#F5F7FA] p-8">
     <div class="bg-white rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
       <!-- Filters -->
@@ -6,19 +7,29 @@
         <div class="flex gap-4">
           <div class="flex-1 relative">
             <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input type="text" placeholder="Поиск по названию, проекту или модели…" v-model="searchTerm"
-              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF] focus:border-transparent" />
+            <v-text-field type="text" placeholder="Поиск по названию, проекту или модели…" v-model="searchTerm"
+              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF] focus:border-transparent"  variant="outlined" density="comfortable" hide-details />
           </div>
-          <select v-model="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]">
-            <option value="all">Все статусы</option>
-            <option value="running">Работает</option>
-            <option value="stopped">Остановлен</option>
-            <option value="error">Ошибка</option>
-          </select>
-          <select v-model="projectFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]">
-            <option value="all">Все проекты</option>
-            <option v-for="project in uniqueProjects" :key="project" :value="project">{{ project }}</option>
-          </select>
+          <v-select
+            v-model="statusFilter"
+            :items="statusOptions"
+            item-title="label"
+            item-value="value"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            class="px-4"
+          />
+          <v-select
+            v-model="projectFilter"
+            :items="projectOptions"
+            item-title="label"
+            item-value="value"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            class="px-4"
+          />
         </div>
       </div>
 
@@ -34,11 +45,11 @@
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="service in filteredServices" :key="service.id" class="hover:bg-gray-50 transition-colors">
               <td class="px-6 py-4 whitespace-nowrap">
-                <button @click="$emit('navigate-to-monitoring', service.id, service.name)"
+                <v-btn @click="$emit('navigate-to-monitoring', service.id, service.name)"
                   class="flex items-center gap-2 text-[#409EFF] hover:underline">
                   <Bot class="w-4 h-4 flex-shrink-0" />
                   <span class="text-sm font-medium">{{ service.name }}</span>
-                </button>
+                </v-btn>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ service.project }}</td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -63,15 +74,15 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center gap-2">
-                  <button :disabled="service.status === 'running'" class="p-1.5 hover:bg-green-50 rounded transition-colors disabled:opacity-50" title="Запустить">
+                  <v-btn :disabled="service.status === 'running'" class="p-1.5 hover:bg-green-50 rounded transition-colors disabled:opacity-50" title="Запустить">
                     <Play class="w-4 h-4 text-green-600" />
-                  </button>
-                  <button :disabled="service.status === 'stopped'" class="p-1.5 hover:bg-red-50 rounded transition-colors disabled:opacity-50" title="Остановить">
+                  </v-btn>
+                  <v-btn :disabled="service.status === 'stopped'" class="p-1.5 hover:bg-red-50 rounded transition-colors disabled:opacity-50" title="Остановить">
                     <Square class="w-4 h-4 text-red-600" />
-                  </button>
-                  <button :disabled="service.status === 'stopped'" class="p-1.5 hover:bg-blue-50 rounded transition-colors disabled:opacity-50" title="Перезапустить">
+                  </v-btn>
+                  <v-btn :disabled="service.status === 'stopped'" class="p-1.5 hover:bg-blue-50 rounded transition-colors disabled:opacity-50" title="Перезапустить">
                     <RotateCw class="w-4 h-4 text-[#409EFF]" />
-                  </button>
+                  </v-btn>
                 </div>
               </td>
             </tr>
@@ -84,6 +95,7 @@
       </div>
     </div>
   </div>
+  </v-container>
 </template>
 
 <script setup lang="ts">
@@ -118,6 +130,13 @@ function statusText(s: ServiceStatus) { return s === 'running' ? 'Работае
 function latencyColor(l: number) { if (l === 0) return 'text-gray-400'; if (l < 200) return 'text-green-600'; if (l < 500) return 'text-yellow-600'; return 'text-red-600' }
 
 const uniqueProjects = computed(() => [...new Set(mockServices.map(s => s.project))])
+const statusOptions = [
+  { label: 'Все статусы', value: 'all' },
+  { label: 'Работает', value: 'running' },
+  { label: 'Остановлен', value: 'stopped' },
+  { label: 'Ошибка', value: 'error' },
+]
+const projectOptions = computed(() => [{ label: 'Все проекты', value: 'all' }, ...uniqueProjects.value.map(project => ({ label: project, value: project }))])
 const filteredServices = computed(() => mockServices.filter(s => {
   const matchSearch = s.name.toLowerCase().includes(searchTerm.value.toLowerCase()) || s.project.toLowerCase().includes(searchTerm.value.toLowerCase()) || s.model.toLowerCase().includes(searchTerm.value.toLowerCase())
   const matchStatus = statusFilter.value === 'all' || s.status === statusFilter.value

@@ -1,11 +1,12 @@
 <template>
+  <v-container fluid class="pa-0">
   <div class="flex-1 bg-[#F5F7FA] p-8">
     <div class="bg-white rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
       <!-- Header -->
       <div class="p-6 border-b border-gray-200">
-        <button @click="$emit('back')" class="flex items-center gap-2 text-[#409EFF] hover:underline mb-4">
+        <v-btn @click="$emit('back')" class="flex items-center gap-2 text-[#409EFF] hover:underline mb-4">
           <ArrowLeft class="w-4 h-4" />Назад к списку потоков
-        </button>
+        </v-btn>
         <div class="flex items-start justify-between">
           <div>
             <h2 class="text-2xl font-semibold text-gray-900 mb-4">{{ flowName }}</h2>
@@ -19,9 +20,9 @@
             </div>
           </div>
           <div class="flex gap-2">
-            <button class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center gap-2"><Play class="w-4 h-4" />Запустить</button>
-            <button class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center gap-2"><Square class="w-4 h-4" />Остановить</button>
-            <button class="px-4 py-2 bg-[#409EFF] text-white rounded hover:bg-[#3a8eef] transition-colors flex items-center gap-2"><RotateCw class="w-4 h-4" />Перезапустить</button>
+            <v-btn class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center gap-2"><Play class="w-4 h-4" />Запустить</v-btn>
+            <v-btn class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center gap-2"><Square class="w-4 h-4" />Остановить</v-btn>
+            <v-btn class="px-4 py-2 bg-[#409EFF] text-white rounded hover:bg-[#3a8eef] transition-colors flex items-center gap-2"><RotateCw class="w-4 h-4" />Перезапустить</v-btn>
           </div>
         </div>
       </div>
@@ -29,11 +30,11 @@
       <!-- Tabs -->
       <div class="border-b border-gray-200">
         <div class="flex gap-8 px-6">
-          <button v-for="tab in ['metrics','variables','components','history']" :key="tab" @click="activeTab = tab"
+          <v-btn v-for="tab in ['metrics','variables','components','history']" :key="tab" @click="activeTab = tab"
             :class="['py-4 text-sm font-medium transition-colors relative', activeTab === tab ? 'text-[#409EFF]' : 'text-gray-600 hover:text-gray-900']">
             {{ { metrics: 'Метрики', variables: 'Переменные', components: 'Компоненты', history: 'История' }[tab] }}
             <div v-if="activeTab === tab" class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#409EFF]"></div>
-          </button>
+          </v-btn>
         </div>
       </div>
 
@@ -82,18 +83,18 @@
               <div class="text-xs text-gray-500 mb-2">{{ variable.description }}</div>
               <div v-if="editingVariable !== variable.key" class="flex items-center gap-2">
                 <code class="px-3 py-2 bg-gray-100 rounded font-mono text-sm text-gray-900 flex-1">{{ variableValues[variable.key] }}</code>
-                <button @click="editingVariable = variable.key" class="px-3 py-2 text-[#409EFF] hover:bg-blue-50 rounded transition-colors text-sm font-medium">Изменить</button>
+                <v-btn @click="editingVariable = variable.key" class="px-3 py-2 text-[#409EFF] hover:bg-blue-50 rounded transition-colors text-sm font-medium">Изменить</v-btn>
               </div>
               <div v-else class="flex items-center gap-2">
-                <input type="text" v-model="variableValues[variable.key]"
-                  class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#409EFF]" />
-                <button @click="editingVariable = null" class="px-3 py-2 bg-[#409EFF] text-white rounded hover:bg-[#3a8eef] transition-colors flex items-center gap-1">
+                <v-text-field type="text" v-model="variableValues[variable.key]"
+                  class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#409EFF]"  variant="outlined" density="comfortable" hide-details />
+                <v-btn @click="editingVariable = null" class="px-3 py-2 bg-[#409EFF] text-white rounded hover:bg-[#3a8eef] transition-colors flex items-center gap-1">
                   <Save class="w-4 h-4" />Сохранить
-                </button>
-                <button @click="variableValues[variable.key] = variable.value; editingVariable = null"
+                </v-btn>
+                <v-btn @click="variableValues[variable.key] = variable.value; editingVariable = null"
                   class="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors flex items-center gap-1">
                   <X class="w-4 h-4" />Отмена
-                </button>
+                </v-btn>
               </div>
             </div>
           </div>
@@ -163,6 +164,7 @@
       </div>
     </div>
   </div>
+  </v-container>
 </template>
 
 <script setup lang="ts">

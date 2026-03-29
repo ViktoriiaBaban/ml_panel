@@ -1,24 +1,25 @@
 <template>
+  <v-container fluid class="pa-0">
   <div class="flex-1 bg-[#F5F7FA] p-8">
     <div class="bg-white rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
       <!-- Tabs -->
       <div class="border-b border-gray-200">
         <div class="flex gap-8 px-6">
-          <button v-for="tab in ['users','integrations']" :key="tab" @click="activeTab = tab"
+          <v-btn v-for="tab in ['users','integrations']" :key="tab" @click="activeTab = tab"
             :class="['py-4 text-sm font-medium transition-colors relative', activeTab === tab ? 'text-[#409EFF]' : 'text-gray-600 hover:text-gray-900']">
             {{ tab === 'users' ? 'Пользователи' : 'Системные интеграции' }}
             <div v-if="activeTab === tab" class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#409EFF]"></div>
-          </button>
+          </v-btn>
         </div>
       </div>
 
       <!-- Users Tab -->
       <template v-if="activeTab === 'users'">
         <div class="p-6 border-b border-gray-200">
-          <button @click="showAddUserModal = true"
+          <v-btn @click="showAddUserModal = true"
             class="px-6 py-2 bg-[#409EFF] text-white rounded-lg hover:bg-[#3a8eef] transition-colors flex items-center gap-2">
             <Plus class="w-4 h-4" />Добавить пользователя
-          </button>
+          </v-btn>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full">
@@ -50,17 +51,17 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ user.lastLogin }}</td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center gap-2">
-                    <button @click="toggleUserStatus(user.id)" class="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                    <v-btn @click="toggleUserStatus(user.id)" class="p-1.5 hover:bg-gray-100 rounded transition-colors"
                       :title="user.status === 'active' ? 'Заблокировать' : 'Разблокировать'">
                       <Lock v-if="user.status === 'active'" class="w-4 h-4 text-gray-600" />
                       <Unlock v-else class="w-4 h-4 text-gray-600" />
-                    </button>
-                    <button class="p-1.5 hover:bg-gray-100 rounded transition-colors" title="Редактировать">
+                    </v-btn>
+                    <v-btn class="p-1.5 hover:bg-gray-100 rounded transition-colors" title="Редактировать">
                       <Edit class="w-4 h-4 text-[#409EFF]" />
-                    </button>
-                    <button @click="deleteUser(user.id)" class="p-1.5 hover:bg-red-50 rounded transition-colors" title="Удалить">
+                    </v-btn>
+                    <v-btn @click="deleteUser(user.id)" class="p-1.5 hover:bg-red-50 rounded transition-colors" title="Удалить">
                       <Trash2 class="w-4 h-4 text-red-600" />
-                    </button>
+                    </v-btn>
                   </div>
                 </td>
               </tr>
@@ -86,8 +87,8 @@
                 <template v-for="integration in integrations" :key="integration.id">
                   <tr class="hover:bg-gray-50 transition-colors">
                     <td class="px-6 py-4 whitespace-nowrap">
-                      <button @click="expandedIntegration = expandedIntegration === integration.id ? null : integration.id"
-                        class="text-sm font-medium text-gray-900 hover:text-[#409EFF] transition-colors">{{ integration.name }}</button>
+                      <v-btn @click="expandedIntegration = expandedIntegration === integration.id ? null : integration.id"
+                        class="text-sm font-medium text-gray-900 hover:text-[#409EFF] transition-colors">{{ integration.name }}</v-btn>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                       <div class="flex items-center gap-2">
@@ -101,11 +102,11 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ integration.lastCheck }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                      <button @click="checkIntegration(integration.id)" :disabled="checkingIntegration === integration.id"
+                      <v-btn @click="checkIntegration(integration.id)" :disabled="checkingIntegration === integration.id"
                         class="px-4 py-1.5 bg-[#409EFF] text-white text-sm rounded hover:bg-[#3a8eef] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                         <RefreshCw :class="['w-4 h-4', checkingIntegration === integration.id ? 'animate-spin' : '']" />
                         {{ checkingIntegration === integration.id ? 'Проверка...' : 'Проверить сейчас' }}
-                      </button>
+                      </v-btn>
                     </td>
                   </tr>
                   <tr v-if="expandedIntegration === integration.id && integration.details">
@@ -144,36 +145,43 @@
       <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div class="p-6 border-b border-gray-200 flex items-center justify-between">
           <h3 class="text-lg font-semibold text-gray-900">Добавить пользователя</h3>
-          <button @click="showAddUserModal = false" class="p-1 hover:bg-gray-100 rounded transition-colors">
+          <v-btn @click="showAddUserModal = false" class="p-1 hover:bg-gray-100 rounded transition-colors">
             <X class="w-5 h-5 text-gray-500" />
-          </button>
+          </v-btn>
         </div>
         <div class="p-6 space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Логин (Email) <span class="text-red-500">*</span></label>
-            <input type="email" v-model="newUser.email" placeholder="user@example.com"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]" />
+            <v-text-field type="email" v-model="newUser.email" placeholder="user@example.com"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]"  variant="outlined" density="comfortable" hide-details />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Имя (опционально)</label>
-            <input type="text" v-model="newUser.name" placeholder="Иванов Иван"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]" />
+            <v-text-field type="text" v-model="newUser.name" placeholder="Иванов Иван"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]"  variant="outlined" density="comfortable" hide-details />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Роль</label>
-            <select v-model="newUser.role" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]">
-              <option value="user">Обычный пользователь</option>
-              <option value="admin">Администратор</option>
-            </select>
+            <v-select
+              v-model="newUser.role"
+              :items="roleOptions"
+              item-title="label"
+              item-value="value"
+              variant="outlined"
+              density="comfortable"
+              hide-details
+              class="w-full"
+            />
           </div>
         </div>
         <div class="p-6 border-t border-gray-200 flex gap-3 justify-end">
-          <button @click="showAddUserModal = false" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Отмена</button>
-          <button @click="addUser" :disabled="!newUser.email" class="px-4 py-2 bg-[#409EFF] text-white rounded-lg hover:bg-[#3a8eef] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Добавить</button>
+          <v-btn @click="showAddUserModal = false" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Отмена</v-btn>
+          <v-btn @click="addUser" :disabled="!newUser.email" class="px-4 py-2 bg-[#409EFF] text-white rounded-lg hover:bg-[#3a8eef] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Добавить</v-btn>
         </div>
       </div>
     </div>
   </div>
+  </v-container>
 </template>
 
 <script setup lang="ts">
@@ -185,6 +193,10 @@ const showAddUserModal = ref(false)
 const expandedIntegration = ref<string | null>(null)
 const checkingIntegration = ref<string | null>(null)
 const newUser = reactive({ email: '', name: '', role: 'user' as 'user' | 'admin' })
+const roleOptions = [
+  { label: 'Обычный пользователь', value: 'user' },
+  { label: 'Администратор', value: 'admin' },
+]
 
 type UserStatus = 'active' | 'blocked'
 interface User { id: number; email: string; name: string; role: 'user' | 'admin'; status: UserStatus; registrationDate: string; lastLogin: string }

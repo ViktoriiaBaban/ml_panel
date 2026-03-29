@@ -1,4 +1,5 @@
 <template>
+  <v-container fluid class="pa-0">
   <div class="flex-1 bg-[#F5F7FA] p-8">
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -28,12 +29,12 @@
         <div class="flex items-center gap-4">
           <div class="flex-1 relative">
             <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input type="text" placeholder="Поиск по названию потока..."
-              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]" />
+            <v-text-field type="text" placeholder="Поиск по названию потока..."
+              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#409EFF]"  variant="outlined" density="comfortable" hide-details />
           </div>
-          <button class="px-4 py-2 bg-[#409EFF] text-white rounded-lg hover:bg-[#3a8eef] transition-colors flex items-center gap-2">
+          <v-btn class="px-4 py-2 bg-[#409EFF] text-white rounded-lg hover:bg-[#3a8eef] transition-colors flex items-center gap-2">
             <RotateCw class="w-4 h-4" />Обновить
-          </button>
+          </v-btn>
         </div>
       </div>
 
@@ -48,8 +49,8 @@
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="flow in mockFlows" :key="flow.id" class="hover:bg-gray-50 transition-colors">
               <td class="px-6 py-4 whitespace-nowrap">
-                <button @click="$emit('navigate-to-detail', flow.id, flow.name)"
-                  class="text-[#409EFF] hover:underline font-medium">{{ flow.name }}</button>
+                <v-btn @click="$emit('navigate-to-detail', flow.id, flow.name)"
+                  class="text-[#409EFF] hover:underline font-medium">{{ flow.name }}</v-btn>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span :class="['inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded', statusBadgeClass(flow.status)]">
@@ -73,15 +74,15 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ flow.lastUpdated }}</td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center gap-2">
-                  <button v-if="flow.status === 'running'" class="p-2 text-red-600 hover:bg-red-50 rounded transition-colors" title="Остановить">
+                  <v-btn v-if="flow.status === 'running'" class="p-2 text-red-600 hover:bg-red-50 rounded transition-colors" title="Остановить">
                     <Square class="w-4 h-4" />
-                  </button>
-                  <button v-else class="p-2 text-green-600 hover:bg-green-50 rounded transition-colors" title="Запустить">
+                  </v-btn>
+                  <v-btn v-else class="p-2 text-green-600 hover:bg-green-50 rounded transition-colors" title="Запустить">
                     <Play class="w-4 h-4" />
-                  </button>
-                  <button class="p-2 text-[#409EFF] hover:bg-blue-50 rounded transition-colors" title="Перезапустить">
+                  </v-btn>
+                  <v-btn class="p-2 text-[#409EFF] hover:bg-blue-50 rounded transition-colors" title="Перезапустить">
                     <RotateCw class="w-4 h-4" />
-                  </button>
+                  </v-btn>
                 </div>
               </td>
             </tr>
@@ -98,6 +99,7 @@
       </div>
     </div>
   </div>
+  </v-container>
 </template>
 
 <script setup lang="ts">
