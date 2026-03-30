@@ -1,0 +1,20 @@
+import { alerts, healthChecks, integrations, keyMetrics, servicesStatus, users } from './fixtures/adminMonitoring'
+import { etlFlows, flowComponents, flowHistory, flowVariables } from './fixtures/etl'
+import { pipelines, projects } from './fixtures/projectsPipelines'
+import { files, inferenceMonitoringByServiceId, inferenceServices } from './fixtures/storageInference'
+
+export const db = {
+  projects,
+  pipelines,
+  files,
+  inferenceServices,
+  inferenceMonitoringByServiceId,
+  etlFlows,
+  flowVariables,
+  flowComponents,
+  flowHistory,
+  users,
+  integrations,
+  healthChecks,
+  monitoring: { keyMetrics, servicesStatus, alerts },
+}
