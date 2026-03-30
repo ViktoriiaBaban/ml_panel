@@ -1,4 +1,4 @@
-import type { ApiErrorShape, Json } from '../types/http'
+import type { ApiErrorShape, Json } from '@/types/http'
 
 export function json(data: Json, init?: ResponseInit) {
   return new Response(JSON.stringify(data), {

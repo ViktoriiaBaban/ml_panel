@@ -1,4 +1,4 @@
-import type { Alert, HealthCheck, Integration, MonitoringMetric, MonitoringServiceUptime, User } from '../../types/domain'
+import type { Alert, HealthCheck, Integration, MonitoringMetric, MonitoringServiceUptime, User } from '@/types/domain'
 
 export const users: User[] = [
   { id: 1, email: 'ivanov@example.com', name: 'Иванов Иван', role: 'user', status: 'active', registrationDate: '2025-11-03', lastLogin: '2026-01-16 09:45' },

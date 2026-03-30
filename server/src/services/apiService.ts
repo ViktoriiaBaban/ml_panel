@@ -1,4 +1,4 @@
-import type { UserRole } from '../types/domain'
+import type { UserRole } from '@/types/domain'
 import { db } from './db'
 
 export const apiService = {

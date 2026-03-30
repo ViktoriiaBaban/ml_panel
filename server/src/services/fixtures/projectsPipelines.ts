@@ -1,4 +1,4 @@
-import type { Pipeline, Project } from '../../types/domain'
+import type { Pipeline, Project } from '@/types/domain'
 
 export const projects: Project[] = [
   { id: 1, name: 'fraud-detection', description: 'Модель для детекции мошенничества в транзакциях', namespace: 'ml-team/fraud', lastCommit: { author: 'ivanov', time: '2 ч назад' }, pipelineStatus: 'success', types: ['training', 'inference'] },

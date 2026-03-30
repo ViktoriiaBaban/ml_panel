@@ -1,4 +1,4 @@
-import type { EtlFlow, FlowComponent, FlowHistoryItem, FlowVariable } from '../../types/domain'
+import type { EtlFlow, FlowComponent, FlowHistoryItem, FlowVariable } from '@/types/domain'
 
 export const etlFlows: EtlFlow[] = [
   { id: 1, name: 'fraud-inference-pipeline', status: 'running', processGroups: 12, activeThreads: 8, queuedItems: 234, throughput: 1240, lastUpdated: '2026-03-25 14:23:45', source: 'Kafka: fraud-transactions', destination: 'Octopus: fraud_labels', owner: 'ml-team/fraud', schedule: 'Real-time', description: 'Поток скоринга транзакций в режиме реального времени' },

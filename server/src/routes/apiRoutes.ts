@@ -1,10 +1,10 @@
-import { adminController } from '../controllers/adminController'
-import { commonController } from '../controllers/commonController'
-import { etlController } from '../controllers/etlController'
-import { inferenceController } from '../controllers/inferenceController'
-import { monitoringController } from '../controllers/monitoringController'
-import { projectsController } from '../controllers/projectsController'
-import { storageController } from '../controllers/storageController'
+import { adminController } from '@/controllers/adminController'
+import { commonController } from '@/controllers/commonController'
+import { etlController } from '@/controllers/etlController'
+import { inferenceController } from '@/controllers/inferenceController'
+import { monitoringController } from '@/controllers/monitoringController'
+import { projectsController } from '@/controllers/projectsController'
+import { storageController } from '@/controllers/storageController'
 
 const projectRoutes = {
   '/api/projects': { GET: projectsController.listProjects },

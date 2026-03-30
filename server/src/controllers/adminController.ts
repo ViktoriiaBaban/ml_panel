@@ -1,7 +1,7 @@
-import { apiError, json, readJson } from '../helpers/http'
-import { apiService } from '../services/apiService'
-import type { UserRole } from '../types/domain'
-import type { Json } from '../types/http'
+import { apiError, json, readJson } from '@/helpers/http'
+import { apiService } from '@/services/apiService'
+import type { UserRole } from '@/types/domain'
+import type { Json } from '@/types/http'
 
 type RouteReq = Request & { params: Record<string, string> }
 

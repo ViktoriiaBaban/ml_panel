@@ -1,4 +1,4 @@
-import type { InferenceService, InferenceServiceMonitoring, StorageFile } from '../../types/domain'
+import type { InferenceService, InferenceServiceMonitoring, StorageFile } from '@/types/domain'
 
 export const files: StorageFile[] = [
   { id: 1, name: 'training_data_v1.csv', type: 'Датасет', size: '12.4 МБ', date: '09.01.2026, 14:23', project: 'Fraud Detection' },

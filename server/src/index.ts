@@ -1,4 +1,4 @@
-import { routes } from './routes/apiRoutes'
+import { routes } from '@/routes/apiRoutes'
 
 const port = Number(process.env.PORT ?? '3001') || 3001
 
