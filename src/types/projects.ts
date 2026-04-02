@@ -32,3 +32,33 @@ export type ProjectTypeConfig = {
   label: string
   iconColor: string
 }
+
+export type StageStatus = 'success' | 'failed' | 'running' | 'pending' | 'warning'
+
+export type PipelineStage = {
+  name: string
+  status: StageStatus
+  duration?: string
+  mlflowRun?: string
+  bentoService?: string
+  nifiFlow?: string
+}
+
+export type Pipeline = {
+  id: number
+  projectId: number
+  pipelineId: string
+  branch: string
+  tag?: string
+  author: string
+  startTime: string
+  stages: PipelineStage[]
+  duration: string
+  status: PipelineStatus
+}
+
+export type PipelinesQuery = {
+  projectId?: number | null
+  branch?: string
+  status?: string
+}

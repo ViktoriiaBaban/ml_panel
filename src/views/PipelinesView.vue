@@ -120,7 +120,8 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ChevronDown, ChevronUp, ExternalLink, Clock, User, GitBranch, Tag, Check, X, RefreshCw, Pause, AlertTriangle } from 'lucide-vue-next'
-import { usePipelinesStore, type Pipeline, type PipelineStatus, type StageStatus } from '@/stores/pipelines'
+import { usePipelinesStore } from '@/stores/pipelines'
+import { Pipeline, PipelineStatus, StageStatus } from '@/types/projects.ts';
 
 const props = defineProps<{ projectId: number; projectName: string }>()
 

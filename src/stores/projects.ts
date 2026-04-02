@@ -17,15 +17,15 @@ const STATUS_OPTIONS: StatusOption[] = [
 ]
 
 const STATUS_CONFIG: Record<PipelineStatus, PipelineStatusConfig> = {
-  success: { label: 'Успешен', chipColor: 'green', icon: 'mdiCheckCircle' },
-  failed: { label: 'Ошибка', chipColor: 'red', icon: 'mdiCloseCircle' },
-  running: { label: 'В процессе', chipColor: 'blue', icon: 'mdiRefresh' },
+  success: { label: 'Успешен', chipColor: 'green', icon: 'mdi-check-circle' },
+  failed: { label: 'Ошибка', chipColor: 'red', icon: 'mdi-close-circle' },
+  running: { label: 'В процессе', chipColor: 'blue', icon: 'mdi-refresh' },
 }
 
 const TYPE_CONFIG: Record<ProjectType, ProjectTypeConfig> = {
-  training: { icon: 'mdiFlask', label: 'Обучение', iconColor: 'primary' },
-  inference: { icon: 'mdiRobot', label: 'Инференс', iconColor: 'purple' },
-  etl: { icon: 'mdiSwapHorizontal', label: 'ETL', iconColor: 'green' },
+  training: { icon: 'mdi-flask', label: 'Обучение', iconColor: 'primary' },
+  inference: { icon: 'mdi-robot', label: 'Инференс', iconColor: 'purple' },
+  etl: { icon: 'mdi-swap-horizontal', label: 'ETL', iconColor: 'green' },
 }
 
 export const useProjectsStore = defineStore('projects', {
@@ -82,14 +82,6 @@ export const useProjectsStore = defineStore('projects', {
     closeGitlabDialog() {
       this.dialogs.gitlab = false
       this.selectedProject = null
-    },
-    openPipelinesDialog(project: Project) {
-      this.selectedProject = project
-      this.dialogs.pipelines = true
-    },
-    closePipelinesDialog() {
-      this.dialogs.pipelines = false
-      this.selectedProject = null
-    },
+    }
   },
 })

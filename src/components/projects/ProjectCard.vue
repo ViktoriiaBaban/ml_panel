@@ -29,11 +29,11 @@
 
       <div class="project-card__actions">
         <v-btn variant="outlined" class="project-card__btn" rounded="lg" @click="emit('open-gitlab', project)">
-          <v-icon icon="mdiOpenInNew" size="16" start />
+          <v-icon icon="mdi-open-in-new" size="16" start />
           Открыть в GitLab
         </v-btn>
-        <v-btn color="primary" class="project-card__btn" rounded="lg" @click="emit('open-pipelines', project)">
-          <v-icon icon="mdiPlayCircleOutline" size="16" start />
+        <v-btn color="primary" class="project-card__btn" rounded="lg" @click="goToPipelines(project)">
+          <v-icon icon="mdi-play-circle-outline" size="16" start />
           Пайплайны
         </v-btn>
       </div>
@@ -43,6 +43,7 @@
 
 <script setup lang="ts">
 import type { Project, PipelineStatusConfig, ProjectType, ProjectTypeConfig } from '@/types/projects'
+import {router} from '@/router.ts';
 
 defineProps<{
   project: Project
@@ -52,8 +53,11 @@ defineProps<{
 
 const emit = defineEmits<{
   'open-gitlab': [project: Project]
-  'open-pipelines': [project: Project]
 }>()
+
+function goToPipelines(selectedProject: Project) {
+  router.push({ name: 'project-pipelines', params: { projectId: selectedProject.id }, query: { projectName: selectedProject.name } })
+}
 </script>
 
 <style scoped>
