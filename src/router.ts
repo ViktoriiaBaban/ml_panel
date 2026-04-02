@@ -75,6 +75,7 @@ export const router = createRouter({
     },
     {
       path: '/inference',
+      name: 'inference-root',
       component: RouterGroup,
       meta: { section: 'inference', breadcrumb: 'Инференс-сервисы' },
       children: [
@@ -86,6 +87,7 @@ export const router = createRouter({
         },
         {
           path: 'services/:serviceId',
+          name: 'inference-service-root',
           component: RouterGroup,
           meta: {
             section: 'inference',
@@ -127,6 +129,7 @@ export const router = createRouter({
     },
     {
       path: '/etl',
+      name: 'etl-root',
       component: RouterGroup,
       meta: { section: 'etl', breadcrumb: 'Потоки данных и ETL' },
       children: [
@@ -138,6 +141,7 @@ export const router = createRouter({
         },
         {
           path: 'flows/:flowId',
+          name: 'etl-flow-root',
           component: RouterGroup,
           meta: {
             section: 'etl',
@@ -179,6 +183,7 @@ export const router = createRouter({
     },
     {
       path: '/monitoring',
+      name: 'monitoring-root',
       component: RouterGroup,
       meta: { section: 'monitoring', title: 'Мониторинг и состояние системы', breadcrumb: 'Мониторинг и состояние системы' },
       children: [
@@ -199,6 +204,7 @@ export const router = createRouter({
     },
     {
       path: '/administration',
+      name: 'administration-root',
       component: RouterGroup,
       meta: { section: 'administration', title: 'Администрирование', breadcrumb: 'Администрирование' },
       children: [

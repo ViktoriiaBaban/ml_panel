@@ -168,6 +168,7 @@
         </div>
       </div>
     </div>
+    <v-card v-else-if="isFlowLoading" class="ma-8" variant="tonal"><v-card-text>Загрузка потока...</v-card-text></v-card>
     <v-card v-else class="ma-8" variant="tonal"><v-card-text>Поток не найден</v-card-text></v-card>
   </div>
   </v-container>
@@ -215,6 +216,7 @@ watch(
 )
 
 const flow = computed(() => etlStore.flowById[props.flowId] ?? etlStore.flows.find((item) => item.id === props.flowId))
+const isFlowLoading = computed(() => Boolean(etlStore.flowLoading[props.flowId]))
 const editingVariable = ref<string | null>(null)
 const componentHeaders = ['Название', 'Тип', 'Статус', 'Активные потоки', 'Выполнено задач']
 
