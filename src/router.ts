@@ -1,4 +1,5 @@
-import { createRouter, createWebHistory, type RouteLocationNormalizedLoaded } from 'vue-router'
+import { h } from 'vue'
+import { createRouter, createWebHistory, RouterView, type RouteLocationNormalizedLoaded } from 'vue-router'
 
 import FileTable from '@/views/FileTable.vue'
 import ProjectsView from '@/views/ProjectsView.vue'
@@ -11,11 +12,16 @@ import MonitoringSystemView from '@/views/MonitoringSystemView.vue'
 import AdministrationView from '@/views/AdministrationView.vue'
 
 const PlaceholderView = {
-  template:
-    '<v-card class="ma-8" elevation="2" rounded="lg"><v-card-text class="text-center text-medium-emphasis">Раздел в разработке</v-card-text></v-card>',
+  render() {
+    return h('div', { style: 'padding: 32px; color: #6b7280;' }, 'Раздел в разработке')
+  },
 }
 
-const RouterGroup = { template: '<router-view />' }
+const RouterGroup = {
+  render() {
+    return h(RouterView)
+  },
+}
 
 type RouteMetaLabel = string | ((route: RouteLocationNormalizedLoaded) => string)
 
