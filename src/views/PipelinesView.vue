@@ -1,9 +1,9 @@
 <template>
   <v-container fluid class="pa-8">
     <div class="d-flex align-center ga-2 text-body-2 text-medium-emphasis mb-6">
-      <v-btn variant="text" density="comfortable" class="text-none px-0" @click="$emit('back')">Главная</v-btn>
+      <v-btn variant="text" density="comfortable" class="text-none px-0" @click="goBack">Главная</v-btn>
       <span>→</span>
-      <v-btn variant="text" density="comfortable" class="text-none px-0" @click="$emit('back')">Проекты и пайплайны</v-btn>
+      <v-btn variant="text" density="comfortable" class="text-none px-0" @click="goBack">Проекты и пайплайны</v-btn>
       <span>→</span>
       <span class="text-grey-darken-4">Пайплайны</span>
       <span>→</span>
@@ -118,11 +118,13 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { ChevronDown, ChevronUp, ExternalLink, Clock, User, GitBranch, Tag, Check, X, RefreshCw, Pause, AlertTriangle } from 'lucide-vue-next'
 import { usePipelinesStore, type Pipeline, type PipelineStatus, type StageStatus } from '@/stores/pipelines'
 
 const props = defineProps<{ projectId: number; projectName: string }>()
-defineEmits<{ back: [] }>()
+
+const router = useRouter()
 
 const expandedPipeline = ref<number | null>(null)
 const branchFilter = ref('all')
@@ -176,6 +178,10 @@ const statusItems = [
 ]
 
 const filteredPipelines = computed<Pipeline[]>(() => pipelinesStore.items)
+
+function goBack() {
+  router.push('/projects')
+}
 </script>
 
 <style scoped>
