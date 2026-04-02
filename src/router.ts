@@ -34,7 +34,6 @@ function label(value: RouteMetaLabel | undefined, route: RouteLocationNormalized
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', redirect: '/storage' },
     {
       path: '/home',
       name: 'home',
