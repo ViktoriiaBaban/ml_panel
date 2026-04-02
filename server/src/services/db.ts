@@ -16,5 +16,11 @@ export const db = {
   users,
   integrations,
   healthChecks,
+  invitationLinks: [] as Array<{
+    code: string
+    role: 'user' | 'admin'
+    expiresAt: string
+    createdAt: string
+  }>,
   monitoring: { keyMetrics, servicesStatus, alerts },
 }
