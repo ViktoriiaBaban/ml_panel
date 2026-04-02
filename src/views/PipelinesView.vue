@@ -1,7 +1,5 @@
 <template>
   <v-container fluid class="pipelines-view">
-    <PipelinesBreadcrumbs :project-name="projectName" @back="goBack" />
-
     <PipelinesFilters
       :branch-filter="branchFilter"
       :status-filter="statusFilter"
@@ -42,17 +40,13 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 
 import PipelineCard from '@/components/pipelines/PipelineCard.vue'
 import PipelineDetailsDialog from '@/components/pipelines/PipelineDetailsDialog.vue'
-import PipelinesBreadcrumbs from '@/components/pipelines/PipelinesBreadcrumbs.vue'
 import PipelinesFilters from '@/components/pipelines/PipelinesFilters.vue'
 import { usePipelinesStore } from '@/stores/pipelines'
 
 const props = defineProps<{ projectId: number; projectName: string }>()
-
-const router = useRouter()
 
 const pipelinesStore = usePipelinesStore()
 const { items, loading, error, branchFilter, statusFilter, expandedPipelineId, selectedPipeline, branchItems, statusItems } = storeToRefs(pipelinesStore)
@@ -73,9 +67,6 @@ async function onStatusFilterChange(value: string) {
   await pipelinesStore.setFilters(branchFilter.value, value)
 }
 
-function goBack() {
-  router.push('/projects')
-}
 </script>
 
 <style scoped>
