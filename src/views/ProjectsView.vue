@@ -64,7 +64,7 @@
               <v-btn variant="outlined" class="flex-1 text-none" rounded="lg">
                 <ExternalLink :size="16" class="mr-2" /> Открыть в GitLab
               </v-btn>
-              <v-btn color="primary" class="flex-1 text-none" rounded="lg" @click="$emit('navigate-to-pipelines', project.id, project.name)">
+              <v-btn color="primary" class="flex-1 text-none" rounded="lg" @click="goToPipelines(project.id, project.name)">
                 <PlayCircle :size="16" class="mr-2" /> Пайплайны
               </v-btn>
             </div>
@@ -81,10 +81,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { Search, GitBranch, ExternalLink, PlayCircle, FlaskConical, Bot, Repeat, CheckCircle, XCircle, RefreshCw } from 'lucide-vue-next'
 import { useProjectsStore } from '@/stores/projects'
 
-defineEmits<{ 'navigate-to-pipelines': [id: number, name: string] }>()
+const router = useRouter()
 
 const searchTerm = ref('')
 const statusFilter = ref('all')
@@ -118,6 +119,10 @@ watch([searchTerm, statusFilter], () => {
 })
 
 const filteredProjects = computed(() => projectsStore.items)
+
+function goToPipelines(projectId: number, projectName: string) {
+  router.push({ name: 'project-pipelines', params: { projectId }, query: { projectName } })
+}
 </script>
 
 <style scoped>
@@ -141,3 +146,5 @@ const filteredProjects = computed(() => projectsStore.items)
   border-top: 1px solid #e5e7eb;
 }
 </style>
+
+

@@ -4,7 +4,7 @@
     <div class="bg-white rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
       <!-- Header -->
       <div class="p-6 border-b border-gray-200">
-        <v-btn @click="$emit('back')" class="flex items-center gap-2 text-[#409EFF] hover:underline mb-4">
+        <v-btn @click="goBack" class="flex items-center gap-2 text-[#409EFF] hover:underline mb-4">
           <ArrowLeft class="w-4 h-4" />Назад к списку сервисов
         </v-btn>
         <div class="flex items-start justify-between">
@@ -30,7 +30,7 @@
       <!-- Tabs -->
       <div class="border-b border-gray-200">
         <div class="flex gap-8 px-6">
-          <v-btn v-for="tab in tabs" :key="tab.value" @click="activeTab = tab.value"
+          <v-btn v-for="tab in tabs" :key="tab.value" @click="setTab(tab.value)"
             :class="['py-4 text-sm font-medium transition-colors relative', activeTab === tab.value ? 'text-[#409EFF]' : 'text-gray-600 hover:text-gray-900']">
             {{ tab.label }}
             <div v-if="activeTab === tab.value" class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#409EFF]"></div>
@@ -202,23 +202,54 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, Play, Square, RotateCw, Download, CheckCircle, Info, RefreshCw, Database, FlaskConical } from 'lucide-vue-next'
 import { useInferenceMonitoringStore } from '@/stores/inferenceMonitoring'
 
 const props = defineProps<{ serviceId: number; serviceName: string }>()
-defineEmits<{ back: [] }>()
+const route = useRoute()
+const router = useRouter()
 
 const monitoringStore = useInferenceMonitoringStore()
 monitoringStore.fetchAll(props.serviceId)
 
-const activeTab = ref('metrics')
 const tabs = [
   { value: 'metrics', label: 'Метрики' },
   { value: 'logs', label: 'Логи' },
   { value: 'model', label: 'Модель' },
   { value: 'integrations', label: 'Интеграции' },
-]
+] as const
+
+function tabFromRouteName(name: unknown) {
+  if (name === 'inference-service-logs') return 'logs'
+  if (name === 'inference-service-model') return 'model'
+  if (name === 'inference-service-integrations') return 'integrations'
+  return 'metrics'
+}
+
+const activeTab = ref(tabFromRouteName(route.name))
+watch(
+  () => route.name,
+  (name) => {
+    activeTab.value = tabFromRouteName(name)
+  },
+)
+
+function setTab(tab: string) {
+  const nameMap = {
+    metrics: 'inference-service-metrics',
+    logs: 'inference-service-logs',
+    model: 'inference-service-model',
+    integrations: 'inference-service-integrations',
+  } as const
+  router.push({ name: nameMap[tab as keyof typeof nameMap] ?? 'inference-service-metrics', params: { serviceId: props.serviceId }, query: { serviceName: props.serviceName } })
+}
+
+function goBack() {
+  router.push('/inference')
+}
+
 const logFilter = ref('all')
 const logFilterOptions = [
   { label: 'Все уровни', value: 'all' },

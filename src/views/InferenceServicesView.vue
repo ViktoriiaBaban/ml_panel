@@ -45,7 +45,7 @@
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="service in filteredServices" :key="service.id" class="hover:bg-gray-50 transition-colors">
               <td class="px-6 py-4 whitespace-nowrap">
-                <v-btn @click="$emit('navigate-to-monitoring', service.id, service.name)"
+                <v-btn @click="goToMonitoring(service.id, service.name)"
                   class="flex items-center gap-2 text-[#409EFF] hover:underline">
                   <Bot class="w-4 h-4 flex-shrink-0" />
                   <span class="text-sm font-medium">{{ service.name }}</span>
@@ -100,10 +100,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { Search, Play, Square, RotateCw, Bot, CheckCircle, XCircle, MinusCircle } from 'lucide-vue-next'
 import { useInferenceServicesStore, type ServiceStatus } from '@/stores/inferenceServices'
 
-defineEmits<{ 'navigate-to-monitoring': [id: number, name: string] }>()
+const router = useRouter()
 
 const searchTerm = ref('')
 const statusFilter = ref('all')
@@ -131,4 +132,8 @@ const statusOptions = [
 ]
 const projectOptions = computed(() => [{ label: 'Все проекты', value: 'all' }, ...uniqueProjects.value.map(project => ({ label: project, value: project }))])
 const filteredServices = computed(() => servicesStore.items)
+
+function goToMonitoring(serviceId: number, serviceName: string) {
+  router.push({ name: 'inference-service-metrics', params: { serviceId }, query: { serviceName } })
+}
 </script>

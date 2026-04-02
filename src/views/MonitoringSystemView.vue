@@ -6,7 +6,7 @@
       <div class="border-b border-gray-200">
         <div class="flex items-center justify-between px-6 pt-4">
           <div class="flex gap-8">
-            <v-btn v-for="tab in tabs" :key="tab.value" @click="activeTab = tab.value"
+            <v-btn v-for="tab in tabs" :key="tab.value" @click="setTab(tab.value)"
               :class="['pb-4 text-sm font-medium transition-colors relative', activeTab === tab.value ? 'text-[#409EFF]' : 'text-gray-600 hover:text-gray-900']">
               {{ tab.label }}
               <div v-if="activeTab === tab.value" class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#409EFF]"></div>
@@ -190,10 +190,18 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Search, Plus, MoreVertical, AlertTriangle, CheckCircle, XCircle, Activity, Cpu, HardDrive, Network, TrendingUp, TrendingDown, Info, AlertCircle } from 'lucide-vue-next'
 import { useMonitoringStore } from '@/stores/monitoring'
 
-const activeTab = ref('dashboard')
+const route = useRoute()
+const router = useRouter()
+const activeTab = ref(route.name === 'monitoring-alerts' ? 'alerts' : 'dashboard')
+watch(() => route.name, (name) => { activeTab.value = name === 'monitoring-alerts' ? 'alerts' : 'dashboard' })
+function setTab(tab: string) {
+  router.push({ name: tab === 'alerts' ? 'monitoring-alerts' : 'monitoring-dashboard' })
+}
+
 const tabs = [
   { value: 'dashboard', label: 'Дашборд' },
   { value: 'alerts', label: 'Алерты' },

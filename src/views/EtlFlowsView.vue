@@ -49,7 +49,7 @@
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="flow in etlStore.flows" :key="flow.id" class="hover:bg-gray-50 transition-colors">
               <td class="px-6 py-4 whitespace-nowrap">
-                <v-btn @click="$emit('navigate-to-detail', flow)"
+                <v-btn @click="goToFlowDetail(flow.id)"
                   class="text-[#409EFF] hover:underline font-medium">{{ flow.name }}</v-btn>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -104,10 +104,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { Search, Play, Square, RotateCw, Activity, TrendingUp, AlertTriangle, CheckCircle, XCircle, MinusCircle, RefreshCw } from 'lucide-vue-next'
 import { useEtlStore, type EtlFlow, type FlowStatus } from '@/stores/etl'
 
-defineEmits<{ 'navigate-to-detail': [flow: EtlFlow] }>()
+const router = useRouter()
 
 const etlStore = useEtlStore()
 etlStore.fetchFlows()
@@ -118,6 +119,10 @@ function statusBadgeClass(s: FlowStatus) {
 }
 function statusIcon(s: FlowStatus) { return { running: CheckCircle, stopped: MinusCircle, error: XCircle }[s] }
 function statusText(s: FlowStatus) { return { running: 'Работает', stopped: 'Остановлен', error: 'Ошибка' }[s] }
+
+function goToFlowDetail(flowId: number) {
+  router.push({ name: 'etl-flow-metrics', params: { flowId } })
+}
 
 const stats = computed(() => ({
   running: etlStore.flows.filter(f => f.status === 'running').length,

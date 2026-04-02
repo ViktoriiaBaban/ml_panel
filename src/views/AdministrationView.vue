@@ -4,7 +4,7 @@
       <AdministrationTabs
         :model-value="adminStore.activeTab"
         :tabs="adminStore.tabs"
-        @update:model-value="adminStore.setActiveTab"
+        @update:model-value="onTabChange"
       />
 
       <v-divider />
@@ -63,7 +63,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import AdministrationAddUserDialog from '@/components/administration/AdministrationAddUserDialog.vue'
 import AdministrationEditUserDialog from '@/components/administration/AdministrationEditUserDialog.vue'
 import AdministrationIntegrationsTable from '@/components/administration/AdministrationIntegrationsTable.vue'
@@ -72,10 +73,29 @@ import AdministrationUsersTable from '@/components/administration/Administration
 import { useAdminStore } from '@/stores/admin'
 
 const adminStore = useAdminStore()
+const route = useRoute()
+const router = useRouter()
 
 onMounted(() => {
   adminStore.initAdministration()
 })
+
+watch(
+  () => route.name,
+  (name) => {
+    const next = name === 'administration-integrations' ? 'integrations' : 'users'
+    if (adminStore.activeTab !== next) {
+      adminStore.setActiveTab(next)
+    }
+  },
+  { immediate: true },
+)
+
+function onTabChange(tab: 'users' | 'integrations') {
+  adminStore.setActiveTab(tab)
+  router.push({ name: tab === 'integrations' ? 'administration-integrations' : 'administration-users' })
+}
+
 
 function onDialogChange(open: boolean) {
   if (open) {

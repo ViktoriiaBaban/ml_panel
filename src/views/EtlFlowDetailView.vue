@@ -1,10 +1,10 @@
 <template>
   <v-container fluid class="pa-0">
   <div class="flex-1 bg-[#F5F7FA] p-8">
-    <div class="bg-white rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
+    <div v-if="flow" class="bg-white rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
       <!-- Header -->
       <div class="p-6 border-b border-gray-200">
-        <v-btn @click="$emit('back')" class="flex items-center gap-2 text-[#409EFF] hover:underline mb-4">
+        <v-btn @click="goBack" class="flex items-center gap-2 text-[#409EFF] hover:underline mb-4">
           <ArrowLeft class="w-4 h-4" />Назад к списку потоков
         </v-btn>
         <div class="flex items-start justify-between">
@@ -35,7 +35,7 @@
       <!-- Tabs -->
       <div class="border-b border-gray-200">
         <div class="flex gap-8 px-6">
-          <v-btn v-for="tab in tabs" :key="tab.value" @click="activeTab = tab.value"
+          <v-btn v-for="tab in tabs" :key="tab.value" @click="setTab(tab.value)"
             :class="['py-4 text-sm font-medium transition-colors relative', activeTab === tab.value ? 'text-[#409EFF]' : 'text-gray-600 hover:text-gray-900']">
             {{ tab.label }}
             <div v-if="activeTab === tab.value" class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#409EFF]"></div>
@@ -168,48 +168,71 @@
         </div>
       </div>
     </div>
+    <v-card v-else class="ma-8" variant="tonal"><v-card-text>Поток не найден</v-card-text></v-card>
   </div>
   </v-container>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, Play, Square, RotateCw, Save, X, AlertCircle, Activity, Database, Clock, Settings, CheckCircle, Info, XCircle, MinusCircle } from 'lucide-vue-next'
 import { useEtlStore, type FlowVariable, type FlowStatus } from '@/stores/etl'
 
-interface FlowDetail {
-  id: number
-  name: string
-  status: FlowStatus
-  processGroups: number
-  activeThreads: number
-  queuedItems: number
-  throughput: number
-  lastUpdated: string
-  source: string
-  destination: string
-  owner: string
-  schedule: string
-  description: string
-}
-
-const { flow } = defineProps<{ flow: FlowDetail }>()
-defineEmits<{ back: [] }>()
-
+const props = defineProps<{ flowId: number }>()
+const route = useRoute()
+const router = useRouter()
 const etlStore = useEtlStore()
-etlStore.fetchVariables(flow.id)
-etlStore.fetchComponents(flow.id)
-etlStore.fetchHistory(flow.id)
 
-const activeTab = ref('metrics')
-const editingVariable = ref<string | null>(null)
+if (etlStore.flows.length === 0) {
+  etlStore.fetchFlows()
+}
+etlStore.fetchFlow(props.flowId)
+etlStore.fetchVariables(props.flowId)
+etlStore.fetchComponents(props.flowId)
+etlStore.fetchHistory(props.flowId)
+
 const tabs = [
   { value: 'metrics', label: 'Метрики' },
   { value: 'variables', label: 'Переменные' },
   { value: 'components', label: 'Компоненты' },
   { value: 'history', label: 'История' },
-]
+] as const
+
+function tabFromRouteName(name: unknown) {
+  if (name === 'etl-flow-variables') return 'variables'
+  if (name === 'etl-flow-components') return 'components'
+  if (name === 'etl-flow-history') return 'history'
+  return 'metrics'
+}
+
+const activeTab = ref(tabFromRouteName(route.name))
+watch(
+  () => route.name,
+  (name) => {
+    activeTab.value = tabFromRouteName(name)
+  },
+)
+
+const flow = computed(() => etlStore.flowById[props.flowId] ?? etlStore.flows.find((item) => item.id === props.flowId))
+const editingVariable = ref<string | null>(null)
 const componentHeaders = ['Название', 'Тип', 'Статус', 'Активные потоки', 'Выполнено задач']
+
+function setTab(tab: string) {
+  if (!flow.value) return
+  const nameMap = {
+    metrics: 'etl-flow-metrics',
+    variables: 'etl-flow-variables',
+    components: 'etl-flow-components',
+    history: 'etl-flow-history',
+  } as const
+  router.push({ name: nameMap[tab as keyof typeof nameMap] ?? 'etl-flow-metrics', params: { flowId: flow.value.id } })
+}
+
+function goBack() {
+  router.push('/etl')
+}
+
 function statusIcon(status: FlowStatus) {
   return { running: CheckCircle, stopped: MinusCircle, error: XCircle }[status]
 }
@@ -220,7 +243,7 @@ function statusLabel(status: FlowStatus) {
   return { running: 'Работает', stopped: 'Остановлен', error: 'Ошибка' }[status]
 }
 
-const variables = computed<FlowVariable[]>(() => etlStore.variablesByFlowId[flow.id] ?? [])
+const variables = computed<FlowVariable[]>(() => etlStore.variablesByFlowId[props.flowId] ?? [])
 const variableValues = reactive<Record<string, string>>({})
 watch(
   variables,
@@ -243,11 +266,12 @@ const charts = [
   { title: 'Использование потоков', color: 'bg-purple-500', data: Array.from({ length: 48 }, () => 40 + Math.random() * 40) },
 ]
 
-const components = computed(() => etlStore.componentsByFlowId[flow.id] ?? [])
-const historyItems = computed(() => etlStore.historyByFlowId[flow.id] ?? [])
+const components = computed(() => etlStore.componentsByFlowId[props.flowId] ?? [])
+const historyItems = computed(() => etlStore.historyByFlowId[props.flowId] ?? [])
 
 async function saveVariable(key: string) {
-  await etlStore.updateVariable(flow.id, key, variableValues[key] ?? '')
+  if (!flow.value) return
+  await etlStore.updateVariable(flow.value.id, key, variableValues[key] ?? '')
   editingVariable.value = null
 }
 </script>
