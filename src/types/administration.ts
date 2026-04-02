@@ -39,12 +39,30 @@ export interface AddUserPayload {
   email: string
   name?: string
   role?: UserRole
+  password: string
 }
 
 export interface UserFormState {
   email: string
   name: string
   role: UserRole
+  password: string
+  showPassword: boolean
+}
+
+export interface InvitationLink {
+  code: string
+  role: UserRole
+  url: string
+  expiresAt: string
+  createdAt: string
+}
+
+export interface RegisterByInvitationPayload {
+  code: string
+  email: string
+  name?: string
+  password: string
 }
 
 export interface SelectOption<T> {

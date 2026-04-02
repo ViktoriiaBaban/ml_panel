@@ -33,6 +33,8 @@ const etlRoutes = {
 
 const adminRoutes = {
   '/api/admin/users': { GET: adminController.listUsers, POST: adminController.addUser },
+  '/api/admin/users/invitations': { POST: adminController.createInvitationLink },
+  '/api/admin/users/register-by-invitation': { POST: adminController.registerByInvitation },
   '/api/admin/users/:id/toggle-status': { PATCH: adminController.toggleUserStatus },
   '/api/admin/users/:id': { DELETE: adminController.deleteUser },
   '/api/admin/integrations': { GET: adminController.listIntegrations },

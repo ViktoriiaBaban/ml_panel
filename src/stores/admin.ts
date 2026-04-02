@@ -7,6 +7,8 @@ import type {
   AdminUser,
   AdministrationTab,
   HealthCheck,
+  InvitationLink,
+  RegisterByInvitationPayload,
   IntegrationStatus,
   SelectOption,
   UserFormState,
@@ -62,7 +64,12 @@ export const useAdminStore = defineStore('admin', {
       email: '',
       name: '',
       role: 'user',
+      password: '',
+      showPassword: false,
     } as UserFormState,
+    invitationRole: 'user' as UserRole,
+    latestInvitation: null as InvitationLink | null,
+    invitationCopied: false,
   }),
   getters: {
     tabs: () => TABS,
@@ -95,17 +102,37 @@ export const useAdminStore = defineStore('admin', {
     setUserFormField<K extends keyof UserFormState>(field: K, value: UserFormState[K]) {
       this.userForm[field] = value
     },
+    setInvitationRole(role: UserRole) {
+      this.invitationRole = role
+    },
     resetUserForm() {
-      this.userForm = { email: '', name: '', role: 'user' }
+      this.userForm = { email: '', name: '', role: 'user', password: '', showPassword: false }
     },
     async submitUserForm() {
       if (!this.userForm.email.trim()) return
+      if (!this.userForm.password.trim()) return
       await this.addUser({
         email: this.userForm.email,
         name: this.userForm.name,
         role: this.userForm.role,
+        password: this.userForm.password,
       })
       this.closeAddUserDialog()
+    },
+    async createInvitationLink() {
+      const invitation = await api.post<InvitationLink, { role: UserRole }>('/admin/users/invitations', { role: this.invitationRole })
+      this.latestInvitation = invitation
+      try {
+        if (typeof navigator !== 'undefined' && navigator.clipboard) {
+          await navigator.clipboard.writeText(invitation.url)
+        }
+      } finally {
+        this.invitationCopied = true
+      }
+      return invitation
+    },
+    closeInvitationSnackbar() {
+      this.invitationCopied = false
     },
     async fetchUsers() {
       this.loadingUsers = true
@@ -120,6 +147,11 @@ export const useAdminStore = defineStore('admin', {
     },
     async addUser(input: AddUserPayload) {
       const created = await api.post<AdminUser, AddUserPayload>('/admin/users', input)
+      this.users = [...this.users, created]
+      return created
+    },
+    async registerByInvitation(payload: RegisterByInvitationPayload) {
+      const created = await api.post<AdminUser, RegisterByInvitationPayload>('/admin/users/register-by-invitation', payload)
       this.users = [...this.users, created]
       return created
     },

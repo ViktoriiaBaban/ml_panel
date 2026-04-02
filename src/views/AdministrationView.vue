@@ -39,8 +39,13 @@
       :model-value="adminStore.showAddUserDialog"
       :form="adminStore.userForm"
       :role-options="adminStore.roleOptions"
+      :invitation-role="adminStore.invitationRole"
+      :invitation-copied="adminStore.invitationCopied"
       @update:model-value="onDialogChange"
       @set-field="adminStore.setUserFormField"
+      @set-invitation-role="adminStore.setInvitationRole"
+      @create-invitation-link="adminStore.createInvitationLink"
+      @close-invitation-snackbar="adminStore.closeInvitationSnackbar"
       @submit="adminStore.submitUserForm"
     />
   </v-container>
