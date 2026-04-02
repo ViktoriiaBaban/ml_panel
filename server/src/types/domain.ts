@@ -99,6 +99,13 @@ export type Integration = {
 }
 
 export type HealthCheck = { name: string; command: string }
+export type InvitationLink = {
+  code: string
+  role: UserRole
+  url: string
+  expiresAt: string
+  createdAt: string
+}
 
 export type MonitoringMetric = { label: string; value: string; sub: string; trend: 'up' | 'down' }
 export type MonitoringServiceUptime = { name: string; status: number }
