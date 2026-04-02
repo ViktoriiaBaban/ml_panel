@@ -9,8 +9,11 @@ import type {
   HealthCheck,
   InvitationLink,
   RegisterByInvitationPayload,
+  ResetUserPasswordPayload,
+  UpdateUserPayload,
   IntegrationStatus,
   SelectOption,
+  EditUserFormState,
   UserFormState,
   UserRole,
 } from '@/types/administration'
@@ -70,6 +73,15 @@ export const useAdminStore = defineStore('admin', {
     invitationRole: 'user' as UserRole,
     latestInvitation: null as InvitationLink | null,
     invitationCopied: false,
+    showEditUserDialog: false,
+    editUserForm: {
+      id: null,
+      email: '',
+      name: '',
+      role: 'user',
+      newPassword: '',
+      showPassword: false,
+    } as EditUserFormState,
   }),
   getters: {
     tabs: () => TABS,
@@ -133,6 +145,53 @@ export const useAdminStore = defineStore('admin', {
     },
     closeInvitationSnackbar() {
       this.invitationCopied = false
+    },
+    openEditUserDialog(id: number) {
+      const user = this.users.find((item) => item.id === id)
+      if (!user) return
+      this.editUserForm = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        newPassword: '',
+        showPassword: false,
+      }
+      this.showEditUserDialog = true
+    },
+    closeEditUserDialog() {
+      this.showEditUserDialog = false
+      this.editUserForm = {
+        id: null,
+        email: '',
+        name: '',
+        role: 'user',
+        newPassword: '',
+        showPassword: false,
+      }
+    },
+    setEditUserField<K extends keyof EditUserFormState>(field: K, value: EditUserFormState[K]) {
+      this.editUserForm[field] = value
+    },
+    async saveEditedUser() {
+      if (!this.editUserForm.id) return
+      const payload: UpdateUserPayload = {
+        email: this.editUserForm.email,
+        name: this.editUserForm.name,
+        role: this.editUserForm.role,
+      }
+      const updated = await api.patch<AdminUser, UpdateUserPayload>(`/admin/users/${this.editUserForm.id}`, payload)
+      this.users = this.users.map((u) => (u.id === updated.id ? updated : u))
+      this.closeEditUserDialog()
+      return updated
+    },
+    async resetEditedUserPassword() {
+      if (!this.editUserForm.id || this.editUserForm.newPassword.length < 8) return
+      await api.post<{ ok: true }, ResetUserPasswordPayload>(`/admin/users/${this.editUserForm.id}/reset-password`, {
+        password: this.editUserForm.newPassword,
+      })
+      this.editUserForm.newPassword = ''
+      this.editUserForm.showPassword = false
     },
     async fetchUsers() {
       this.loadingUsers = true

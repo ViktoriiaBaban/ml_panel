@@ -16,6 +16,7 @@
           :users="adminStore.users"
           :loading="adminStore.loadingUsers"
           @add-user="adminStore.openAddUserDialog"
+          @edit-user="adminStore.openEditUserDialog"
           @toggle-user-status="adminStore.toggleUserStatus"
           @delete-user="onDeleteUser"
         />
@@ -48,12 +49,23 @@
       @close-invitation-snackbar="adminStore.closeInvitationSnackbar"
       @submit="adminStore.submitUserForm"
     />
+
+    <AdministrationEditUserDialog
+      :model-value="adminStore.showEditUserDialog"
+      :form="adminStore.editUserForm"
+      :role-options="adminStore.roleOptions"
+      @update:model-value="onEditDialogChange"
+      @set-field="adminStore.setEditUserField"
+      @save="adminStore.saveEditedUser"
+      @reset-password="adminStore.resetEditedUserPassword"
+    />
   </v-container>
 </template>
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import AdministrationAddUserDialog from '@/components/administration/AdministrationAddUserDialog.vue'
+import AdministrationEditUserDialog from '@/components/administration/AdministrationEditUserDialog.vue'
 import AdministrationIntegrationsTable from '@/components/administration/AdministrationIntegrationsTable.vue'
 import AdministrationTabs from '@/components/administration/AdministrationTabs.vue'
 import AdministrationUsersTable from '@/components/administration/AdministrationUsersTable.vue'
@@ -76,6 +88,12 @@ function onDialogChange(open: boolean) {
 function onDeleteUser(id: number) {
   if (confirm('Вы уверены, что хотите удалить этого пользователя?')) {
     adminStore.deleteUser(id)
+  }
+}
+
+function onEditDialogChange(open: boolean) {
+  if (!open) {
+    adminStore.closeEditUserDialog()
   }
 }
 </script>

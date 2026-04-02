@@ -38,7 +38,7 @@
           >
             <v-icon :icon="item.status === 'active' ? 'mdi-lock-outline' : 'mdi-lock-open-variant-outline'" />
           </v-btn>
-          <v-btn icon variant="text" size="small" title="Редактировать">
+          <v-btn icon variant="text" size="small" title="Редактировать" @click="$emit('edit-user', item.id)">
             <v-icon icon="mdi-pencil-outline" color="primary" />
           </v-btn>
           <v-btn icon variant="text" size="small" title="Удалить" @click="$emit('delete-user', item.id)">
@@ -66,6 +66,7 @@ defineProps<{
 
 defineEmits<{
   'add-user': []
+  'edit-user': [id: number]
   'toggle-user-status': [id: number]
   'delete-user': [id: number]
 }>()

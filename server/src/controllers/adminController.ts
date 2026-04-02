@@ -36,6 +36,21 @@ export const adminController = {
     }
     return json(result.user as unknown as Json, { status: 201 })
   },
+  updateUser: async (req: RouteReq) => {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) return apiError(400, { error: 'bad_request', message: 'Invalid user id' })
+    const body = await readJson<{ email?: string; name?: string; role?: UserRole }>(req)
+    const user = apiService.updateUser(id, body ?? {})
+    return user ? json(user as unknown as Json) : apiError(404, { error: 'not_found', message: 'User not found' })
+  },
+  resetUserPassword: async (req: RouteReq) => {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) return apiError(400, { error: 'bad_request', message: 'Invalid user id' })
+    const body = await readJson<{ password?: string }>(req)
+    if (!body?.password) return apiError(400, { error: 'bad_request', message: 'password is required' })
+    const result = apiService.resetUserPassword(id, body.password)
+    return result ? json(result as unknown as Json) : apiError(400, { error: 'bad_request', message: 'Password must be at least 8 chars' })
+  },
   toggleUserStatus: (req: RouteReq) => {
     const id = Number(req.params.id)
     if (!Number.isFinite(id)) return apiError(400, { error: 'bad_request', message: 'Invalid user id' })

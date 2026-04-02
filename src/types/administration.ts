@@ -42,11 +42,26 @@ export interface AddUserPayload {
   password: string
 }
 
+export interface UpdateUserPayload {
+  email: string
+  name?: string
+  role: UserRole
+}
+
 export interface UserFormState {
   email: string
   name: string
   role: UserRole
   password: string
+  showPassword: boolean
+}
+
+export interface EditUserFormState {
+  id: number | null
+  email: string
+  name: string
+  role: UserRole
+  newPassword: string
   showPassword: boolean
 }
 
@@ -62,6 +77,10 @@ export interface RegisterByInvitationPayload {
   code: string
   email: string
   name?: string
+  password: string
+}
+
+export interface ResetUserPasswordPayload {
   password: string
 }
 

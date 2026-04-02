@@ -91,6 +91,21 @@ export const apiService = {
     db.users.splice(idx, 1)
     return true
   },
+  updateUser(id: number, input: { email?: string; name?: string; role?: UserRole }) {
+    const user = db.users.find((item) => item.id === id)
+    if (!user) return null
+    const email = input.email?.trim()
+    if (email) user.email = email
+    if (typeof input.name === 'string') user.name = input.name.trim()
+    if (input.role) user.role = input.role
+    return user
+  },
+  resetUserPassword(id: number, password: string) {
+    const user = db.users.find((item) => item.id === id)
+    if (!user) return null
+    if (!password || password.length < 8) return null
+    return { ok: true as const }
+  },
   listIntegrations: () => db.integrations,
   listHealthChecks: () => db.healthChecks,
   checkIntegration(id: string) {
