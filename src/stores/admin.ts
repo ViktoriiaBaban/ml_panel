@@ -1,58 +1,130 @@
 import { defineStore } from 'pinia'
+import type { DataTableHeader } from 'vuetify'
 import { api, ApiError } from '@/lib/api'
+import type {
+  AddUserPayload,
+  AdminIntegration,
+  AdminUser,
+  AdministrationTab,
+  HealthCheck,
+  IntegrationStatus,
+  SelectOption,
+  UserFormState,
+  UserRole,
+} from '@/types/administration'
 
-export type UserRole = 'user' | 'admin'
-export type UserStatus = 'active' | 'blocked'
-
-export type User = {
-  id: number
-  email: string
-  name: string
-  role: UserRole
-  status: UserStatus
-  registrationDate: string
-  lastLogin: string
+const INTEGRATION_STATUS_LABELS: Record<IntegrationStatus, string> = {
+  working: 'Работает',
+  warning: 'Проблемы с записью',
+  error: 'Не отвечает',
 }
 
-export type IntegrationStatus = 'working' | 'warning' | 'error'
-export type Integration = {
-  id: string
-  name: string
-  status: IntegrationStatus
-  lastCheck: string
-  details?: { url?: string; version?: string; error?: string; lastSuccessfulCall?: string }
-}
+const USER_HEADERS: DataTableHeader[] = [
+  { title: 'Логин / Email', key: 'email' },
+  { title: 'ФИО / Имя', key: 'name' },
+  { title: 'Роль', key: 'role' },
+  { title: 'Статус', key: 'status' },
+  { title: 'Дата регистрации', key: 'registrationDate' },
+  { title: 'Последний вход', key: 'lastLogin' },
+  { title: 'Действия', key: 'actions', sortable: false },
+]
 
-export type HealthCheck = { name: string; command: string }
+const INTEGRATION_HEADERS: DataTableHeader[] = [
+  { title: 'Компонент', key: 'name' },
+  { title: 'Статус', key: 'status' },
+  { title: 'Последняя проверка', key: 'lastCheck' },
+  { title: 'Действия', key: 'actions', sortable: false },
+]
+
+const ROLE_OPTIONS: SelectOption<UserRole>[] = [
+  { label: 'Обычный пользователь', value: 'user' },
+  { label: 'Администратор', value: 'admin' },
+]
+
+const TABS: SelectOption<AdministrationTab>[] = [
+  { value: 'users', label: 'Пользователи' },
+  { value: 'integrations', label: 'Системные интеграции' },
+]
 
 export const useAdminStore = defineStore('admin', {
   state: () => ({
-    users: [] as User[],
-    integrations: [] as Integration[],
+    users: [] as AdminUser[],
+    integrations: [] as AdminIntegration[],
     healthChecks: [] as HealthCheck[],
     loadingUsers: false,
     loadingIntegrations: false,
     error: null as string | null,
+    activeTab: 'users' as AdministrationTab,
+    showAddUserDialog: false,
+    expandedIntegrationId: null as string | null,
+    checkingIntegrationId: null as string | null,
+    userForm: {
+      email: '',
+      name: '',
+      role: 'user',
+    } as UserFormState,
   }),
+  getters: {
+    tabs: () => TABS,
+    userHeaders: () => USER_HEADERS,
+    integrationHeaders: () => INTEGRATION_HEADERS,
+    roleOptions: () => ROLE_OPTIONS,
+    integrationStatusLabels: () => INTEGRATION_STATUS_LABELS,
+    usersCount: (state) => state.users.length,
+  },
   actions: {
+    async initAdministration() {
+      await this.fetchUsers()
+      if (this.activeTab === 'integrations') {
+        await this.fetchIntegrations()
+      }
+    },
+    async setActiveTab(tab: AdministrationTab) {
+      this.activeTab = tab
+      if (tab === 'integrations' && this.integrations.length === 0 && !this.loadingIntegrations) {
+        await this.fetchIntegrations()
+      }
+    },
+    openAddUserDialog() {
+      this.showAddUserDialog = true
+    },
+    closeAddUserDialog() {
+      this.showAddUserDialog = false
+      this.resetUserForm()
+    },
+    setUserFormField<K extends keyof UserFormState>(field: K, value: UserFormState[K]) {
+      this.userForm[field] = value
+    },
+    resetUserForm() {
+      this.userForm = { email: '', name: '', role: 'user' }
+    },
+    async submitUserForm() {
+      if (!this.userForm.email.trim()) return
+      await this.addUser({
+        email: this.userForm.email,
+        name: this.userForm.name,
+        role: this.userForm.role,
+      })
+      this.closeAddUserDialog()
+    },
     async fetchUsers() {
       this.loadingUsers = true
       this.error = null
       try {
-        this.users = await api.get<User[]>('/admin/users')
+        this.users = await api.get<AdminUser[]>('/admin/users')
       } catch (e) {
         this.error = e instanceof ApiError ? e.message : 'Не удалось загрузить пользователей'
       } finally {
         this.loadingUsers = false
       }
     },
-    async addUser(input: { email: string; name?: string; role?: UserRole }) {
-      const created = await api.post<User, typeof input>('/admin/users', input)
+    async addUser(input: AddUserPayload) {
+      const created = await api.post<AdminUser, AddUserPayload>('/admin/users', input)
       this.users = [...this.users, created]
       return created
     },
     async toggleUserStatus(id: number) {
-      const updated = await api.patch<User, Record<string, never>>(`/admin/users/${id}/toggle-status`, {})
+      const updated = await api.patch<AdminUser, Record<string, never>>(`/admin/users/${id}/toggle-status`, {})
       this.users = this.users.map((u) => (u.id === id ? updated : u))
       return updated
     },
@@ -64,7 +136,7 @@ export const useAdminStore = defineStore('admin', {
       this.loadingIntegrations = true
       this.error = null
       try {
-        this.integrations = await api.get<Integration[]>('/admin/integrations')
+        this.integrations = await api.get<AdminIntegration[]>('/admin/integrations')
         this.healthChecks = await api.get<HealthCheck[]>('/admin/health-checks')
       } catch (e) {
         this.error = e instanceof ApiError ? e.message : 'Не удалось загрузить интеграции'
@@ -72,11 +144,18 @@ export const useAdminStore = defineStore('admin', {
         this.loadingIntegrations = false
       }
     },
+    toggleIntegrationExpanded(id: string) {
+      this.expandedIntegrationId = this.expandedIntegrationId === id ? null : id
+    },
     async checkIntegration(id: string) {
-      const updated = await api.post<Integration, Record<string, never>>(`/admin/integrations/${id}/check`, {})
-      this.integrations = this.integrations.map((i) => (i.id === id ? updated : i))
-      return updated
+      this.checkingIntegrationId = id
+      try {
+        const updated = await api.post<AdminIntegration, Record<string, never>>(`/admin/integrations/${id}/check`, {})
+        this.integrations = this.integrations.map((i) => (i.id === id ? updated : i))
+        return updated
+      } finally {
+        this.checkingIntegrationId = null
+      }
     },
   },
 })
-
