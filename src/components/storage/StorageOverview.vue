@@ -188,6 +188,7 @@ defineEmits<{
 .object-table :deep(td) {
   border-bottom: 1px solid #e3e6eb;
   height: 46px;
+  font-size: 12.5px;
 }
 
 .object-table :deep(tr:last-child td) {
@@ -218,12 +219,13 @@ defineEmits<{
 
 .overview-table :deep(th) {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 12.5px;
   border-bottom: 1px solid #9aa0a6;
 }
 
 .overview-table :deep(td) {
   border-bottom: 1px solid #e3e6eb;
   height: 46px;
+  font-size: 12.5px;
 }
 </style>

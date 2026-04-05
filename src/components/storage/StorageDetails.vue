@@ -160,6 +160,14 @@ function chipColor(value: unknown) {
   border: 1px solid #d8dce5;
 }
 
+.bordered-table :deep(th) {
+  font-size: 12.5px;
+}
+
+.bordered-table :deep(td) {
+  font-size: 12.5px;
+}
+
 .page-badge {
   width: 40px;
   height: 40px;
