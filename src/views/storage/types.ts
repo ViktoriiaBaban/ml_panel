@@ -17,4 +17,5 @@ export type UploadForm = {
   name: string
   type: string
   bucket: string
+  file: File | null
 }

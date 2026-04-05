@@ -51,9 +51,51 @@ export const router = createRouter({
     },
     {
       path: '/storage',
-      name: 'storage',
-      component: FileTable,
+      name: 'storage-root',
+      component: RouterGroup,
       meta: { section: 'storage', title: 'Данные и хранилища', breadcrumb: 'Данные и хранилища' },
+      children: [
+        {
+          path: '',
+          name: 'storage-overview',
+          component: FileTable,
+          meta: {
+            section: 'storage',
+            title: 'Данные и хранилища',
+            breadcrumb: 'Данные и хранилища',
+          },
+        },
+        {
+          path: 'buckets',
+          name: 'storage-buckets',
+          component: FileTable,
+          meta: {
+            section: 'storage',
+            title: 'Данные и хранилища',
+            breadcrumb: 'Бакеты',
+          },
+        },
+        {
+          path: 'files',
+          name: 'storage-files',
+          component: FileTable,
+          meta: {
+            section: 'storage',
+            title: 'Данные и хранилища',
+            breadcrumb: 'Файлы',
+          },
+        },
+        {
+          path: 'tables',
+          name: 'storage-tables',
+          component: FileTable,
+          meta: {
+            section: 'storage',
+            title: 'Данные и хранилища',
+            breadcrumb: 'Табличные данные',
+          },
+        },
+      ],
     },
     {
       path: '/projects',

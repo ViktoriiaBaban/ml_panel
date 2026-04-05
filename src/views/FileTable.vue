@@ -1,24 +1,5 @@
 <template>
   <v-container fluid class="storage-page pa-6 pa-md-8">
-    <div class="d-flex align-center justify-space-between mb-4">
-      <div>
-        <h1 class="text-h4 font-weight-bold mb-2">Данные и хранилища</h1>
-        <p v-if="mode === 'overview'" class="text-medium-emphasis">
-          Выберите нужный раздел для работы с бакетами, файлами и таблицами.
-        </p>
-      </div>
-
-      <v-btn
-        v-if="mode === 'details'"
-        variant="text"
-        class="text-none"
-        prepend-icon="mdi-view-dashboard-outline"
-        @click="goOverview"
-      >
-        На главную раздела
-      </v-btn>
-    </div>
-
     <StorageOverview
       v-if="mode === 'overview'"
       :buckets-preview="bucketsPreview"
@@ -36,7 +17,7 @@
       :items-per-page="itemsPerPage"
       :current-page="currentPage"
       :total-pages="totalPages"
-      @update:active-tab="activeTab = $event"
+      @update:active-tab="onTabChange"
       @update:search-term="searchTerm = $event"
       @set-page="setPage"
     />
@@ -70,6 +51,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import CreateBucketDialog from '@/components/storage/CreateBucketDialog.vue'
 import StorageDetails from '@/components/storage/StorageDetails.vue'
 import StorageFab from '@/components/storage/StorageFab.vue'
@@ -84,6 +66,21 @@ import {
   tableRows,
 } from './storage/mockData'
 import type { BucketForm, StorageMode, StorageRow, StorageTab, UploadForm } from './storage/types'
+
+const route = useRoute()
+const router = useRouter()
+
+const routeToTab: Partial<Record<string, StorageTab>> = {
+  'storage-buckets': 'buckets',
+  'storage-files': 'files',
+  'storage-tables': 'tables',
+}
+
+const tabToRoute: Record<StorageTab, string> = {
+  buckets: 'storage-buckets',
+  files: 'storage-files',
+  tables: 'storage-tables',
+}
 
 const mode = ref<StorageMode>('overview')
 const activeTab = ref<StorageTab>('buckets')
@@ -106,6 +103,7 @@ const uploadForm = ref<UploadForm>({
   name: '',
   type: 'Датасет',
   bucket: 'Название бакета 1',
+  file: null,
 })
 
 const buckets = ref<StorageRow[]>([...bucketRows])
@@ -138,6 +136,25 @@ const filesPreview = computed(() => files.value.slice(0, 5))
 const tablesPreview = computed(() => tables.value.slice(0, 12))
 const bucketNames = computed(() => buckets.value.map((item) => String(item.name)))
 
+watch(
+  () => route.name,
+  (name) => {
+    const routeName = typeof name === 'string' ? name : ''
+    if (routeName === 'storage-overview') {
+      mode.value = 'overview'
+      fabExpanded.value = false
+      return
+    }
+
+    const tab = routeToTab[routeName]
+    if (tab) {
+      mode.value = 'details'
+      activeTab.value = tab
+    }
+  },
+  { immediate: true }
+)
+
 watch([activeTab, searchTerm], () => {
   currentPage.value = 1
 })
@@ -148,12 +165,11 @@ watch(totalPages, (value) => {
 
 function openTab(tab: StorageTab) {
   activeTab.value = tab
-  mode.value = 'details'
+  router.push({ name: tabToRoute[tab] })
 }
 
-function goOverview() {
-  mode.value = 'overview'
-  fabExpanded.value = false
+function onTabChange(tab: StorageTab) {
+  openTab(tab)
 }
 
 function setPage(page: number) {
