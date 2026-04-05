@@ -1,5 +1,10 @@
 import { h } from 'vue'
-import { createRouter, createWebHistory, RouterView, type RouteLocationNormalizedLoaded } from 'vue-router'
+import {
+  createRouter,
+  createWebHistory,
+  RouterView,
+  type RouteLocationNormalizedLoaded,
+} from 'vue-router'
 
 import FileTable from '@/views/FileTable.vue'
 import ProjectsView from '@/views/ProjectsView.vue'
@@ -25,7 +30,11 @@ const RouterGroup = {
 
 type RouteMetaLabel = string | ((route: RouteLocationNormalizedLoaded) => string)
 
-function label(value: RouteMetaLabel | undefined, route: RouteLocationNormalizedLoaded, fallback: string) {
+function label(
+  value: RouteMetaLabel | undefined,
+  route: RouteLocationNormalizedLoaded,
+  fallback: string
+) {
   if (typeof value === 'function') return value(route)
   if (typeof value === 'string') return value
   return fallback
@@ -42,9 +51,51 @@ export const router = createRouter({
     },
     {
       path: '/storage',
-      name: 'storage',
-      component: FileTable,
-      meta: { section: 'storage', title: 'Объектное хранилище', breadcrumb: 'Данные и хранилища' },
+      name: 'storage-root',
+      component: RouterGroup,
+      meta: { section: 'storage', title: 'Данные и хранилища', breadcrumb: 'Данные и хранилища' },
+      children: [
+        {
+          path: '',
+          name: 'storage-overview',
+          component: FileTable,
+          meta: {
+            section: 'storage',
+            title: 'Данные и хранилища',
+            breadcrumb: 'Данные и хранилища',
+          },
+        },
+        {
+          path: 'buckets',
+          name: 'storage-buckets',
+          component: FileTable,
+          meta: {
+            section: 'storage',
+            title: 'Данные и хранилища',
+            breadcrumb: 'Бакеты',
+          },
+        },
+        {
+          path: 'files',
+          name: 'storage-files',
+          component: FileTable,
+          meta: {
+            section: 'storage',
+            title: 'Данные и хранилища',
+            breadcrumb: 'Файлы',
+          },
+        },
+        {
+          path: 'tables',
+          name: 'storage-tables',
+          component: FileTable,
+          meta: {
+            section: 'storage',
+            title: 'Данные и хранилища',
+            breadcrumb: 'Табличные данные',
+          },
+        },
+      ],
     },
     {
       path: '/projects',
@@ -63,7 +114,8 @@ export const router = createRouter({
       meta: {
         section: 'projects',
         title: 'Пайплайны',
-        breadcrumb: (route: RouteLocationNormalizedLoaded) => String(route.query.projectName ?? 'Пайплайны'),
+        breadcrumb: (route: RouteLocationNormalizedLoaded) =>
+          String(route.query.projectName ?? 'Пайплайны'),
       },
     },
     {
@@ -90,7 +142,8 @@ export const router = createRouter({
           component: RouterGroup,
           meta: {
             section: 'inference',
-            breadcrumb: (route: RouteLocationNormalizedLoaded) => String(route.query.serviceName ?? `Сервис #${String(route.params.serviceId)}`),
+            breadcrumb: (route: RouteLocationNormalizedLoaded) =>
+              String(route.query.serviceName ?? `Сервис #${String(route.params.serviceId)}`),
           },
           children: [
             { path: '', redirect: { name: 'inference-service-metrics' } },
@@ -98,29 +151,53 @@ export const router = createRouter({
               path: 'metrics',
               name: 'inference-service-metrics',
               component: InferenceMonitoringView,
-              props: (route) => ({ serviceId: Number(route.params.serviceId), serviceName: String(route.query.serviceName ?? `Сервис #${String(route.params.serviceId)}`) }),
+              props: (route) => ({
+                serviceId: Number(route.params.serviceId),
+                serviceName: String(
+                  route.query.serviceName ?? `Сервис #${String(route.params.serviceId)}`
+                ),
+              }),
               meta: { section: 'inference', title: 'Мониторинг инференса', breadcrumb: 'Метрики' },
             },
             {
               path: 'logs',
               name: 'inference-service-logs',
               component: InferenceMonitoringView,
-              props: (route) => ({ serviceId: Number(route.params.serviceId), serviceName: String(route.query.serviceName ?? `Сервис #${String(route.params.serviceId)}`) }),
+              props: (route) => ({
+                serviceId: Number(route.params.serviceId),
+                serviceName: String(
+                  route.query.serviceName ?? `Сервис #${String(route.params.serviceId)}`
+                ),
+              }),
               meta: { section: 'inference', title: 'Мониторинг инференса', breadcrumb: 'Логи' },
             },
             {
               path: 'model',
               name: 'inference-service-model',
               component: InferenceMonitoringView,
-              props: (route) => ({ serviceId: Number(route.params.serviceId), serviceName: String(route.query.serviceName ?? `Сервис #${String(route.params.serviceId)}`) }),
+              props: (route) => ({
+                serviceId: Number(route.params.serviceId),
+                serviceName: String(
+                  route.query.serviceName ?? `Сервис #${String(route.params.serviceId)}`
+                ),
+              }),
               meta: { section: 'inference', title: 'Мониторинг инференса', breadcrumb: 'Модель' },
             },
             {
               path: 'integrations',
               name: 'inference-service-integrations',
               component: InferenceMonitoringView,
-              props: (route) => ({ serviceId: Number(route.params.serviceId), serviceName: String(route.query.serviceName ?? `Сервис #${String(route.params.serviceId)}`) }),
-              meta: { section: 'inference', title: 'Мониторинг инференса', breadcrumb: 'Интеграции' },
+              props: (route) => ({
+                serviceId: Number(route.params.serviceId),
+                serviceName: String(
+                  route.query.serviceName ?? `Сервис #${String(route.params.serviceId)}`
+                ),
+              }),
+              meta: {
+                section: 'inference',
+                title: 'Мониторинг инференса',
+                breadcrumb: 'Интеграции',
+              },
             },
           ],
         },
@@ -144,7 +221,8 @@ export const router = createRouter({
           component: RouterGroup,
           meta: {
             section: 'etl',
-            breadcrumb: (route: RouteLocationNormalizedLoaded) => `Flow #${String(route.params.flowId ?? '')}`,
+            breadcrumb: (route: RouteLocationNormalizedLoaded) =>
+              `Flow #${String(route.params.flowId ?? '')}`,
           },
           children: [
             { path: '', redirect: { name: 'etl-flow-metrics' } },
@@ -184,20 +262,32 @@ export const router = createRouter({
       path: '/monitoring',
       name: 'monitoring-root',
       component: RouterGroup,
-      meta: { section: 'monitoring', title: 'Мониторинг и состояние системы', breadcrumb: 'Мониторинг и состояние системы' },
+      meta: {
+        section: 'monitoring',
+        title: 'Мониторинг и состояние системы',
+        breadcrumb: 'Мониторинг и состояние системы',
+      },
       children: [
         { path: '', redirect: { name: 'monitoring-dashboard' } },
         {
           path: 'dashboard',
           name: 'monitoring-dashboard',
           component: MonitoringSystemView,
-          meta: { section: 'monitoring', title: 'Мониторинг и состояние системы', breadcrumb: 'Дашборд' },
+          meta: {
+            section: 'monitoring',
+            title: 'Мониторинг и состояние системы',
+            breadcrumb: 'Дашборд',
+          },
         },
         {
           path: 'alerts',
           name: 'monitoring-alerts',
           component: MonitoringSystemView,
-          meta: { section: 'monitoring', title: 'Мониторинг и состояние системы', breadcrumb: 'Алерты' },
+          meta: {
+            section: 'monitoring',
+            title: 'Мониторинг и состояние системы',
+            breadcrumb: 'Алерты',
+          },
         },
       ],
     },
@@ -205,20 +295,32 @@ export const router = createRouter({
       path: '/administration',
       name: 'administration-root',
       component: RouterGroup,
-      meta: { section: 'administration', title: 'Администрирование', breadcrumb: 'Администрирование' },
+      meta: {
+        section: 'administration',
+        title: 'Администрирование',
+        breadcrumb: 'Администрирование',
+      },
       children: [
         { path: '', redirect: { name: 'administration-users' } },
         {
           path: 'users',
           name: 'administration-users',
           component: AdministrationView,
-          meta: { section: 'administration', title: 'Администрирование', breadcrumb: 'Пользователи' },
+          meta: {
+            section: 'administration',
+            title: 'Администрирование',
+            breadcrumb: 'Пользователи',
+          },
         },
         {
           path: 'integrations',
           name: 'administration-integrations',
           component: AdministrationView,
-          meta: { section: 'administration', title: 'Администрирование', breadcrumb: 'Системные интеграции' },
+          meta: {
+            section: 'administration',
+            title: 'Администрирование',
+            breadcrumb: 'Системные интеграции',
+          },
         },
       ],
     },
@@ -226,7 +328,10 @@ export const router = createRouter({
   ],
 })
 
-export function resolveBreadcrumb(record: { meta: Record<string, unknown>; path: string }, route: RouteLocationNormalizedLoaded) {
+export function resolveBreadcrumb(
+  record: { meta: Record<string, unknown>; path: string },
+  route: RouteLocationNormalizedLoaded
+) {
   return label(record.meta.breadcrumb as RouteMetaLabel | undefined, route, record.path)
 }
 

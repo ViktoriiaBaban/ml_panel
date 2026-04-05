@@ -1,207 +1,335 @@
 <template>
-  <v-container fluid class="pa-8">
-    <v-card rounded="lg" elevation="2">
-      <v-tabs v-model="activeTab" color="primary" align-tabs="start" class="px-4 border-b">
-        <v-tab v-for="tab in tabs" :key="tab" :value="tab" class="text-none">{{ tab }}</v-tab>
-      </v-tabs>
+  <v-container fluid class="storage-page pa-6 pa-md-8">
+    <StorageOverview
+      v-if="mode === 'overview'"
+      :buckets-preview="bucketsPreview"
+      :files-preview="filesPreview"
+      :tables-preview="tablesPreview"
+      @open-tab="openTab"
+      @preview-view="handlePreviewView"
+      @preview-delete="handlePreviewDelete"
+    />
 
-      <template v-if="activeTab === 'Files'">
-        <div class="pa-6 d-flex align-center ga-4 border-b flex-wrap">
-          <v-text-field
-            v-model="searchTerm"
-            placeholder="Поиск по имени или проекту…"
-            variant="outlined"
-            density="comfortable"
-            hide-details
-            rounded="lg"
-            class="flex-1"
-          >
-            <template #prepend-inner>
-              <Search :size="18" class="text-medium-emphasis" />
-            </template>
-          </v-text-field>
+    <StorageDetails
+      v-else
+      :active-tab="activeTab"
+      :search-term="searchTerm"
+      :headers="headersByTab[activeTab]"
+      :paged-items="currentItems"
+      :items-per-page="itemsPerPage"
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      @update:active-tab="onTabChange"
+      @update:search-term="searchTerm = $event"
+      @set-page="setPage"
+      @row-view="handleDetailsView"
+      @row-delete="handleDetailsDelete"
+    />
 
-          <v-select
-            v-model="filterType"
-            :items="filterItems"
-            variant="outlined"
-            density="comfortable"
-            hide-details
-            rounded="lg"
-            class="filter-select"
-          />
+    <StorageFab
+      v-if="mode === 'details'"
+      :expanded="fabExpanded"
+      @toggle="fabExpanded = !fabExpanded"
+      @upload="openUploadDialog"
+      @create-bucket="openCreateBucketDialog"
+    />
 
-          <v-btn color="primary" rounded="lg" class="text-none">
-            <Upload :size="16" class="mr-2" />
-            Загрузить файл
-          </v-btn>
-        </div>
+    <CreateBucketDialog
+      v-model="createBucketDialog"
+      :form="bucketForm"
+      :projects="projects"
+      @update:form="bucketForm = $event"
+      @save="saveBucket"
+    />
 
-        <v-table class="text-no-wrap">
-          <thead>
-            <tr>
-              <th v-for="col in columns" :key="col.key" @click="handleSort(col.key)" class="cursor-pointer">
-                <div class="d-flex align-center ga-1">
-                  {{ col.label }}
-                  <span v-if="sortField === col.key" class="text-primary">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
-                </div>
-              </th>
-              <th>Действия</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="file in pagedFiles" :key="file.id">
-              <td>
-                <div class="d-flex align-center ga-3">
-                  <component :is="fileTypeIcons[file.type]" :size="18" color="#409EFF" />
-                  <span>{{ file.name }}</span>
-                </div>
-              </td>
-              <td>
-                <v-chip size="small" :class="typeBadgeClass(file.type)">{{ file.type }}</v-chip>
-              </td>
-              <td>{{ file.size }}</td>
-              <td>{{ file.date }}</td>
-              <td>{{ file.project }}</td>
-              <td>
-                <v-menu location="bottom end">
-                  <template #activator="{ props }">
-                    <v-btn icon variant="text" size="small" v-bind="props">
-                      <MoreVertical :size="18" />
-                    </v-btn>
-                  </template>
-                  <v-list density="compact">
-                    <v-list-item title="Просмотреть">
-                      <template #prepend><Eye :size="16" /></template>
-                    </v-list-item>
-                    <v-list-item title="Скачать">
-                      <template #prepend><Download :size="16" /></template>
-                    </v-list-item>
-                    <v-list-item title="Удалить" base-color="error">
-                      <template #prepend><Trash2 :size="16" /></template>
-                    </v-list-item>
-                  </v-list>
-                </v-menu>
-              </td>
-            </tr>
-          </tbody>
-        </v-table>
+    <UploadFileDialog
+      v-model="uploadFileDialog"
+      :form="uploadForm"
+      :file-types="fileTypes"
+      :bucket-names="bucketNames"
+      @update:form="uploadForm = $event"
+      @save="saveUpload"
+    />
 
-        <div class="px-6 py-4 d-flex align-center justify-space-between border-t flex-wrap ga-2">
-          <div class="text-body-2 text-medium-emphasis">
-            Показано {{ pagedStart }}–{{ pagedEnd }} из {{ totalLabel }}
-          </div>
+    <v-dialog v-model="deleteDialog" max-width="420">
+      <v-card>
+        <v-card-title class="text-h6">Подтверждение удаления</v-card-title>
+        <v-card-text>{{ deleteDialogText }}</v-card-text>
+        <v-card-actions class="justify-end">
+          <v-btn variant="text" @click="deleteDialog = false">Отмена</v-btn>
+          <v-btn color="error" @click="confirmDelete">Удалить</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
-          <div class="d-flex align-center ga-2">
-            <v-btn icon variant="outlined" size="small" :disabled="currentPage === 1" @click="currentPage = Math.max(1, currentPage - 1)">
-              <ChevronLeft :size="16" />
-            </v-btn>
-            <span class="text-body-2">Страница {{ currentPage }} из {{ totalPages }}</span>
-            <v-btn icon variant="outlined" size="small" :disabled="currentPage >= totalPages" @click="currentPage = Math.min(totalPages, currentPage + 1)">
-              <ChevronRight :size="16" />
-            </v-btn>
-          </div>
-        </div>
-      </template>
-
-      <v-card-text v-else class="py-12 text-center text-medium-emphasis">
-        Содержимое вкладки "{{ activeTab }}" будет отображено здесь
-      </v-card-text>
-    </v-card>
+    <v-snackbar v-model="snackbarOpen" timeout="2000">{{ snackbarText }}</v-snackbar>
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { FileText, Database, Package, MoreVertical, Search, Upload, ChevronLeft, ChevronRight, Download, Eye, Trash2 } from 'lucide-vue-next'
-import { useStorageFilesStore, type StorageFileType } from '@/stores/storageFiles'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import CreateBucketDialog from '@/components/storage/CreateBucketDialog.vue'
+import StorageDetails from '@/components/storage/StorageDetails.vue'
+import StorageFab from '@/components/storage/StorageFab.vue'
+import StorageOverview from '@/components/storage/StorageOverview.vue'
+import UploadFileDialog from '@/components/storage/UploadFileDialog.vue'
+import { api } from '@/lib/api'
+import { fileTypes, headersByTab, projects } from './storage/mockData'
+import type {
+  BucketForm,
+  StorageMode,
+  StoragePreviewBlock,
+  StorageRow,
+  StorageTab,
+  UploadForm,
+} from './storage/types'
 
-const tabs = ['Buckets', 'Files', 'Upload', 'Metadata']
-const activeTab = ref('Files')
-const currentPage = ref(1)
+type PagedResponse = {
+  items: StorageRow[]
+  total: number
+  page: number
+  perPage: number
+}
+
+type OverviewResponse = {
+  buckets: StorageRow[]
+  files: StorageRow[]
+  tables: StorageRow[]
+}
+
+const route = useRoute()
+const router = useRouter()
+
+const routeToTab: Partial<Record<string, StorageTab>> = {
+  'storage-buckets': 'buckets',
+  'storage-files': 'files',
+  'storage-tables': 'tables',
+}
+
+const tabToRoute: Record<StorageTab, string> = {
+  buckets: 'storage-buckets',
+  files: 'storage-files',
+  tables: 'storage-tables',
+}
+
+const endpointByTab: Record<StorageTab, string> = {
+  buckets: 'buckets',
+  files: 'files',
+  tables: 'tables',
+}
+
+const mode = ref<StorageMode>('overview')
+const activeTab = ref<StorageTab>('buckets')
 const searchTerm = ref('')
-const filterType = ref('Все типы')
-const sortField = ref<string | null>(null)
-const sortDirection = ref<'asc' | 'desc'>('asc')
+const currentPage = ref(1)
 const itemsPerPage = 10
+const fabExpanded = ref(false)
 
-const filterItems = ['Все типы', 'Разметка', 'Датасеты', 'Артефакты']
+const createBucketDialog = ref(false)
+const uploadFileDialog = ref(false)
+const deleteDialog = ref(false)
+const snackbarOpen = ref(false)
+const snackbarText = ref('')
+const deleteTarget = ref<{
+  block: StoragePreviewBlock
+  id: number
+  scope: 'preview' | 'details'
+} | null>(null)
 
-type FileType = StorageFileType
-const filesStore = useStorageFilesStore()
-filesStore.fetchFiles({ search: '', type: 'Все типы', page: 1, perPage: itemsPerPage, sortField: null, sortDirection: 'asc' })
+const overview = ref<OverviewResponse>({ buckets: [], files: [], tables: [] })
+const buckets = ref<StorageRow[]>([])
+const files = ref<StorageRow[]>([])
+const tables = ref<StorageRow[]>([])
+const totals = ref<Record<StorageTab, number>>({ buckets: 0, files: 0, tables: 0 })
 
-const fileTypeIcons: Record<FileType, any> = { 'Разметка': FileText, 'Датасет': Database, 'Артефакт модели': Package }
+const bucketForm = ref<BucketForm>({
+  name: '',
+  project: 'Общее',
+  versioning: true,
+  hasLimit: false,
+})
 
-const columns = [
-  { key: 'name', label: 'Имя файла' },
-  { key: 'type', label: 'Тип' },
-  { key: 'size', label: 'Размер' },
-  { key: 'date', label: 'Дата загрузки' },
-  { key: 'project', label: 'Проект' },
-]
+const uploadForm = ref<UploadForm>({
+  name: '',
+  type: 'Датасет',
+  bucket: 'Название бакета 1',
+  file: null,
+})
 
-function typeBadgeClass(type: FileType) {
-  if (type === 'Разметка') return 'bg-blue-100 text-blue-800'
-  if (type === 'Датасет') return 'bg-green-100 text-green-800'
-  return 'bg-purple-100 text-purple-800'
+const currentItems = computed(() => {
+  if (activeTab.value === 'buckets') return buckets.value
+  if (activeTab.value === 'files') return files.value
+  return tables.value
+})
+
+const totalPages = computed(() => {
+  const total = totals.value[activeTab.value]
+  return Math.max(1, Math.ceil(total / itemsPerPage))
+})
+
+const bucketsPreview = computed(() => overview.value.buckets)
+const filesPreview = computed(() => overview.value.files)
+const tablesPreview = computed(() => overview.value.tables)
+const bucketNames = computed(() => {
+  const source = overview.value.buckets.length ? overview.value.buckets : buckets.value
+  return source.map((item) => String(item.name))
+})
+const deleteDialogText = computed(() => {
+  if (deleteTarget.value?.block === 'buckets') {
+    return 'При удалении бакета будут удалены и все файлы из этого бакета. Продолжить?'
+  }
+  return 'Вы уверены, что хотите удалить элемент?'
+})
+
+watch(
+  () => route.name,
+  (name) => {
+    const routeName = typeof name === 'string' ? name : ''
+    if (routeName === 'storage-overview') {
+      mode.value = 'overview'
+      fabExpanded.value = false
+      fetchOverview()
+      return
+    }
+
+    const tab = routeToTab[routeName]
+    if (tab) {
+      mode.value = 'details'
+      activeTab.value = tab
+      fetchTabData(tab, currentPage.value)
+    }
+  },
+  { immediate: true }
+)
+
+watch(searchTerm, () => {
+  currentPage.value = 1
+  if (mode.value === 'details') fetchTabData(activeTab.value, 1)
+})
+
+function openTab(tab: StorageTab) {
+  activeTab.value = tab
+  currentPage.value = 1
+  router.push({ name: tabToRoute[tab] })
 }
 
-function handleSort(field: string) {
-  if (sortField.value === field) sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
-  else { sortField.value = field; sortDirection.value = 'asc' }
+function onTabChange(tab: StorageTab) {
+  openTab(tab)
 }
 
-watch([searchTerm, filterType], () => {
-  currentPage.value = 1
-  filesStore.fetchFiles({
-    search: searchTerm.value,
-    type: filterType.value,
-    page: 1,
-    perPage: itemsPerPage,
-    sortField: sortField.value,
-    sortDirection: sortDirection.value,
-  })
-})
-watch([sortField, sortDirection], () => {
-  currentPage.value = 1
-  filesStore.fetchFiles({
-    search: searchTerm.value,
-    type: filterType.value,
-    page: 1,
-    perPage: itemsPerPage,
-    sortField: sortField.value,
-    sortDirection: sortDirection.value,
-  })
-})
-watch(currentPage, (p) => {
-  filesStore.fetchFiles({
-    search: searchTerm.value,
-    type: filterType.value,
-    page: p,
-    perPage: itemsPerPage,
-    sortField: sortField.value,
-    sortDirection: sortDirection.value,
-  })
-})
+function setPage(page: number) {
+  if (page < 1 || page > totalPages.value) return
+  currentPage.value = page
+  fetchTabData(activeTab.value, page)
+}
 
-const totalPages = computed(() => Math.max(1, Math.ceil(filesStore.total / itemsPerPage)))
-const pagedFiles = computed(() => filesStore.items)
-const pagedStart = computed(() => filesStore.total === 0 ? 0 : (currentPage.value - 1) * itemsPerPage + 1)
-const pagedEnd = computed(() => Math.min(currentPage.value * itemsPerPage, filesStore.total))
-const totalLabel = computed(() => filesStore.total)
+async function fetchOverview() {
+  const params = new URLSearchParams({ bucketsLimit: '5', filesLimit: '5', tablesLimit: '10' })
+  const res = await api.get<OverviewResponse>(`/storage/overview?${params.toString()}`)
+  overview.value = {
+    buckets: res.buckets,
+    files: res.files.map((x) => normalizeFileRow(x)),
+    tables: res.tables,
+  }
+}
+
+async function fetchTabData(tab: StorageTab, page: number) {
+  const params = new URLSearchParams({
+    search: searchTerm.value,
+    page: String(page),
+    perPage: String(itemsPerPage),
+  })
+
+  if (tab === 'files') {
+    params.set('type', 'Все типы')
+    params.set('sortDirection', 'asc')
+  }
+
+  const res = await api.get<PagedResponse>(`/storage/${endpointByTab[tab]}?${params.toString()}`)
+  totals.value[tab] = res.total
+
+  if (tab === 'buckets') buckets.value = res.items
+  if (tab === 'files') files.value = res.items.map((x) => normalizeFileRow(x))
+  if (tab === 'tables') tables.value = res.items
+}
+
+function normalizeFileRow(row: StorageRow): StorageRow {
+  if ('uploadedAt' in row) return row
+  if ('date' in row) {
+    return { ...row, uploadedAt: row.date }
+  }
+  return row
+}
+
+function openCreateBucketDialog() {
+  fabExpanded.value = false
+  createBucketDialog.value = true
+}
+
+function openUploadDialog() {
+  fabExpanded.value = false
+  uploadFileDialog.value = true
+}
+
+function saveBucket() {
+  createBucketDialog.value = false
+}
+
+function saveUpload() {
+  uploadFileDialog.value = false
+}
+
+function handlePreviewView(block: StoragePreviewBlock, id: number) {
+  snackbarText.value = `Открыть: ${block} #${id}`
+  snackbarOpen.value = true
+}
+
+function handleDetailsView(id: number) {
+  snackbarText.value = `Открыть: ${activeTab.value} #${id}`
+  snackbarOpen.value = true
+}
+
+function handlePreviewDelete(block: StoragePreviewBlock, id: number) {
+  deleteTarget.value = { block, id, scope: 'preview' }
+  deleteDialog.value = true
+}
+
+function handleDetailsDelete(id: number) {
+  deleteTarget.value = { block: activeTab.value, id, scope: 'details' }
+  deleteDialog.value = true
+}
+
+async function confirmDelete() {
+  if (!deleteTarget.value) return
+
+  const target = deleteTarget.value
+  await api.del(`/storage/${target.block}/${target.id}`)
+  deleteDialog.value = false
+  deleteTarget.value = null
+
+  if (target.scope === 'preview') {
+    await fetchPreviewBlock(target.block)
+    return
+  }
+
+  await fetchTabData(target.block, currentPage.value)
+}
+
+async function fetchPreviewBlock(block: StoragePreviewBlock) {
+  const perPage = block === 'tables' ? 10 : 5
+  const params = new URLSearchParams({ page: '1', perPage: String(perPage) })
+  if (block === 'files') params.set('type', 'Все типы')
+  const res = await api.get<PagedResponse>(`/storage/${block}?${params.toString()}`)
+
+  if (block === 'buckets') overview.value.buckets = res.items
+  if (block === 'files') overview.value.files = res.items.map((x) => normalizeFileRow(x))
+  if (block === 'tables') overview.value.tables = res.items
+}
 </script>
 
 <style scoped>
-.filter-select {
-  min-width: 180px;
-}
-
-.border-b {
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.border-t {
-  border-top: 1px solid #e5e7eb;
+.storage-page {
+  position: relative;
 }
 </style>

@@ -42,7 +42,30 @@ export type Pipeline = {
 }
 
 export type StorageFileType = 'Разметка' | 'Датасет' | 'Артефакт модели'
-export type StorageFile = { id: number; name: string; type: StorageFileType; size: string; date: string; project: string }
+export type StorageFile = {
+  id: number
+  name: string
+  type: StorageFileType
+  size: string
+  date: string
+  project: string
+  bucketId: number
+}
+export type StorageBucket = {
+  id: number
+  name: string
+  size: string
+  createdAt: string
+  project: string
+}
+export type StorageTableType = 'Исходные данные' | 'Признаки'
+export type StorageTable = {
+  id: number
+  name: string
+  type: StorageTableType
+  rows: number
+  createdAt: string
+}
 
 export type InferenceService = {
   id: number
@@ -57,10 +80,24 @@ export type InferenceService = {
   errorRate: number
 }
 
-export type InferenceRecentCall = { id: number; time: string; latency: number; status: 'success' | 'error' }
-export type InferenceLogItem = { id: number; timestamp: string; level: 'ERROR' | 'WARNING' | 'INFO'; message: string }
+export type InferenceRecentCall = {
+  id: number
+  time: string
+  latency: number
+  status: 'success' | 'error'
+}
+export type InferenceLogItem = {
+  id: number
+  timestamp: string
+  level: 'ERROR' | 'WARNING' | 'INFO'
+  message: string
+}
 export type InferenceChart = { title: string; color: string; data: Array<{ pct: number }> }
-export type InferenceRelatedSystem = { icon: 'RefreshCw' | 'Database' | 'FlaskConical'; name: string; desc: string }
+export type InferenceRelatedSystem = {
+  icon: 'RefreshCw' | 'Database' | 'FlaskConical'
+  name: string
+  desc: string
+}
 export type InferenceServiceMonitoring = {
   recentCalls: InferenceRecentCall[]
   logs: InferenceLogItem[]
@@ -86,10 +123,31 @@ export type EtlFlow = {
 }
 
 export type FlowVariable = { key: string; value: string; description: string }
-export type FlowComponent = { id: number; name: string; type: string; status: string; threadsActive: number; tasksCompleted: number }
-export type FlowHistoryItem = { id: number; timestamp: string; action: string; user: string; status: 'success' | 'error' }
+export type FlowComponent = {
+  id: number
+  name: string
+  type: string
+  status: string
+  threadsActive: number
+  tasksCompleted: number
+}
+export type FlowHistoryItem = {
+  id: number
+  timestamp: string
+  action: string
+  user: string
+  status: 'success' | 'error'
+}
 
-export type User = { id: number; email: string; name: string; role: UserRole; status: UserStatus; registrationDate: string; lastLogin: string }
+export type User = {
+  id: number
+  email: string
+  name: string
+  role: UserRole
+  status: UserStatus
+  registrationDate: string
+  lastLogin: string
+}
 export type Integration = {
   id: string
   name: string
@@ -109,4 +167,12 @@ export type InvitationLink = {
 
 export type MonitoringMetric = { label: string; value: string; sub: string; trend: 'up' | 'down' }
 export type MonitoringServiceUptime = { name: string; status: number }
-export type Alert = { id: number; name: string; status: string; state: AlertState; severity: AlertSeverity; lastChanged: string; description: string }
+export type Alert = {
+  id: number
+  name: string
+  status: string
+  state: AlertState
+  severity: AlertSeverity
+  lastChanged: string
+  description: string
+}
