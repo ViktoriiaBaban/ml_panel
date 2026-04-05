@@ -3,47 +3,48 @@
     <v-col cols="12" md="6">
       <v-card rounded="lg" class="pa-4 h-100">
         <div class="text-h6 mb-4">Объектные хранилища</div>
-        <v-row dense>
-          <v-col cols="12">
-            <v-card class="section-block" variant="outlined" @click="$emit('open-tab', 'buckets')">
-              <v-card-title
-                class="d-flex align-center justify-space-between text-primary font-weight-bold"
-              >
-                Бакеты
-                <ChevronRight :size="18" />
-              </v-card-title>
-              <v-divider />
-              <v-list lines="one" density="comfortable">
-                <v-list-item
-                  v-for="bucket in bucketsPreview"
-                  :key="String(bucket.id)"
-                  :title="String(bucket.name)"
-                  :subtitle="`${bucket.size} · ${bucket.project}`"
-                />
-              </v-list>
-            </v-card>
-          </v-col>
 
-          <v-col cols="12">
-            <v-card class="section-block" variant="outlined" @click="$emit('open-tab', 'files')">
-              <v-card-title
-                class="d-flex align-center justify-space-between text-primary font-weight-bold"
-              >
-                Файлы
-                <ChevronRight :size="18" />
-              </v-card-title>
-              <v-divider />
-              <v-list lines="one" density="comfortable">
-                <v-list-item
-                  v-for="file in filesPreview"
-                  :key="String(file.id)"
-                  :title="String(file.name)"
-                  :subtitle="`${file.size} · ${file.project}`"
-                />
-              </v-list>
-            </v-card>
-          </v-col>
-        </v-row>
+        <section class="object-block mb-4" @click="$emit('open-tab', 'buckets')">
+          <div
+            class="object-block__header d-flex align-center justify-space-between text-primary font-weight-bold"
+          >
+            <span>Бакеты</span>
+            <ChevronRight :size="18" />
+          </div>
+
+          <v-table density="comfortable" class="object-table">
+            <tbody>
+              <tr v-for="bucket in bucketsPreview" :key="String(bucket.id)">
+                <td>{{ bucket.name }}</td>
+                <td class="col-size">{{ bucket.size }}</td>
+                <td class="col-date">{{ bucket.createdAt }}</td>
+                <td class="col-project">{{ bucket.project }}</td>
+                <td class="text-right">•••</td>
+              </tr>
+            </tbody>
+          </v-table>
+        </section>
+
+        <section class="object-block" @click="$emit('open-tab', 'files')">
+          <div
+            class="object-block__header d-flex align-center justify-space-between text-primary font-weight-bold"
+          >
+            <span>Файлы</span>
+            <ChevronRight :size="18" />
+          </div>
+
+          <v-table density="comfortable" class="object-table">
+            <tbody>
+              <tr v-for="file in filesPreview" :key="String(file.id)">
+                <td>{{ file.name }}</td>
+                <td class="col-size">{{ file.size }}</td>
+                <td class="col-date">{{ file.uploadedAt ?? file.date }}</td>
+                <td class="col-project">{{ file.project }}</td>
+                <td class="text-right">•••</td>
+              </tr>
+            </tbody>
+          </v-table>
+        </section>
       </v-card>
     </v-col>
 
@@ -103,9 +104,39 @@ defineEmits<{
 </script>
 
 <style scoped>
-.section-block {
-  border-color: #1f6ed4;
+.object-block {
+  border: 1px solid #1f6ed4;
+  border-radius: 10px;
+  overflow: hidden;
   cursor: pointer;
+}
+
+.object-block__header {
+  padding: 10px 14px;
+  background: #e9f1fc;
+}
+
+.object-table :deep(td) {
+  border-bottom: 1px solid #e3e6eb;
+  height: 46px;
+}
+
+.object-table :deep(tr:last-child td) {
+  border-bottom: none;
+}
+
+.col-size {
+  width: 95px;
+  white-space: nowrap;
+}
+
+.col-date {
+  width: 150px;
+  white-space: nowrap;
+}
+
+.col-project {
+  min-width: 140px;
 }
 
 .table-card {
