@@ -142,6 +142,31 @@ export const tableRows: StorageRow[] = [
   },
   { id: 4, name: 'table_name_4', type: 'Признаки', rows: 123, createdAt: '08.01.2026, 15:00' },
   { id: 5, name: 'table_name_5', type: 'Признаки', rows: 452, createdAt: '08.01.2026, 15:00' },
+  {
+    id: 6,
+    name: 'table_name_6',
+    type: 'Исходные данные',
+    rows: 15105,
+    createdAt: '08.01.2026, 15:00',
+  },
+  {
+    id: 7,
+    name: 'table_name_7',
+    type: 'Исходные данные',
+    rows: 123,
+    createdAt: '08.01.2026, 15:00',
+  },
+  { id: 8, name: 'table_name_8', type: 'Признаки', rows: 452, createdAt: '08.01.2026, 15:00' },
+  { id: 9, name: 'table_name_9', type: 'Признаки', rows: 15105, createdAt: '08.01.2026, 15:00' },
+  { id: 10, name: 'table_name_10', type: 'Признаки', rows: 123, createdAt: '08.01.2026, 15:00' },
+  {
+    id: 11,
+    name: 'table_name_11',
+    type: 'Исходные данные',
+    rows: 452,
+    createdAt: '08.01.2026, 15:00',
+  },
+  { id: 12, name: 'table_name_12', type: 'Признаки', rows: 15105, createdAt: '08.01.2026, 15:00' },
 ]
 
 export const headersByTab: Record<StorageTab, StorageHeader[]> = {

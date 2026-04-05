@@ -1,6 +1,6 @@
 <template>
   <v-row dense>
-    <v-col cols="12" md="8">
+    <v-col cols="12" md="6">
       <v-card rounded="lg" class="pa-4 h-100">
         <div class="text-h6 mb-4">Объектные хранилища</div>
         <v-row dense>
@@ -47,35 +47,41 @@
       </v-card>
     </v-col>
 
-    <v-col cols="12" md="4">
-      <v-card
-        rounded="lg"
-        class="pa-4 h-100 section-block"
-        variant="outlined"
-        @click="$emit('open-tab', 'tables')"
-      >
+    <v-col cols="12" md="6">
+      <v-card rounded="lg" class="pa-4 h-100 table-card" @click="$emit('open-tab', 'tables')">
         <v-card-title class="d-flex align-center justify-space-between font-weight-bold">
           Табличные данные
           <ChevronRight :size="18" />
         </v-card-title>
-        <v-divider class="mb-2" />
-        <v-list lines="one" density="comfortable">
-          <v-list-item
-            v-for="table in tablesPreview"
-            :key="String(table.id)"
-            :title="String(table.name)"
-          >
-            <template #append>
-              <v-chip
-                :color="table.type === 'Признаки' ? 'cyan' : 'orange'"
-                size="small"
-                variant="tonal"
-              >
-                {{ table.type }}
-              </v-chip>
-            </template>
-          </v-list-item>
-        </v-list>
+
+        <v-table density="comfortable" class="overview-table">
+          <thead>
+            <tr>
+              <th>Название ↓</th>
+              <th>Тип</th>
+              <th>Размер, строки</th>
+              <th>Дата создания</th>
+              <th class="text-right"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="table in tablesPreview" :key="String(table.id)">
+              <td>{{ table.name }}</td>
+              <td>
+                <v-chip
+                  :color="table.type === 'Признаки' ? 'cyan' : 'orange'"
+                  size="small"
+                  variant="tonal"
+                >
+                  {{ table.type }}
+                </v-chip>
+              </td>
+              <td>{{ table.rows }}</td>
+              <td>{{ table.createdAt }}</td>
+              <td class="text-right">•••</td>
+            </tr>
+          </tbody>
+        </v-table>
       </v-card>
     </v-col>
   </v-row>
@@ -100,5 +106,20 @@ defineEmits<{
 .section-block {
   border-color: #1f6ed4;
   cursor: pointer;
+}
+
+.table-card {
+  cursor: pointer;
+}
+
+.overview-table :deep(th) {
+  font-weight: 600;
+  font-size: 14px;
+  border-bottom: 1px solid #9aa0a6;
+}
+
+.overview-table :deep(td) {
+  border-bottom: 1px solid #e3e6eb;
+  height: 46px;
 }
 </style>
