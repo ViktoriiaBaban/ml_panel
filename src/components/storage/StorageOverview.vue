@@ -4,9 +4,10 @@
       <v-card rounded="lg" class="pa-4 h-100">
         <div class="text-h6 mb-4">Объектные хранилища</div>
 
-        <section class="object-block mb-4" @click="$emit('open-tab', 'buckets')">
+        <section class="object-block mb-4">
           <div
             class="object-block__header d-flex align-center justify-space-between text-primary font-weight-bold"
+            @click="$emit('open-tab', 'buckets')"
           >
             <span>Бакеты</span>
             <ChevronRight :size="18" />
@@ -19,15 +20,26 @@
                 <td class="col-size">{{ bucket.size }}</td>
                 <td class="col-date">{{ bucket.createdAt }}</td>
                 <td class="col-project">{{ bucket.project }}</td>
-                <td class="text-right">•••</td>
+                <td class="text-right">
+                  <v-menu location="bottom end">
+                    <template #activator="{ props }">
+                      <v-btn icon size="x-small" variant="text" v-bind="props">•••</v-btn>
+                    </template>
+                    <v-list density="compact">
+                      <v-list-item title="Посмотреть" />
+                      <v-list-item title="Удалить" base-color="error" />
+                    </v-list>
+                  </v-menu>
+                </td>
               </tr>
             </tbody>
           </v-table>
         </section>
 
-        <section class="object-block" @click="$emit('open-tab', 'files')">
+        <section class="object-block">
           <div
             class="object-block__header d-flex align-center justify-space-between text-primary font-weight-bold"
+            @click="$emit('open-tab', 'files')"
           >
             <span>Файлы</span>
             <ChevronRight :size="18" />
@@ -40,7 +52,17 @@
                 <td class="col-size">{{ file.size }}</td>
                 <td class="col-date">{{ file.uploadedAt ?? file.date }}</td>
                 <td class="col-project">{{ file.project }}</td>
-                <td class="text-right">•••</td>
+                <td class="text-right">
+                  <v-menu location="bottom end">
+                    <template #activator="{ props }">
+                      <v-btn icon size="x-small" variant="text" v-bind="props">•••</v-btn>
+                    </template>
+                    <v-list density="compact">
+                      <v-list-item title="Посмотреть" />
+                      <v-list-item title="Удалить" base-color="error" />
+                    </v-list>
+                  </v-menu>
+                </td>
               </tr>
             </tbody>
           </v-table>
@@ -49,8 +71,11 @@
     </v-col>
 
     <v-col cols="12" md="6">
-      <v-card rounded="lg" class="pa-4 h-100 table-card" @click="$emit('open-tab', 'tables')">
-        <v-card-title class="d-flex align-center justify-space-between font-weight-bold">
+      <v-card rounded="lg" class="pa-4 h-100 table-card">
+        <v-card-title
+          class="d-flex align-center justify-space-between font-weight-bold table-card__header"
+          @click="$emit('open-tab', 'tables')"
+        >
           Табличные данные
           <ChevronRight :size="18" />
         </v-card-title>
@@ -79,7 +104,17 @@
               </td>
               <td>{{ table.rows }}</td>
               <td>{{ table.createdAt }}</td>
-              <td class="text-right">•••</td>
+              <td class="text-right">
+                <v-menu location="bottom end">
+                  <template #activator="{ props }">
+                    <v-btn icon size="x-small" variant="text" v-bind="props">•••</v-btn>
+                  </template>
+                  <v-list density="compact">
+                    <v-list-item title="Посмотреть" />
+                    <v-list-item title="Удалить" base-color="error" />
+                  </v-list>
+                </v-menu>
+              </td>
             </tr>
           </tbody>
         </v-table>
@@ -114,6 +149,7 @@ defineEmits<{
 .object-block__header {
   padding: 10px 14px;
   background: #e9f1fc;
+  cursor: pointer;
 }
 
 .object-table :deep(td) {
@@ -140,6 +176,10 @@ defineEmits<{
 }
 
 .table-card {
+  cursor: default;
+}
+
+.table-card__header {
   cursor: pointer;
 }
 

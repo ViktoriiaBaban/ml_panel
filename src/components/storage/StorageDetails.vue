@@ -45,9 +45,17 @@
       </template>
 
       <template #item.actions>
-        <v-btn icon variant="text" size="small">
-          <MoreHorizontal :size="16" />
-        </v-btn>
+        <v-menu location="bottom end">
+          <template #activator="{ props }">
+            <v-btn icon variant="text" size="small" v-bind="props">
+              <MoreHorizontal :size="16" />
+            </v-btn>
+          </template>
+          <v-list density="compact">
+            <v-list-item title="Посмотреть" />
+            <v-list-item title="Удалить" base-color="error" />
+          </v-list>
+        </v-menu>
       </template>
     </v-data-table>
 
