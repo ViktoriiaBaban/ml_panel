@@ -44,7 +44,7 @@
         <span v-else>—</span>
       </template>
 
-      <template #item.actions>
+      <template #item.actions="{ item }">
         <v-menu location="bottom end">
           <template #activator="{ props }">
             <v-btn icon variant="text" size="small" v-bind="props">
@@ -52,8 +52,17 @@
             </v-btn>
           </template>
           <v-list density="compact">
-            <v-list-item title="Посмотреть" />
-            <v-list-item title="Удалить" base-color="error" />
+            <v-list-item
+              title="Посмотреть"
+              prepend-icon="mdi-eye-outline"
+              @click="emit('row-view', Number(item.id))"
+            />
+            <v-list-item
+              title="Удалить"
+              prepend-icon="mdi-delete-outline"
+              base-color="error"
+              @click="emit('row-delete', Number(item.id))"
+            />
           </v-list>
         </v-menu>
       </template>
@@ -122,6 +131,8 @@ const emit = defineEmits<{
   (e: 'update:active-tab', tab: StorageTab): void
   (e: 'update:search-term', value: string): void
   (e: 'set-page', page: number): void
+  (e: 'row-view', id: number): void
+  (e: 'row-delete', id: number): void
 }>()
 
 function onTabChange(tab: string | null) {

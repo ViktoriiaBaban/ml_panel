@@ -23,11 +23,22 @@
                 <td class="text-right">
                   <v-menu location="bottom end">
                     <template #activator="{ props }">
-                      <v-btn icon size="x-small" variant="text" v-bind="props">•••</v-btn>
+                      <v-btn icon size="x-small" variant="text" v-bind="props" @click.stop
+                        >•••</v-btn
+                      >
                     </template>
                     <v-list density="compact">
-                      <v-list-item title="Посмотреть" />
-                      <v-list-item title="Удалить" base-color="error" />
+                      <v-list-item
+                        title="Посмотреть"
+                        prepend-icon="mdi-eye-outline"
+                        @click="$emit('preview-view', 'buckets', Number(bucket.id))"
+                      />
+                      <v-list-item
+                        title="Удалить"
+                        prepend-icon="mdi-delete-outline"
+                        base-color="error"
+                        @click="$emit('preview-delete', 'buckets', Number(bucket.id))"
+                      />
                     </v-list>
                   </v-menu>
                 </td>
@@ -55,11 +66,22 @@
                 <td class="text-right">
                   <v-menu location="bottom end">
                     <template #activator="{ props }">
-                      <v-btn icon size="x-small" variant="text" v-bind="props">•••</v-btn>
+                      <v-btn icon size="x-small" variant="text" v-bind="props" @click.stop
+                        >•••</v-btn
+                      >
                     </template>
                     <v-list density="compact">
-                      <v-list-item title="Посмотреть" />
-                      <v-list-item title="Удалить" base-color="error" />
+                      <v-list-item
+                        title="Посмотреть"
+                        prepend-icon="mdi-eye-outline"
+                        @click="$emit('preview-view', 'files', Number(file.id))"
+                      />
+                      <v-list-item
+                        title="Удалить"
+                        prepend-icon="mdi-delete-outline"
+                        base-color="error"
+                        @click="$emit('preview-delete', 'files', Number(file.id))"
+                      />
                     </v-list>
                   </v-menu>
                 </td>
@@ -107,11 +129,20 @@
               <td class="text-right">
                 <v-menu location="bottom end">
                   <template #activator="{ props }">
-                    <v-btn icon size="x-small" variant="text" v-bind="props">•••</v-btn>
+                    <v-btn icon size="x-small" variant="text" v-bind="props" @click.stop>•••</v-btn>
                   </template>
                   <v-list density="compact">
-                    <v-list-item title="Посмотреть" />
-                    <v-list-item title="Удалить" base-color="error" />
+                    <v-list-item
+                      title="Посмотреть"
+                      prepend-icon="mdi-eye-outline"
+                      @click="$emit('preview-view', 'tables', Number(table.id))"
+                    />
+                    <v-list-item
+                      title="Удалить"
+                      prepend-icon="mdi-delete-outline"
+                      base-color="error"
+                      @click="$emit('preview-delete', 'tables', Number(table.id))"
+                    />
                   </v-list>
                 </v-menu>
               </td>
@@ -125,7 +156,7 @@
 
 <script setup lang="ts">
 import { ChevronRight } from 'lucide-vue-next'
-import type { StorageRow, StorageTab } from '@/views/storage/types'
+import type { StoragePreviewBlock, StorageRow, StorageTab } from '@/views/storage/types'
 
 defineProps<{
   bucketsPreview: StorageRow[]
@@ -135,6 +166,8 @@ defineProps<{
 
 defineEmits<{
   (e: 'open-tab', tab: StorageTab): void
+  (e: 'preview-view', block: StoragePreviewBlock, id: number): void
+  (e: 'preview-delete', block: StoragePreviewBlock, id: number): void
 }>()
 </script>
 
@@ -143,7 +176,7 @@ defineEmits<{
   border: 1px solid #1f6ed4;
   border-radius: 10px;
   overflow: hidden;
-  cursor: pointer;
+  cursor: default;
 }
 
 .object-block__header {

@@ -95,6 +95,24 @@ export const apiService = {
       tables: db.tables.slice(0, tablesLimit),
     }
   },
+  deleteStorageBucket(id: number) {
+    const index = db.buckets.findIndex((x) => x.id === id)
+    if (index < 0) return false
+    db.buckets.splice(index, 1)
+    return true
+  },
+  deleteStorageFile(id: number) {
+    const index = db.files.findIndex((x) => x.id === id)
+    if (index < 0) return false
+    db.files.splice(index, 1)
+    return true
+  },
+  deleteStorageTable(id: number) {
+    const index = db.tables.findIndex((x) => x.id === id)
+    if (index < 0) return false
+    db.tables.splice(index, 1)
+    return true
+  },
   listInferenceServices: (q: URLSearchParams) =>
     db.inferenceServices.filter((s) => {
       const search = (q.get('search') ?? '').trim().toLowerCase()

@@ -1,4 +1,5 @@
 export type StorageTab = 'buckets' | 'files' | 'tables'
+export type StoragePreviewBlock = StorageTab
 
 export type StorageMode = 'overview' | 'details'
 

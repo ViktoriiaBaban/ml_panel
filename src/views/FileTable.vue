@@ -6,6 +6,8 @@
       :files-preview="filesPreview"
       :tables-preview="tablesPreview"
       @open-tab="openTab"
+      @preview-view="handlePreviewView"
+      @preview-delete="handlePreviewDelete"
     />
 
     <StorageDetails
@@ -20,6 +22,8 @@
       @update:active-tab="onTabChange"
       @update:search-term="searchTerm = $event"
       @set-page="setPage"
+      @row-view="handleDetailsView"
+      @row-delete="handleDetailsDelete"
     />
 
     <StorageFab
@@ -46,6 +50,19 @@
       @update:form="uploadForm = $event"
       @save="saveUpload"
     />
+
+    <v-dialog v-model="deleteDialog" max-width="420">
+      <v-card>
+        <v-card-title class="text-h6">Подтверждение удаления</v-card-title>
+        <v-card-text>Вы уверены, что хотите удалить элемент?</v-card-text>
+        <v-card-actions class="justify-end">
+          <v-btn variant="text" @click="deleteDialog = false">Отмена</v-btn>
+          <v-btn color="error" @click="confirmDelete">Удалить</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-snackbar v-model="snackbarOpen" timeout="2000">{{ snackbarText }}</v-snackbar>
   </v-container>
 </template>
 
@@ -59,7 +76,14 @@ import StorageOverview from '@/components/storage/StorageOverview.vue'
 import UploadFileDialog from '@/components/storage/UploadFileDialog.vue'
 import { api } from '@/lib/api'
 import { fileTypes, headersByTab, projects } from './storage/mockData'
-import type { BucketForm, StorageMode, StorageRow, StorageTab, UploadForm } from './storage/types'
+import type {
+  BucketForm,
+  StorageMode,
+  StoragePreviewBlock,
+  StorageRow,
+  StorageTab,
+  UploadForm,
+} from './storage/types'
 
 type PagedResponse = {
   items: StorageRow[]
@@ -104,6 +128,14 @@ const fabExpanded = ref(false)
 
 const createBucketDialog = ref(false)
 const uploadFileDialog = ref(false)
+const deleteDialog = ref(false)
+const snackbarOpen = ref(false)
+const snackbarText = ref('')
+const deleteTarget = ref<{
+  block: StoragePreviewBlock
+  id: number
+  scope: 'preview' | 'details'
+} | null>(null)
 
 const overview = ref<OverviewResponse>({ buckets: [], files: [], tables: [] })
 const buckets = ref<StorageRow[]>([])
@@ -240,6 +272,53 @@ function saveBucket() {
 
 function saveUpload() {
   uploadFileDialog.value = false
+}
+
+function handlePreviewView(block: StoragePreviewBlock, id: number) {
+  snackbarText.value = `Открыть: ${block} #${id}`
+  snackbarOpen.value = true
+}
+
+function handleDetailsView(id: number) {
+  snackbarText.value = `Открыть: ${activeTab.value} #${id}`
+  snackbarOpen.value = true
+}
+
+function handlePreviewDelete(block: StoragePreviewBlock, id: number) {
+  deleteTarget.value = { block, id, scope: 'preview' }
+  deleteDialog.value = true
+}
+
+function handleDetailsDelete(id: number) {
+  deleteTarget.value = { block: activeTab.value, id, scope: 'details' }
+  deleteDialog.value = true
+}
+
+async function confirmDelete() {
+  if (!deleteTarget.value) return
+
+  const target = deleteTarget.value
+  await api.del(`/storage/${target.block}/${target.id}`)
+  deleteDialog.value = false
+  deleteTarget.value = null
+
+  if (target.scope === 'preview') {
+    await fetchPreviewBlock(target.block)
+    return
+  }
+
+  await fetchTabData(target.block, currentPage.value)
+}
+
+async function fetchPreviewBlock(block: StoragePreviewBlock) {
+  const perPage = block === 'tables' ? 10 : 5
+  const params = new URLSearchParams({ page: '1', perPage: String(perPage) })
+  if (block === 'files') params.set('type', 'Все типы')
+  const res = await api.get<PagedResponse>(`/storage/${block}?${params.toString()}`)
+
+  if (block === 'buckets') overview.value.buckets = res.items
+  if (block === 'files') overview.value.files = res.items.map((x) => normalizeFileRow(x))
+  if (block === 'tables') overview.value.tables = res.items
 }
 </script>
 
