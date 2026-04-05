@@ -87,6 +87,7 @@ export const files: StorageFile[] = [
     size: '12.4 МБ',
     date: '09.01.2026, 14:23',
     project: 'Fraud Detection',
+    bucketId: 1,
   },
   {
     id: 2,
@@ -95,6 +96,7 @@ export const files: StorageFile[] = [
     size: '856 КБ',
     date: '09.01.2026, 13:45',
     project: 'Fraud Detection',
+    bucketId: 1,
   },
   {
     id: 3,
@@ -103,6 +105,7 @@ export const files: StorageFile[] = [
     size: '45.2 МБ',
     date: '09.01.2026, 12:30',
     project: 'Fraud Detection',
+    bucketId: 2,
   },
   {
     id: 4,
@@ -111,6 +114,7 @@ export const files: StorageFile[] = [
     size: '8.7 МБ',
     date: '09.01.2026, 11:15',
     project: 'Customer Segmentation',
+    bucketId: 2,
   },
   {
     id: 5,
@@ -119,6 +123,7 @@ export const files: StorageFile[] = [
     size: '320 КБ',
     date: '09.01.2026, 10:00',
     project: 'Customer Segmentation',
+    bucketId: 3,
   },
   {
     id: 6,
@@ -127,6 +132,7 @@ export const files: StorageFile[] = [
     size: '92.1 МБ',
     date: '09.01.2026, 09:45',
     project: 'Text Classification',
+    bucketId: 4,
   },
   {
     id: 7,
@@ -135,6 +141,7 @@ export const files: StorageFile[] = [
     size: '6.3 МБ',
     date: '09.01.2026, 08:20',
     project: 'Text Classification',
+    bucketId: 4,
   },
   {
     id: 8,
@@ -143,6 +150,7 @@ export const files: StorageFile[] = [
     size: '1.2 МБ',
     date: '08.01.2026, 17:30',
     project: 'Image Recognition',
+    bucketId: 5,
   },
   {
     id: 9,
@@ -151,6 +159,7 @@ export const files: StorageFile[] = [
     size: '128.5 МБ',
     date: '08.01.2026, 16:15',
     project: 'Recommendation System',
+    bucketId: 5,
   },
   {
     id: 10,
@@ -159,6 +168,7 @@ export const files: StorageFile[] = [
     size: '22.8 МБ',
     date: '08.01.2026, 15:00',
     project: 'Recommendation System',
+    bucketId: 6,
   },
 ]
 

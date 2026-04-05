@@ -49,6 +49,7 @@ export type StorageFile = {
   size: string
   date: string
   project: string
+  bucketId: number
 }
 export type StorageBucket = {
   id: number

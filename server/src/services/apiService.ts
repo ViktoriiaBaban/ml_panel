@@ -99,6 +99,7 @@ export const apiService = {
     const index = db.buckets.findIndex((x) => x.id === id)
     if (index < 0) return false
     db.buckets.splice(index, 1)
+    db.files = db.files.filter((file) => file.bucketId !== id)
     return true
   },
   deleteStorageFile(id: number) {

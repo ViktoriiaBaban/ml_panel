@@ -54,7 +54,7 @@
     <v-dialog v-model="deleteDialog" max-width="420">
       <v-card>
         <v-card-title class="text-h6">Подтверждение удаления</v-card-title>
-        <v-card-text>Вы уверены, что хотите удалить элемент?</v-card-text>
+        <v-card-text>{{ deleteDialogText }}</v-card-text>
         <v-card-actions class="justify-end">
           <v-btn variant="text" @click="deleteDialog = false">Отмена</v-btn>
           <v-btn color="error" @click="confirmDelete">Удалить</v-btn>
@@ -174,6 +174,12 @@ const tablesPreview = computed(() => overview.value.tables)
 const bucketNames = computed(() => {
   const source = overview.value.buckets.length ? overview.value.buckets : buckets.value
   return source.map((item) => String(item.name))
+})
+const deleteDialogText = computed(() => {
+  if (deleteTarget.value?.block === 'buckets') {
+    return 'При удалении бакета будут удалены и все файлы из этого бакета. Продолжить?'
+  }
+  return 'Вы уверены, что хотите удалить элемент?'
 })
 
 watch(
