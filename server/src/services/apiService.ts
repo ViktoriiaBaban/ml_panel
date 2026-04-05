@@ -1,40 +1,114 @@
 import type { UserRole } from '@/types/domain'
 import { db } from './db'
 
+function getPaging(q: URLSearchParams) {
+  const page = Math.max(1, Number(q.get('page') ?? '1') || 1)
+  const perPage = Math.max(1, Math.min(100, Number(q.get('perPage') ?? '10') || 10))
+  return { page, perPage }
+}
+
+function paginate<T>(items: T[], page: number, perPage: number) {
+  const total = items.length
+  const out = items.slice((page - 1) * perPage, page * perPage)
+  return { items: out, total, page, perPage }
+}
+
 export const apiService = {
   listProjects(q: URLSearchParams) {
     const search = (q.get('search') ?? '').trim().toLowerCase()
     const status = q.get('status') ?? 'all'
     return db.projects.filter((p) => {
-      const matchSearch = !search || p.name.toLowerCase().includes(search) || p.description.toLowerCase().includes(search)
-      const matchStatus = status === 'all' || (status === 'active' && p.pipelineStatus === 'running') || (status === 'errors' && p.pipelineStatus === 'failed')
+      const matchSearch =
+        !search ||
+        p.name.toLowerCase().includes(search) ||
+        p.description.toLowerCase().includes(search)
+      const matchStatus =
+        status === 'all' ||
+        (status === 'active' && p.pipelineStatus === 'running') ||
+        (status === 'errors' && p.pipelineStatus === 'failed')
       return matchSearch && matchStatus
     })
   },
   listPipelines(projectId: number | null, q: URLSearchParams) {
     const branch = q.get('branch') ?? 'all'
     const status = q.get('status') ?? 'all'
-    return db.pipelines.filter((p) => (projectId === null || p.projectId === projectId) && (branch === 'all' || p.branch === branch) && (status === 'all' || p.status === status))
+    return db.pipelines.filter(
+      (p) =>
+        (projectId === null || p.projectId === projectId) &&
+        (branch === 'all' || p.branch === branch) &&
+        (status === 'all' || p.status === status)
+    )
   },
   listFiles(q: URLSearchParams) {
     const search = (q.get('search') ?? '').trim().toLowerCase()
     const filterType = q.get('type') ?? 'Все типы'
     const sortField = q.get('sortField')
     const sortDirection = (q.get('sortDirection') ?? 'asc') as 'asc' | 'desc'
-    const page = Math.max(1, Number(q.get('page') ?? '1') || 1)
-    const perPage = Math.max(1, Math.min(100, Number(q.get('perPage') ?? '10') || 10))
-    let out = db.files.filter((f) => (!search || f.name.toLowerCase().includes(search) || f.project.toLowerCase().includes(search)) && (filterType === 'Все типы' || f.type === filterType || (filterType === 'Датасеты' && f.type === 'Датасет') || (filterType === 'Артефакты' && f.type === 'Артефакт модели')))
-    if (sortField) out = [...out].sort((a, b) => ((a as any)[sortField] > (b as any)[sortField] ? (sortDirection === 'asc' ? 1 : -1) : sortDirection === 'asc' ? -1 : 1))
-    const total = out.length
-    const items = out.slice((page - 1) * perPage, page * perPage)
-    return { items, total, page, perPage }
+    const { page, perPage } = getPaging(q)
+    let out = db.files.filter(
+      (f) =>
+        (!search ||
+          f.name.toLowerCase().includes(search) ||
+          f.project.toLowerCase().includes(search)) &&
+        (filterType === 'Все типы' ||
+          f.type === filterType ||
+          (filterType === 'Датасеты' && f.type === 'Датасет') ||
+          (filterType === 'Артефакты' && f.type === 'Артефакт модели'))
+    )
+    if (sortField)
+      out = [...out].sort((a, b) =>
+        (a as any)[sortField] > (b as any)[sortField]
+          ? sortDirection === 'asc'
+            ? 1
+            : -1
+          : sortDirection === 'asc'
+            ? -1
+            : 1
+      )
+    return paginate(out, page, perPage)
   },
-  listInferenceServices: (q: URLSearchParams) => db.inferenceServices.filter((s) => {
+  listStorageBuckets(q: URLSearchParams) {
     const search = (q.get('search') ?? '').trim().toLowerCase()
-    const status = q.get('status') ?? 'all'
-    const project = q.get('project') ?? 'all'
-    return (!search || s.name.toLowerCase().includes(search) || s.project.toLowerCase().includes(search) || s.model.toLowerCase().includes(search)) && (status === 'all' || s.status === status) && (project === 'all' || s.project === project)
-  }),
+    const { page, perPage } = getPaging(q)
+    const out = db.buckets.filter(
+      (x) =>
+        !search || x.name.toLowerCase().includes(search) || x.project.toLowerCase().includes(search)
+    )
+    return paginate(out, page, perPage)
+  },
+  listStorageTables(q: URLSearchParams) {
+    const search = (q.get('search') ?? '').trim().toLowerCase()
+    const { page, perPage } = getPaging(q)
+    const out = db.tables.filter(
+      (x) =>
+        !search || x.name.toLowerCase().includes(search) || x.type.toLowerCase().includes(search)
+    )
+    return paginate(out, page, perPage)
+  },
+  getStorageOverview(q: URLSearchParams) {
+    const bucketsLimit = Math.max(1, Number(q.get('bucketsLimit') ?? '5') || 5)
+    const filesLimit = Math.max(1, Number(q.get('filesLimit') ?? '5') || 5)
+    const tablesLimit = Math.max(1, Number(q.get('tablesLimit') ?? '10') || 10)
+    return {
+      buckets: db.buckets.slice(0, bucketsLimit),
+      files: db.files.slice(0, filesLimit),
+      tables: db.tables.slice(0, tablesLimit),
+    }
+  },
+  listInferenceServices: (q: URLSearchParams) =>
+    db.inferenceServices.filter((s) => {
+      const search = (q.get('search') ?? '').trim().toLowerCase()
+      const status = q.get('status') ?? 'all'
+      const project = q.get('project') ?? 'all'
+      return (
+        (!search ||
+          s.name.toLowerCase().includes(search) ||
+          s.project.toLowerCase().includes(search) ||
+          s.model.toLowerCase().includes(search)) &&
+        (status === 'all' || s.status === status) &&
+        (project === 'all' || s.project === project)
+      )
+    }),
   getInferenceService: (id: number) => db.inferenceServices.find((s) => s.id === id) ?? null,
   getInferenceMonitoring: (id: number) => db.inferenceMonitoringByServiceId[id] ?? null,
   listEtlFlows: () => db.etlFlows,
@@ -57,7 +131,15 @@ export const apiService = {
     const name = (input.name ?? '').trim() || email.split('@')[0] || email
     const role: UserRole = input.role ?? 'user'
     const registrationDate = new Date().toISOString().split('T')[0] ?? '—'
-    const u = { id: nextId, email, name, role, status: 'active' as const, registrationDate, lastLogin: '—' }
+    const u = {
+      id: nextId,
+      email,
+      name,
+      role,
+      status: 'active' as const,
+      registrationDate,
+      lastLogin: '—',
+    }
     db.users.push(u)
     return u
   },
@@ -74,7 +156,12 @@ export const apiService = {
     const invite = db.invitationLinks.find((item) => item.code === input.code)
     if (!invite) return { error: 'invalid_code' as const }
     if (new Date(invite.expiresAt).getTime() < Date.now()) return { error: 'expired_code' as const }
-    const added = this.addUser({ email: input.email, name: input.name, role: invite.role, password: input.password })
+    const added = this.addUser({
+      email: input.email,
+      name: input.name,
+      role: invite.role,
+      password: input.password,
+    })
     if (!added) return { error: 'invalid_payload' as const }
     db.invitationLinks = db.invitationLinks.filter((item) => item.code !== input.code)
     return { user: added }
@@ -115,9 +202,17 @@ export const apiService = {
     i.lastCheck = new Date().toLocaleString('ru-RU').replace(',', '')
     return i
   },
-  getMonitoringOverview: () => ({ keyMetrics: db.monitoring.keyMetrics, servicesStatus: db.monitoring.servicesStatus }),
-  listAlerts: (q: URLSearchParams) => db.monitoring.alerts.filter((a) => {
-    const search = (q.get('search') ?? '').trim().toLowerCase()
-    return !search || a.name.toLowerCase().includes(search) || a.description.toLowerCase().includes(search)
+  getMonitoringOverview: () => ({
+    keyMetrics: db.monitoring.keyMetrics,
+    servicesStatus: db.monitoring.servicesStatus,
   }),
+  listAlerts: (q: URLSearchParams) =>
+    db.monitoring.alerts.filter((a) => {
+      const search = (q.get('search') ?? '').trim().toLowerCase()
+      return (
+        !search ||
+        a.name.toLowerCase().includes(search) ||
+        a.description.toLowerCase().includes(search)
+      )
+    }),
 }

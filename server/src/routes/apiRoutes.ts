@@ -13,7 +13,10 @@ const projectRoutes = {
 }
 
 const storageRoutes = {
+  '/api/storage/overview': { GET: storageController.getOverview },
+  '/api/storage/buckets': { GET: storageController.listStorageBuckets },
   '/api/storage/files': { GET: storageController.listStorageFiles },
+  '/api/storage/tables': { GET: storageController.listStorageTables },
 }
 
 const inferenceRoutes = {

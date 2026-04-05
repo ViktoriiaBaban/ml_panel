@@ -13,7 +13,7 @@
       :active-tab="activeTab"
       :search-term="searchTerm"
       :headers="headersByTab[activeTab]"
-      :paged-items="pagedItems"
+      :paged-items="currentItems"
       :items-per-page="itemsPerPage"
       :current-page="currentPage"
       :total-pages="totalPages"
@@ -57,15 +57,22 @@ import StorageDetails from '@/components/storage/StorageDetails.vue'
 import StorageFab from '@/components/storage/StorageFab.vue'
 import StorageOverview from '@/components/storage/StorageOverview.vue'
 import UploadFileDialog from '@/components/storage/UploadFileDialog.vue'
-import {
-  bucketRows,
-  fileRows,
-  fileTypes,
-  headersByTab,
-  projects,
-  tableRows,
-} from './storage/mockData'
+import { api } from '@/lib/api'
+import { fileTypes, headersByTab, projects } from './storage/mockData'
 import type { BucketForm, StorageMode, StorageRow, StorageTab, UploadForm } from './storage/types'
+
+type PagedResponse = {
+  items: StorageRow[]
+  total: number
+  page: number
+  perPage: number
+}
+
+type OverviewResponse = {
+  buckets: StorageRow[]
+  files: StorageRow[]
+  tables: StorageRow[]
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -82,6 +89,12 @@ const tabToRoute: Record<StorageTab, string> = {
   tables: 'storage-tables',
 }
 
+const endpointByTab: Record<StorageTab, string> = {
+  buckets: 'buckets',
+  files: 'files',
+  tables: 'tables',
+}
+
 const mode = ref<StorageMode>('overview')
 const activeTab = ref<StorageTab>('buckets')
 const searchTerm = ref('')
@@ -91,6 +104,12 @@ const fabExpanded = ref(false)
 
 const createBucketDialog = ref(false)
 const uploadFileDialog = ref(false)
+
+const overview = ref<OverviewResponse>({ buckets: [], files: [], tables: [] })
+const buckets = ref<StorageRow[]>([])
+const files = ref<StorageRow[]>([])
+const tables = ref<StorageRow[]>([])
+const totals = ref<Record<StorageTab, number>>({ buckets: 0, files: 0, tables: 0 })
 
 const bucketForm = ref<BucketForm>({
   name: '',
@@ -106,35 +125,24 @@ const uploadForm = ref<UploadForm>({
   file: null,
 })
 
-const buckets = ref<StorageRow[]>([...bucketRows])
-const files = ref<StorageRow[]>([...fileRows])
-const tables = ref<StorageRow[]>([...tableRows])
-
 const currentItems = computed(() => {
   if (activeTab.value === 'buckets') return buckets.value
   if (activeTab.value === 'files') return files.value
   return tables.value
 })
 
-const filteredItems = computed(() => {
-  const search = searchTerm.value.trim().toLowerCase()
-  if (!search) return currentItems.value
-  return currentItems.value.filter((item) =>
-    Object.values(item).some((value) => String(value).toLowerCase().includes(search))
-  )
+const totalPages = computed(() => {
+  const total = totals.value[activeTab.value]
+  return Math.max(1, Math.ceil(total / itemsPerPage))
 })
 
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredItems.value.length / itemsPerPage)))
-
-const pagedItems = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  return filteredItems.value.slice(start, start + itemsPerPage)
+const bucketsPreview = computed(() => overview.value.buckets)
+const filesPreview = computed(() => overview.value.files)
+const tablesPreview = computed(() => overview.value.tables)
+const bucketNames = computed(() => {
+  const source = overview.value.buckets.length ? overview.value.buckets : buckets.value
+  return source.map((item) => String(item.name))
 })
-
-const bucketsPreview = computed(() => buckets.value.slice(0, 5))
-const filesPreview = computed(() => files.value.slice(0, 5))
-const tablesPreview = computed(() => tables.value.slice(0, 12))
-const bucketNames = computed(() => buckets.value.map((item) => String(item.name)))
 
 watch(
   () => route.name,
@@ -143,6 +151,7 @@ watch(
     if (routeName === 'storage-overview') {
       mode.value = 'overview'
       fabExpanded.value = false
+      fetchOverview()
       return
     }
 
@@ -150,21 +159,20 @@ watch(
     if (tab) {
       mode.value = 'details'
       activeTab.value = tab
+      fetchTabData(tab, currentPage.value)
     }
   },
   { immediate: true }
 )
 
-watch([activeTab, searchTerm], () => {
+watch(searchTerm, () => {
   currentPage.value = 1
-})
-
-watch(totalPages, (value) => {
-  if (currentPage.value > value) currentPage.value = value
+  if (mode.value === 'details') fetchTabData(activeTab.value, 1)
 })
 
 function openTab(tab: StorageTab) {
   activeTab.value = tab
+  currentPage.value = 1
   router.push({ name: tabToRoute[tab] })
 }
 
@@ -173,9 +181,47 @@ function onTabChange(tab: StorageTab) {
 }
 
 function setPage(page: number) {
-  if (page < 1) return
-  if (page > totalPages.value) return
+  if (page < 1 || page > totalPages.value) return
   currentPage.value = page
+  fetchTabData(activeTab.value, page)
+}
+
+async function fetchOverview() {
+  const params = new URLSearchParams({ bucketsLimit: '5', filesLimit: '5', tablesLimit: '10' })
+  const res = await api.get<OverviewResponse>(`/storage/overview?${params.toString()}`)
+  overview.value = {
+    buckets: res.buckets,
+    files: res.files.map((x) => normalizeFileRow(x)),
+    tables: res.tables,
+  }
+}
+
+async function fetchTabData(tab: StorageTab, page: number) {
+  const params = new URLSearchParams({
+    search: searchTerm.value,
+    page: String(page),
+    perPage: String(itemsPerPage),
+  })
+
+  if (tab === 'files') {
+    params.set('type', 'Все типы')
+    params.set('sortDirection', 'asc')
+  }
+
+  const res = await api.get<PagedResponse>(`/storage/${endpointByTab[tab]}?${params.toString()}`)
+  totals.value[tab] = res.total
+
+  if (tab === 'buckets') buckets.value = res.items
+  if (tab === 'files') files.value = res.items.map((x) => normalizeFileRow(x))
+  if (tab === 'tables') tables.value = res.items
+}
+
+function normalizeFileRow(row: StorageRow): StorageRow {
+  if ('uploadedAt' in row) return row
+  if ('date' in row) {
+    return { ...row, uploadedAt: row.date }
+  }
+  return row
 }
 
 function openCreateBucketDialog() {
