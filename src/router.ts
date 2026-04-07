@@ -122,6 +122,7 @@ export const router = createRouter({
     },
     {
       path: '/experiments',
+      name: 'experiments-root',
       component: RouterGroup,
       meta: { section: 'experiments', breadcrumb: 'Эксперименты' },
       children: [

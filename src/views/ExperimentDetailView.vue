@@ -41,8 +41,8 @@
               v-for="tag in detail.tags"
               :key="tag"
               size="small"
-              color="cyan-lighten-4"
               class="tag-chip"
+              variant="flat"
             >
               {{ tag }}
             </v-chip>
@@ -54,44 +54,51 @@
                 </v-btn>
               </template>
 
-              <v-card min-width="320" class="pa-3">
-                <div class="text-subtitle-2 mb-2">Добавить существующий тег</div>
-                <v-select
-                  v-model="selectedExistingTag"
-                  :items="existingTagOptions"
-                  density="compact"
-                  variant="outlined"
-                  hide-details
-                  placeholder="Выберите тег"
-                  class="mb-3"
-                />
-                <v-btn
-                  block
-                  variant="tonal"
-                  color="primary"
-                  class="mb-4"
-                  :disabled="!selectedExistingTag"
-                  @click="handleAddExistingTag"
-                >
-                  Добавить тег
-                </v-btn>
-
-                <div class="text-subtitle-2 mb-2">Создать новый тег</div>
+              <v-card min-width="360" class="pa-3">
                 <v-text-field
-                  v-model="newTag"
+                  v-model="tagSearch"
                   density="compact"
                   variant="outlined"
                   hide-details
-                  placeholder="Новый тег"
-                  class="mb-3"
+                  placeholder="Поиск или создание тега"
+                  class="mb-2"
                 />
+
+                <v-virtual-scroll
+                  :items="filteredTagOptions"
+                  :height="220"
+                  item-height="42"
+                >
+                  <template #default="{ item }">
+                    <v-checkbox
+                      :model-value="selectedTagsToAdd.includes(item)"
+                      density="compact"
+                      hide-details
+                      @update:model-value="toggleTagSelection(item)"
+                    >
+                      <template #label>{{ item }}</template>
+                    </v-checkbox>
+                  </template>
+                </v-virtual-scroll>
+
                 <v-btn
-                  block
+                  v-if="filteredTagOptions.length === 0 && tagSearch.trim()"
+                  size="small"
+                  variant="outlined"
                   color="primary"
-                  :disabled="!newTag.trim()"
+                  class="mb-3"
                   @click="handleCreateTag"
                 >
-                  Создать и добавить
+                  Добавить тег "{{ tagSearch.trim() }}"
+                </v-btn>
+
+                <v-btn
+                  block
+                  color="primary"
+                  :disabled="selectedTagsToAdd.length === 0"
+                  @click="handleAddSelectedTags"
+                >
+                  Добавить выбранные
                 </v-btn>
               </v-card>
             </v-menu>
@@ -100,7 +107,7 @@
       </aside>
 
       <section class="content-card">
-        <v-tabs v-model="activeTab" color="primary" align-tabs="start" class="detail-tabs">
+        <v-tabs v-model="activeTab" color="primary" align-tabs="start">
           <v-tab value="runs" class="text-none">Запуски</v-tab>
           <v-tab value="models" class="text-none">Модели</v-tab>
         </v-tabs>
@@ -212,12 +219,15 @@ const router = useRouter()
 const detail = ref<ExperimentDetailResponse | null>(null)
 const activeTab = ref<'runs' | 'models'>('runs')
 const error = ref<string | null>(null)
-const selectedExistingTag = ref('')
-const newTag = ref('')
+const tagSearch = ref('')
+const selectedTagsToAdd = ref<string[]>([])
 
-const existingTagOptions = computed(() =>
-  (detail.value?.availableTags ?? []).filter((tag) => !detail.value?.tags.includes(tag))
-)
+const filteredTagOptions = computed(() => {
+  const all = detail.value?.availableTags ?? []
+  const withoutApplied = all.filter((tag) => !detail.value?.tags.includes(tag))
+  const search = tagSearch.value.trim().toLowerCase()
+  return search ? withoutApplied.filter((tag) => tag.toLowerCase().includes(search)) : withoutApplied
+})
 
 async function fetchDetail() {
   error.value = null
@@ -228,6 +238,14 @@ async function fetchDetail() {
     }
   } catch (e) {
     error.value = e instanceof ApiError ? e.message : 'Не удалось загрузить эксперимент'
+  }
+}
+
+function toggleTagSelection(tag: string) {
+  if (selectedTagsToAdd.value.includes(tag)) {
+    selectedTagsToAdd.value = selectedTagsToAdd.value.filter((item) => item !== tag)
+  } else {
+    selectedTagsToAdd.value.push(tag)
   }
 }
 
@@ -243,17 +261,20 @@ async function addTag(tag: string) {
   }
 }
 
-async function handleAddExistingTag() {
-  if (!selectedExistingTag.value) return
-  await addTag(selectedExistingTag.value)
-  selectedExistingTag.value = ''
+async function handleAddSelectedTags() {
+  for (const tag of selectedTagsToAdd.value) {
+    await addTag(tag)
+  }
+  selectedTagsToAdd.value = []
+  tagSearch.value = ''
 }
 
 async function handleCreateTag() {
-  const value = newTag.value.trim()
+  const value = tagSearch.value.trim()
   if (!value) return
   await addTag(value)
-  newTag.value = ''
+  tagSearch.value = ''
+  selectedTagsToAdd.value = []
 }
 
 onMounted(fetchDetail)
@@ -273,14 +294,14 @@ watch(() => props.experimentId, fetchDetail)
 
 .info-card,
 .content-card {
-  background: #f8f9fc;
-  border-radius: 10px;
+  background: #ffffff;
+  border-radius: 12px;
   padding: 16px;
 }
 
 .info-title {
   margin-bottom: 10px;
-  font-size: 28px;
+  font-size: 22px;
 }
 
 .info-block {
@@ -304,7 +325,9 @@ watch(() => props.experimentId, fetchDetail)
 }
 
 .tag-chip {
-  color: #0891b2;
+  background: #d9f3fb;
+  color: #0a87a6;
+  font-weight: 500;
 }
 
 .inner-table {

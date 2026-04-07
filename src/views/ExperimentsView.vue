@@ -29,65 +29,92 @@
               </th>
               <th class="sortable" @click="store.setSort('name')">
                 <span>Название</span>
-                <v-icon size="16" :icon="store.sort === 'name' ? (store.sortDirection === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down') : 'mdi-arrow-up-down'" />
+                <v-icon
+                  size="16"
+                  :icon="store.sort === 'name' ? (store.sortDirection === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down') : 'mdi-arrow-up-down'"
+                />
               </th>
               <th>
                 <div class="th-with-icon">
                   <span>Теги</span>
-                  <v-icon icon="mdi-filter-variant" size="16" />
+                  <v-menu location="bottom start">
+                    <template #activator="{ props }">
+                      <v-badge dot color="primary" :model-value="store.tagFilter !== 'all'">
+                        <v-btn icon variant="text" size="x-small" v-bind="props">
+                          <v-icon icon="mdi-filter-variant" size="16" />
+                        </v-btn>
+                      </v-badge>
+                    </template>
+                    <v-card min-width="240" class="pa-3">
+                      <v-select
+                        :model-value="store.tagFilter"
+                        :items="tagFilterItems"
+                        label="Фильтр по тегу"
+                        density="compact"
+                        variant="outlined"
+                        hide-details
+                        @update:model-value="store.setTagFilter(String($event ?? 'all'))"
+                      />
+                      <v-btn
+                        variant="text"
+                        class="mt-2"
+                        :disabled="store.tagFilter === 'all'"
+                        @click="store.setTagFilter('all')"
+                      >
+                        Сбросить
+                      </v-btn>
+                    </v-card>
+                  </v-menu>
                 </div>
               </th>
               <th class="sortable" @click="store.setSort('updatedAt')">
                 <span>Дата изменения</span>
-                <v-icon size="16" :icon="store.sort === 'updatedAt' ? (store.sortDirection === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down') : 'mdi-arrow-up-down'" />
+                <v-icon
+                  size="16"
+                  :icon="store.sort === 'updatedAt' ? (store.sortDirection === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down') : 'mdi-arrow-up-down'"
+                />
               </th>
               <th class="sortable" @click="store.setSort('createdAt')">
                 <span>Дата создания</span>
-                <v-icon size="16" :icon="store.sort === 'createdAt' ? (store.sortDirection === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down') : 'mdi-arrow-up-down'" />
+                <v-icon
+                  size="16"
+                  :icon="store.sort === 'createdAt' ? (store.sortDirection === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down') : 'mdi-arrow-up-down'"
+                />
               </th>
               <th>
                 <div class="th-with-icon">
                   <span>Проект</span>
-                  <v-icon icon="mdi-filter-variant" size="16" />
+                  <v-menu location="bottom start">
+                    <template #activator="{ props }">
+                      <v-badge dot color="primary" :model-value="store.projectFilter !== 'all'">
+                        <v-btn icon variant="text" size="x-small" v-bind="props">
+                          <v-icon icon="mdi-filter-variant" size="16" />
+                        </v-btn>
+                      </v-badge>
+                    </template>
+                    <v-card min-width="260" class="pa-3">
+                      <v-select
+                        :model-value="store.projectFilter"
+                        :items="projectFilterItems"
+                        label="Фильтр по проекту"
+                        density="compact"
+                        variant="outlined"
+                        hide-details
+                        @update:model-value="store.setProjectFilter(String($event ?? 'all'))"
+                      />
+                      <v-btn
+                        variant="text"
+                        class="mt-2"
+                        :disabled="store.projectFilter === 'all'"
+                        @click="store.setProjectFilter('all')"
+                      >
+                        Сбросить
+                      </v-btn>
+                    </v-card>
+                  </v-menu>
                 </div>
               </th>
               <th class="actions-col" />
-            </tr>
-            <tr class="filters-row">
-              <th />
-              <th>
-                <v-text-field
-                  :model-value="store.nameFilter"
-                  variant="underlined"
-                  density="compact"
-                  hide-details
-                  placeholder="Фильтр названия"
-                  @update:model-value="store.setNameFilter(String($event ?? ''))"
-                />
-              </th>
-              <th>
-                <v-select
-                  :model-value="store.tagFilter"
-                  :items="[{ title: 'Все теги', value: 'all' }, ...store.availableTags.map(tag => ({ title: tag, value: tag }))]"
-                  variant="underlined"
-                  density="compact"
-                  hide-details
-                  @update:model-value="store.setTagFilter(String($event ?? 'all'))"
-                />
-              </th>
-              <th />
-              <th />
-              <th>
-                <v-select
-                  :model-value="store.projectFilter"
-                  :items="[{ title: 'Все проекты', value: 'all' }, ...store.availableProjects.map(project => ({ title: project, value: project }))]"
-                  variant="underlined"
-                  density="compact"
-                  hide-details
-                  @update:model-value="store.setProjectFilter(String($event ?? 'all'))"
-                />
-              </th>
-              <th />
             </tr>
           </thead>
           <tbody>
@@ -103,13 +130,17 @@
                   @update:model-value="store.toggleRowSelection(item.id)"
                 />
               </td>
-              <td><v-btn variant="text" class="name-link" @click="openExperiment(item)">{{ item.name }}</v-btn></td>
+              <td>
+                <v-btn variant="text" class="name-link" @click="openExperiment(item)">{{ item.name }}</v-btn>
+              </td>
               <td>
                 <div class="tags-wrap">
-                  <v-chip v-for="tag in item.tags.slice(0, 2)" :key="tag" size="small" color="cyan-lighten-4" class="tag-chip">
+                  <v-chip v-for="tag in item.tags.slice(0, 2)" :key="tag" size="small" class="tag-chip" variant="flat">
                     {{ tag }}
                   </v-chip>
-                  <v-chip v-if="item.tags.length > 2" size="small" variant="tonal">+{{ item.tags.length - 2 }}</v-chip>
+                  <v-chip v-if="item.tags.length > 2" size="small" variant="flat" class="count-chip">
+                    +{{ item.tags.length - 2 }}
+                  </v-chip>
                 </div>
               </td>
               <td>{{ item.updatedAt }}</td>
@@ -176,12 +207,26 @@ import { useExperimentsStore } from '@/stores/experiments'
 const store = useExperimentsStore()
 const router = useRouter()
 
+const tagFilterItems = computed(() => [
+  { title: 'Все теги', value: 'all' },
+  ...store.availableTags.map((tag) => ({ title: tag, value: tag })),
+])
+
+const projectFilterItems = computed(() => [
+  { title: 'Все проекты', value: 'all' },
+  ...store.availableProjects.map((project) => ({ title: project, value: project })),
+])
+
 onMounted(async () => {
   await store.fetchExperiments()
 })
 
 function openExperiment(item: { id: number; name: string }) {
-  router.push({ name: 'experiment-detail', params: { experimentId: item.id }, query: { experimentName: item.name } })
+  router.push({
+    name: 'experiment-detail',
+    params: { experimentId: item.id },
+    query: { experimentName: item.name },
+  })
 }
 
 const pagesToShow = computed<Array<number | '...'>>(() => {
@@ -246,10 +291,6 @@ const pagesToShow = computed<Array<number | '...'>>(() => {
   vertical-align: middle;
 }
 
-.filters-row :deep(th) {
-  background: #f4f6fb;
-}
-
 .checkbox-col {
   width: 44px;
 }
@@ -270,7 +311,7 @@ const pagesToShow = computed<Array<number | '...'>>(() => {
 .th-with-icon {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .tags-wrap {
@@ -281,7 +322,13 @@ const pagesToShow = computed<Array<number | '...'>>(() => {
 }
 
 .tag-chip {
-  color: #0891b2;
+  background: #d9f3fb;
+  color: #0a87a6;
+  font-weight: 500;
+}
+
+.count-chip {
+  background: #eef2f7;
 }
 
 .loading-cell,
