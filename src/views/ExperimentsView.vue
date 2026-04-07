@@ -23,9 +23,8 @@
           :headers="headers"
           :items="store.items"
           :items-length="store.total"
-          :sort-by="sortByModel"
+          v-model:sort-by="sortBy"
           item-value="id"
-          @update:options="onOptionsUpdate"
           hide-default-footer
           class="experiments-table"
           density="comfortable"
@@ -147,7 +146,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import type { DataTableHeader } from 'vuetify'
 import { useExperimentsStore } from '@/stores/experiments'
@@ -176,18 +175,25 @@ const projectFilterItems = computed(() => [
 ])
 
 
-const sortByModel = computed(() => [
+
+
+const sortBy = ref<Array<{ key: string; order: 'asc' | 'desc' }>>([
   { key: store.sort, order: store.sortDirection },
 ])
 
-async function onOptionsUpdate(options: { sortBy?: Array<{ key: string; order?: 'asc' | 'desc' | boolean }> }) {
-  const first = options.sortBy?.[0]
+watch(sortBy, async (value) => {
+  const first = value[0]
   if (!first) return
   if (first.key !== 'name' && first.key !== 'updatedAt' && first.key !== 'createdAt') return
-  const order = first.order === 'desc' ? 'desc' : 'asc'
-  if (store.sort === first.key && store.sortDirection === order) return
-  await store.setSortFromTable(first.key, order)
-}
+  if (store.sort === first.key && store.sortDirection === first.order) return
+  await store.setSortFromTable(first.key, first.order)
+}, { deep: true })
+
+watch(() => [store.sort, store.sortDirection] as const, ([key, order]) => {
+  const first = sortBy.value[0]
+  if (first && first.key === key && first.order === order) return
+  sortBy.value = [{ key, order }]
+})
 
 onMounted(async () => {
   await store.fetchExperiments()
