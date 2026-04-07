@@ -67,6 +67,43 @@ export type StorageTable = {
   createdAt: string
 }
 
+
+export type Experiment = {
+  id: number
+  name: string
+  tags: string[]
+  updatedAt: string
+  createdAt: string
+  project: string
+}
+
+
+export type ExperimentRun = {
+  id: number
+  name: string
+  startTime: string
+  dataset: string
+  duration: string
+  model: string
+  status: 'completed' | 'running'
+}
+
+export type ExperimentModel = {
+  id: number
+  name: string
+  updatedAt: string
+  version: string
+}
+
+export type ExperimentDetail = {
+  id: number
+  externalId: string
+  description: string
+  tags: string[]
+  runs: ExperimentRun[]
+  models: ExperimentModel[]
+}
+
 export type InferenceService = {
   id: number
   name: string

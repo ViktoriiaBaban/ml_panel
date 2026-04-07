@@ -29,6 +29,133 @@ export const apiService = {
       return matchSearch && matchStatus
     })
   },
+  listExperiments(q: URLSearchParams) {
+    const search = (q.get('search') ?? '').trim().toLowerCase()
+    const name = (q.get('name') ?? '').trim().toLowerCase()
+    const tag = q.get('tag') ?? 'all'
+    const project = q.get('project') ?? 'all'
+    const sort = (q.get('sort') ?? 'name') as 'name' | 'updatedAt' | 'createdAt'
+    const sortDirection = (q.get('sortDirection') ?? 'asc') as 'asc' | 'desc'
+    const { page, perPage } = getPaging(q)
+
+    let out = db.experiments.filter((item) => {
+      const bySearch =
+        !search ||
+        item.name.toLowerCase().includes(search) ||
+        item.project.toLowerCase().includes(search) ||
+        item.tags.some((x) => x.toLowerCase().includes(search))
+      const byName = !name || item.name.toLowerCase().includes(name)
+      const byTag = tag === 'all' || item.tags.includes(tag)
+      const byProject = project === 'all' || item.project === project
+      return bySearch && byName && byTag && byProject
+    })
+
+    out = [...out].sort((a, b) => {
+      const left = a[sort]
+      const right = b[sort]
+      if (left === right) return 0
+      if (left > right) return sortDirection === 'asc' ? 1 : -1
+      return sortDirection === 'asc' ? -1 : 1
+    })
+
+    const pageData = paginate(out, page, perPage)
+
+    return {
+      ...pageData,
+      availableTags: [...db.experimentTagsCatalog],
+      availableProjects: [...new Set(db.experiments.map((item) => item.project))],
+    }
+  },
+
+  getExperimentDetail(id: number) {
+    const experiment = db.experiments.find((item) => item.id === id)
+    if (!experiment) return null
+
+    const fallback = {
+      id: experiment.id,
+      externalId: `exp-${String(experiment.id).padStart(8, '0')}`,
+      description: 'Описание эксперимента',
+      tags: [...experiment.tags],
+      runs: [
+        {
+          id: experiment.id * 100 + 1,
+          name: 'Название запуска',
+          startTime: experiment.updatedAt,
+          dataset: '--',
+          duration: '2.0 c',
+          model: 'Название модели',
+          status: 'completed' as const,
+        },
+      ],
+      models: [
+        {
+          id: experiment.id * 1000 + 1,
+          name: 'Название модели',
+          updatedAt: experiment.updatedAt,
+          version: 'model-name-v1.0',
+        },
+      ],
+    }
+
+    const detail = db.experimentDetails[id] ?? fallback
+
+    return {
+      id: experiment.id,
+      name: experiment.name,
+      externalId: detail.externalId,
+      createdAt: experiment.createdAt,
+      updatedAt: experiment.updatedAt,
+      description: detail.description,
+      tags: [...detail.tags],
+      runs: detail.runs,
+      models: detail.models,
+      availableTags: [...db.experimentTagsCatalog],
+    }
+  },
+  addExperimentTag(id: number, tag: string) {
+    const clean = tag.trim().toLowerCase()
+    if (!clean) return null
+    const experiment = db.experiments.find((item) => item.id === id)
+    if (!experiment) return null
+
+    if (!experiment.tags.includes(clean)) experiment.tags.push(clean)
+
+    if (!db.experimentDetails[id]) {
+      db.experimentDetails[id] = {
+        id,
+        externalId: `exp-${String(id).padStart(8, '0')}`,
+        description: 'Описание эксперимента',
+        tags: [...experiment.tags],
+        runs: [],
+        models: [],
+      }
+    }
+
+    if (!db.experimentDetails[id].tags.includes(clean)) {
+      db.experimentDetails[id].tags.push(clean)
+    }
+
+    if (!db.experimentTagsCatalog.includes(clean)) db.experimentTagsCatalog.push(clean)
+
+    return this.getExperimentDetail(id)
+  },
+
+
+  removeExperimentTag(id: number, tag: string) {
+    const clean = decodeURIComponent(tag).trim().toLowerCase()
+    if (!clean) return null
+    const experiment = db.experiments.find((item) => item.id === id)
+    if (!experiment) return null
+
+    experiment.tags = experiment.tags.filter((value) => value !== clean)
+
+    if (db.experimentDetails[id]) {
+      db.experimentDetails[id].tags = db.experimentDetails[id].tags.filter((value) => value !== clean)
+    }
+
+    return this.getExperimentDetail(id)
+  },
+
   listPipelines(projectId: number | null, q: URLSearchParams) {
     const branch = q.get('branch') ?? 'all'
     const status = q.get('status') ?? 'all'
