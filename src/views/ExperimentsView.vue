@@ -1,33 +1,35 @@
 <template>
   <v-container fluid class="experiments-view">
-    <section class="experiments-panel">
-      <div class="toolbar">
-        <v-btn color="primary" prepend-icon="mdi-plus" class="text-none">Создать эксперимент</v-btn>
+    <div class="toolbar">
+      <v-btn color="primary" prepend-icon="mdi-plus" class="text-none">Создать эксперимент</v-btn>
 
-        <v-text-field
-          :model-value="store.search"
-          prepend-inner-icon="mdi-magnify"
-          variant="outlined"
-          density="comfortable"
-          hide-details
-          class="search-input"
-          placeholder="Введите для поиска"
-          @update:model-value="store.setSearch(String($event ?? ''))"
-        />
-      </div>
+      <v-text-field
+        :model-value="store.search"
+        prepend-inner-icon="mdi-magnify"
+        variant="solo"
+        density="comfortable"
+        hide-details
+        class="search-input"
+        placeholder="Введите для поиска"
+        @update:model-value="store.setSearch(String($event ?? ''))"
+      />
+    </div>
+    <v-card class="experiments-panel">
+
 
       <v-alert v-if="store.error" type="error" variant="tonal" class="mb-4">{{ store.error }}</v-alert>
 
       <v-card class="table-wrap" flat>
         <v-data-table-server
+          v-model:sort-by="sortBy"
           :headers="headers"
           :items="store.items"
           :items-length="store.total"
-          v-model:sort-by="sortBy"
           item-value="id"
           hide-default-footer
           class="experiments-table"
           density="comfortable"
+          must-sort
         >
           <template #header.select>
             <v-checkbox-btn :model-value="store.allVisibleSelected" @update:model-value="store.toggleVisibleSelection" />
@@ -101,7 +103,7 @@
           <template #item.tags="{ item }">
             <div class="tags-wrap">
               <v-chip v-for="tag in item.tags.slice(0, 2)" :key="tag" size="small" class="tag-chip" variant="flat">{{ tag }}</v-chip>
-              <v-chip v-if="item.tags.length > 2" size="small" variant="flat" class="count-chip">+{{ item.tags.length - 2 }}</v-chip>
+              <v-chip v-if="item.tags.length > 2" size="small" variant="tonal">+{{ item.tags.length - 2 }}</v-chip>
             </div>
           </template>
 
@@ -141,7 +143,7 @@
         <v-btn icon variant="text" :disabled="store.page >= store.totalPages" @click="store.setPage(store.page + 1)"><v-icon icon="mdi-chevron-right" /></v-btn>
         <v-btn icon variant="text" :disabled="store.page >= store.totalPages" @click="store.setPage(store.totalPages)"><v-icon icon="mdi-page-last" /></v-btn>
       </div>
-    </section>
+    </v-card>
   </v-container>
 </template>
 
@@ -215,7 +217,7 @@ const pagesToShow = computed<Array<number | '...'>>(() => {
 
 <style scoped>
 .experiments-view { padding: 24px; }
-.experiments-panel { background: #f0f2f7; border-radius: 12px; padding: 20px; }
+.experiments-panel { border-radius: 12px; padding: 20px; }
 .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
 .search-input { max-width: 460px; min-width: 320px; }
 .table-wrap { border: 1px solid #d9dee8; border-radius: 8px; overflow: hidden; }
