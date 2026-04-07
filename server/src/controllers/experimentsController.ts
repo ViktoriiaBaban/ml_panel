@@ -26,4 +26,12 @@ export const experimentsController = {
     if (!out) return apiError(404, { error: 'not_found', message: 'Experiment not found' })
     return json(out as unknown as Json)
   },
+  removeTag: (req: RouteReq) => {
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) return apiError(400, { error: 'bad_request', message: 'Invalid experiment id' })
+    const tag = String(req.params.tag ?? '')
+    const out = apiService.removeExperimentTag(id, tag)
+    if (!out) return apiError(404, { error: 'not_found', message: 'Experiment not found' })
+    return json(out as unknown as Json)
+  },
 }

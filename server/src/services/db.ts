@@ -23,6 +23,7 @@ export const db = {
   pipelines,
   experiments,
   experimentDetails,
+  experimentTagsCatalog: [...new Set(experiments.flatMap((item) => item.tags))],
   files,
   buckets,
   tables,

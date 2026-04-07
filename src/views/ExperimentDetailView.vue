@@ -71,10 +71,10 @@
                 >
                   <template #default="{ item }">
                     <v-checkbox
-                      :model-value="selectedTagsToAdd.includes(item)"
+                      :model-value="detail.tags.includes(item)"
                       density="compact"
                       hide-details
-                      @update:model-value="toggleTagSelection(item)"
+                      @update:model-value="handleToggleTag(item, Boolean($event))"
                     >
                       <template #label>{{ item }}</template>
                     </v-checkbox>
@@ -82,23 +82,14 @@
                 </v-virtual-scroll>
 
                 <v-btn
-                  v-if="filteredTagOptions.length === 0 && tagSearch.trim()"
                   size="small"
-                  variant="outlined"
+                  variant="text"
                   color="primary"
-                  class="mb-3"
+                  class="mb-2"
+                  :disabled="!tagSearch.trim()"
                   @click="handleCreateTag"
                 >
-                  Добавить тег "{{ tagSearch.trim() }}"
-                </v-btn>
-
-                <v-btn
-                  block
-                  color="primary"
-                  :disabled="selectedTagsToAdd.length === 0"
-                  @click="handleAddSelectedTags"
-                >
-                  Добавить выбранные
+                  Добавить тег "{{ tagSearch.trim() || '...' }}"
                 </v-btn>
               </v-card>
             </v-menu>
@@ -220,13 +211,11 @@ const detail = ref<ExperimentDetailResponse | null>(null)
 const activeTab = ref<'runs' | 'models'>('runs')
 const error = ref<string | null>(null)
 const tagSearch = ref('')
-const selectedTagsToAdd = ref<string[]>([])
 
 const filteredTagOptions = computed(() => {
   const all = detail.value?.availableTags ?? []
-  const withoutApplied = all.filter((tag) => !detail.value?.tags.includes(tag))
   const search = tagSearch.value.trim().toLowerCase()
-  return search ? withoutApplied.filter((tag) => tag.toLowerCase().includes(search)) : withoutApplied
+  return search ? all.filter((tag) => tag.toLowerCase().includes(search)) : all
 })
 
 async function fetchDetail() {
@@ -238,14 +227,6 @@ async function fetchDetail() {
     }
   } catch (e) {
     error.value = e instanceof ApiError ? e.message : 'Не удалось загрузить эксперимент'
-  }
-}
-
-function toggleTagSelection(tag: string) {
-  if (selectedTagsToAdd.value.includes(tag)) {
-    selectedTagsToAdd.value = selectedTagsToAdd.value.filter((item) => item !== tag)
-  } else {
-    selectedTagsToAdd.value.push(tag)
   }
 }
 
@@ -261,12 +242,22 @@ async function addTag(tag: string) {
   }
 }
 
-async function handleAddSelectedTags() {
-  for (const tag of selectedTagsToAdd.value) {
-    await addTag(tag)
+async function removeTag(tag: string) {
+  try {
+    detail.value = await api.del<ExperimentDetailResponse>(
+      `/experiments/${props.experimentId}/tags/${encodeURIComponent(tag)}`,
+    )
+  } catch (e) {
+    error.value = e instanceof ApiError ? e.message : 'Не удалось обновить теги'
   }
-  selectedTagsToAdd.value = []
-  tagSearch.value = ''
+}
+
+async function handleToggleTag(tag: string, checked: boolean) {
+  if (checked) {
+    await addTag(tag)
+    return
+  }
+  await removeTag(tag)
 }
 
 async function handleCreateTag() {
@@ -274,7 +265,6 @@ async function handleCreateTag() {
   if (!value) return
   await addTag(value)
   tagSearch.value = ''
-  selectedTagsToAdd.value = []
 }
 
 onMounted(fetchDetail)

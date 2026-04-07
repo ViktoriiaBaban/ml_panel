@@ -62,7 +62,7 @@ export const apiService = {
 
     return {
       ...pageData,
-      availableTags: [...new Set(db.experiments.flatMap((item) => item.tags))],
+      availableTags: [...db.experimentTagsCatalog],
       availableProjects: [...new Set(db.experiments.map((item) => item.project))],
     }
   },
@@ -109,7 +109,7 @@ export const apiService = {
       tags: [...detail.tags],
       runs: detail.runs,
       models: detail.models,
-      availableTags: [...new Set(db.experiments.flatMap((item) => item.tags))],
+      availableTags: [...db.experimentTagsCatalog],
     }
   },
   addExperimentTag(id: number, tag: string) {
@@ -133,6 +133,24 @@ export const apiService = {
 
     if (!db.experimentDetails[id].tags.includes(clean)) {
       db.experimentDetails[id].tags.push(clean)
+    }
+
+    if (!db.experimentTagsCatalog.includes(clean)) db.experimentTagsCatalog.push(clean)
+
+    return this.getExperimentDetail(id)
+  },
+
+
+  removeExperimentTag(id: number, tag: string) {
+    const clean = decodeURIComponent(tag).trim().toLowerCase()
+    if (!clean) return null
+    const experiment = db.experiments.find((item) => item.id === id)
+    if (!experiment) return null
+
+    experiment.tags = experiment.tags.filter((value) => value !== clean)
+
+    if (db.experimentDetails[id]) {
+      db.experimentDetails[id].tags = db.experimentDetails[id].tags.filter((value) => value !== clean)
     }
 
     return this.getExperimentDetail(id)

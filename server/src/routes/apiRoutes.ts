@@ -11,6 +11,7 @@ const experimentsRoutes = {
   '/api/experiments': { GET: experimentsController.listExperiments },
   '/api/experiments/:id': { GET: experimentsController.getExperiment },
   '/api/experiments/:id/tags': { POST: experimentsController.addTag },
+  '/api/experiments/:id/tags/:tag': { DELETE: experimentsController.removeTag },
 }
 
 const projectRoutes = {
