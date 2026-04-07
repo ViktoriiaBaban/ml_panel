@@ -75,6 +75,12 @@ export const useExperimentsStore = defineStore('experiments', {
       this.page = 1
       await this.fetchExperiments()
     },
+    async setSortFromTable(field: Required<ExperimentsQuery>['sort'], direction: Required<ExperimentsQuery>['sortDirection']) {
+      this.sort = field
+      this.sortDirection = direction
+      this.page = 1
+      await this.fetchExperiments()
+    },
     async setNameFilter(value: string) {
       this.nameFilter = value
       this.page = 1

@@ -23,7 +23,9 @@
           :headers="headers"
           :items="store.items"
           :items-length="store.total"
+          :sort-by="sortByModel"
           item-value="id"
+          @update:options="onOptionsUpdate"
           hide-default-footer
           class="experiments-table"
           density="comfortable"
@@ -32,20 +34,10 @@
             <v-checkbox-btn :model-value="store.allVisibleSelected" @update:model-value="store.toggleVisibleSelection" />
           </template>
 
-          <template #header.name>
-            <button type="button" class="header-sort-btn" @click="store.setSort('name')">
-              Название
-              <v-icon
-                size="16"
-                :icon="store.sort === 'name' ? (store.sortDirection === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down') : 'mdi-arrow-up-down'"
-              />
-            </button>
-          </template>
-
           <template #header.tags>
             <div class="th-with-icon">
               <span>Теги</span>
-              <v-menu location="bottom start">
+              <v-menu location="bottom start" :close-on-content-click="false">
                 <template #activator="{ props }">
                   <v-badge dot color="primary" :model-value="store.tagFilter !== 'all'">
                     <v-btn icon variant="text" size="x-small" v-bind="props">
@@ -63,35 +55,16 @@
                     hide-details
                     @update:model-value="store.setTagFilter(String($event ?? 'all'))"
                   />
+                  <v-btn variant="text" class="mt-2" :disabled="store.tagFilter === 'all'" @click="store.setTagFilter('all')">Сбросить</v-btn>
                 </v-card>
               </v-menu>
             </div>
           </template>
 
-          <template #header.updatedAt>
-            <button type="button" class="header-sort-btn" @click="store.setSort('updatedAt')">
-              Дата изменения
-              <v-icon
-                size="16"
-                :icon="store.sort === 'updatedAt' ? (store.sortDirection === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down') : 'mdi-arrow-up-down'"
-              />
-            </button>
-          </template>
-
-          <template #header.createdAt>
-            <button type="button" class="header-sort-btn" @click="store.setSort('createdAt')">
-              Дата создания
-              <v-icon
-                size="16"
-                :icon="store.sort === 'createdAt' ? (store.sortDirection === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down') : 'mdi-arrow-up-down'"
-              />
-            </button>
-          </template>
-
           <template #header.project>
             <div class="th-with-icon">
               <span>Проект</span>
-              <v-menu location="bottom start">
+              <v-menu location="bottom start" :close-on-content-click="false">
                 <template #activator="{ props }">
                   <v-badge dot color="primary" :model-value="store.projectFilter !== 'all'">
                     <v-btn icon variant="text" size="x-small" v-bind="props">
@@ -109,6 +82,7 @@
                     hide-details
                     @update:model-value="store.setProjectFilter(String($event ?? 'all'))"
                   />
+                  <v-btn variant="text" class="mt-2" :disabled="store.projectFilter === 'all'" @click="store.setProjectFilter('all')">Сбросить</v-btn>
                 </v-card>
               </v-menu>
             </div>
@@ -183,10 +157,10 @@ const router = useRouter()
 
 const headers = computed<DataTableHeader[]>(() => [
   { title: '', key: 'select', sortable: false, width: 44 },
-  { title: 'Название', key: 'name', sortable: false },
+  { title: 'Название', key: 'name', sortable: true },
   { title: 'Теги', key: 'tags', sortable: false },
-  { title: 'Дата изменения', key: 'updatedAt', sortable: false },
-  { title: 'Дата создания', key: 'createdAt', sortable: false },
+  { title: 'Дата изменения', key: 'updatedAt', sortable: true },
+  { title: 'Дата создания', key: 'createdAt', sortable: true },
   { title: 'Проект', key: 'project', sortable: false },
   { title: '', key: 'actions', sortable: false, width: 56 },
 ])
@@ -200,6 +174,20 @@ const projectFilterItems = computed(() => [
   { title: 'Все проекты', value: 'all' },
   ...store.availableProjects.map((project) => ({ title: project, value: project })),
 ])
+
+
+const sortByModel = computed(() => [
+  { key: store.sort, order: store.sortDirection },
+])
+
+async function onOptionsUpdate(options: { sortBy?: Array<{ key: string; order?: 'asc' | 'desc' | boolean }> }) {
+  const first = options.sortBy?.[0]
+  if (!first) return
+  if (first.key !== 'name' && first.key !== 'updatedAt' && first.key !== 'createdAt') return
+  const order = first.order === 'desc' ? 'desc' : 'asc'
+  if (store.sort === first.key && store.sortDirection === order) return
+  await store.setSortFromTable(first.key, order)
+}
 
 onMounted(async () => {
   await store.fetchExperiments()
@@ -226,7 +214,6 @@ const pagesToShow = computed<Array<number | '...'>>(() => {
 .search-input { max-width: 460px; min-width: 320px; }
 .table-wrap { border: 1px solid #d9dee8; border-radius: 8px; overflow: hidden; }
 .experiments-table :deep(th) { background: #e8ebf2; font-weight: 600; color: #1f2937; }
-.header-sort-btn { display: inline-flex; align-items: center; gap: 4px; background: transparent; border: 0; cursor: pointer; font-weight: 600; }
 .th-with-icon { display: inline-flex; align-items: center; gap: 4px; }
 .name-link { text-transform: none; letter-spacing: 0; font-weight: 500; padding: 0; min-width: 0; }
 .tags-wrap { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
