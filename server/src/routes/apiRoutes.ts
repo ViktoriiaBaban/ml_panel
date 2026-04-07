@@ -1,10 +1,17 @@
 import { adminController } from '@/controllers/adminController'
 import { commonController } from '@/controllers/commonController'
 import { etlController } from '@/controllers/etlController'
+import { experimentsController } from '@/controllers/experimentsController'
 import { inferenceController } from '@/controllers/inferenceController'
 import { monitoringController } from '@/controllers/monitoringController'
 import { projectsController } from '@/controllers/projectsController'
 import { storageController } from '@/controllers/storageController'
+
+const experimentsRoutes = {
+  '/api/experiments': { GET: experimentsController.listExperiments },
+  '/api/experiments/:id': { GET: experimentsController.getExperiment },
+  '/api/experiments/:id/tags': { POST: experimentsController.addTag },
+}
 
 const projectRoutes = {
   '/api/projects': { GET: projectsController.listProjects },
@@ -57,6 +64,7 @@ const monitoringRoutes = {
 export const routes = {
   '/api/status': new Response('OK'),
   '/api/health': { GET: commonController.health },
+  ...experimentsRoutes,
   ...projectRoutes,
   ...storageRoutes,
   ...inferenceRoutes,

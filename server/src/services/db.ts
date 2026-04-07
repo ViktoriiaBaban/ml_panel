@@ -7,6 +7,8 @@ import {
   users,
 } from './fixtures/adminMonitoring'
 import { etlFlows, flowComponents, flowHistory, flowVariables } from './fixtures/etl'
+import { experiments } from './fixtures/experiments'
+import { experimentDetails } from './fixtures/experimentsDetail'
 import { pipelines, projects } from './fixtures/projectsPipelines'
 import {
   buckets,
@@ -19,6 +21,8 @@ import {
 export const db = {
   projects,
   pipelines,
+  experiments,
+  experimentDetails,
   files,
   buckets,
   tables,

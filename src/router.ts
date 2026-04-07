@@ -9,6 +9,8 @@ import {
 import FileTable from '@/views/FileTable.vue'
 import ProjectsView from '@/views/ProjectsView.vue'
 import PipelinesView from '@/views/PipelinesView.vue'
+import ExperimentsView from '@/views/ExperimentsView.vue'
+import ExperimentDetailView from '@/views/ExperimentDetailView.vue'
 import InferenceServicesView from '@/views/InferenceServicesView.vue'
 import InferenceMonitoringView from '@/views/InferenceMonitoringView.vue'
 import EtlFlowsView from '@/views/EtlFlowsView.vue'
@@ -120,9 +122,29 @@ export const router = createRouter({
     },
     {
       path: '/experiments',
-      name: 'experiments',
-      component: PlaceholderView,
-      meta: { section: 'experiments', title: 'Эксперименты', breadcrumb: 'Эксперименты' },
+      component: RouterGroup,
+      meta: { section: 'experiments', breadcrumb: 'Эксперименты' },
+      children: [
+        {
+          path: '',
+          name: 'experiments',
+          component: ExperimentsView,
+          meta: { section: 'experiments', title: 'Эксперименты' },
+        },
+        {
+          path: ':experimentId',
+          name: 'experiment-detail',
+          component: ExperimentDetailView,
+          props: (route) => ({ experimentId: Number(route.params.experimentId) }),
+          meta: {
+            section: 'experiments',
+            title: (route: RouteLocationNormalizedLoaded) =>
+              String(route.query.experimentName ?? `Эксперимент #${String(route.params.experimentId)}`),
+            breadcrumb: (route: RouteLocationNormalizedLoaded) =>
+              String(route.query.experimentName ?? `Эксперимент #${String(route.params.experimentId)}`),
+          },
+        },
+      ],
     },
     {
       path: '/inference',
