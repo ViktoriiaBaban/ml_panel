@@ -1,6 +1,6 @@
 import axios, { type AxiosError, type AxiosInstance } from 'axios'
 
-import { clearToken, getToken } from '@/lib/authToken'
+import { clearToken, getToken } from '@/api/authToken'
 
 export type ApiErrorShape = {
   error: string

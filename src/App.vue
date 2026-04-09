@@ -22,7 +22,7 @@ import { RouterView, useRoute, useRouter } from 'vue-router'
 import Sidebar from './components/Sidebar.vue'
 import Header from './components/Header.vue'
 import type { BreadcrumbItem } from './components/AppBreadcrumbs.vue'
-import { resolveBreadcrumb, resolveTitle } from './router'
+import { resolveBreadcrumb, resolveTitle } from './router/router.ts'
 import { useSessionStore } from './stores/session'
 
 const route = useRoute()

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { api, ApiError } from '@/lib/api'
+import { api, ApiError } from '@/api/api'
 
 export type StorageFileType = 'Разметка' | 'Датасет' | 'Артефакт модели'
 

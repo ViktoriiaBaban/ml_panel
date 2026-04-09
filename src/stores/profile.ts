@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ApiError, api } from '@/lib/api'
+import { ApiError, api } from '@/api/api'
 import type { ProfileConnection, ProfileSettings, ProfileSettingsResponse } from '@/types/profile'
 
 export const useProfileStore = defineStore('profile', {

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { ApiError, api } from '@/lib/api'
-import { clearToken, setToken } from '@/lib/authToken'
+import { ApiError, api } from '@/api/api'
+import { clearToken, setToken } from '@/api/authToken'
 import type { LoginResponse } from '@/types/auth'
 import { useSessionStore } from '@/stores/session'
 

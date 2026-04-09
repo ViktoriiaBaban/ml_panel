@@ -43,7 +43,7 @@
 
 <script setup lang="ts">
 import type { Project, PipelineStatusConfig, ProjectType, ProjectTypeConfig } from '@/types/projects'
-import {router} from '@/router.ts';
+import {router} from '@/router/router.ts';
 
 defineProps<{
   project: Project

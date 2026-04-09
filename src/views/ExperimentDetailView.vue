@@ -137,7 +137,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { DataTableHeader } from 'vuetify'
-import { api, ApiError } from '@/lib/api'
+import { api, ApiError } from '@/api/api'
 import type { ExperimentDetailResponse } from '@/types/experiments'
 
 const props = defineProps<{ experimentId: number }>()

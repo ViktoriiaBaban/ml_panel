@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ApiError, api } from '@/lib/api'
+import { ApiError, api } from '@/api/api'
 import type { Experiment, ExperimentsQuery, ExperimentsResponse } from '@/types/experiments'
 
 const DEFAULT_PER_PAGE = 10

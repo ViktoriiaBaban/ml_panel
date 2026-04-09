@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { api, ApiError } from '@/lib/api'
+import { api, ApiError } from '@/api/api'
 import type { Pipeline, PipelineFilterItem, PipelinesQuery } from '@/types/pipelines'
 import { pipelineStatusItems } from '@/types/pipelines'
 

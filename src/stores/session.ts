@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ApiError, api } from '@/lib/api'
+import { ApiError, api } from '@/api/api'
 import type { SessionMe } from '@/types/session'
 
 export const useSessionStore = defineStore('session', {

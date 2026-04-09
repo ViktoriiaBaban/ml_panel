@@ -18,7 +18,7 @@ import EtlFlowDetailView from '@/views/EtlFlowDetailView.vue'
 import MonitoringSystemView from '@/views/MonitoringSystemView.vue'
 import AdministrationView from '@/views/AdministrationView.vue'
 import ProfileSettingsView from '@/views/ProfileSettingsView.vue'
-import { getToken } from '@/lib/authToken'
+import { getToken } from '@/api/authToken.ts'
 import LoginView from '@/views/LoginView.vue'
 
 const PlaceholderView = {

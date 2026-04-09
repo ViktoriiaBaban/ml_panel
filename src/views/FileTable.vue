@@ -74,7 +74,7 @@ import StorageDetails from '@/components/storage/StorageDetails.vue'
 import StorageFab from '@/components/storage/StorageFab.vue'
 import StorageOverview from '@/components/storage/StorageOverview.vue'
 import UploadFileDialog from '@/components/storage/UploadFileDialog.vue'
-import { api } from '@/lib/api'
+import { api } from '@/api/api'
 import { fileTypes, headersByTab, projects } from './storage/mockData'
 import type {
   BucketForm,

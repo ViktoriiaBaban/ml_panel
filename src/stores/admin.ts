@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import type { DataTableHeader } from 'vuetify'
-import { api, ApiError } from '@/lib/api'
+import { api, ApiError } from '@/api/api'
 import type {
   AddUserPayload,
   AdminIntegration,
