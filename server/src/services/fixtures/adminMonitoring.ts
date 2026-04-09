@@ -7,9 +7,9 @@ export const users: User[] = [
 ]
 
 export const integrations: Integration[] = [
-  { id: 'gitlab', name: 'GitLab CE', status: 'working', lastCheck: '2026-01-16 10:45', details: { url: 'https://gitlab.internal', version: 'v4' } },
-  { id: 'mlflow', name: 'MLflow Tracking Server', status: 'working', lastCheck: '2026-01-16 10:44', details: { url: 'http://mlflow.internal:5000' } },
-  { id: 'minio', name: 'MinIO (Object Storage)', status: 'warning', lastCheck: '2026-01-16 10:40', details: { url: 'minio.internal:9000', error: 'Проблемы с записью: AccessDenied' } },
+  { id: 'gitlab', name: 'GitLab CE', connected: true, status: 'working', lastCheck: '2026-01-16 10:45', details: { url: 'https://gitlab.internal', version: 'v4' } },
+  { id: 'mlflow', name: 'MLflow Tracking Server', connected: true, status: 'working', lastCheck: '2026-01-16 10:44', details: { url: 'http://mlflow.internal:5000' } },
+  { id: 'minio', name: 'MinIO (Object Storage)', connected: true, status: 'warning', lastCheck: '2026-01-16 10:40', details: { url: 'minio.internal:9000', error: 'Проблемы с записью: AccessDenied' } },
 ]
 
 export const healthChecks: HealthCheck[] = [

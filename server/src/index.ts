@@ -1,12 +1,11 @@
-import { routes } from '@/routes/apiRoutes'
+import { handleApiRequest } from '@/http/apiFetch'
 
 const port = Number(process.env.PORT ?? '3001') || 3001
 
 const server = Bun.serve({
   port,
-  routes,
-  fetch() {
-    return new Response('Not Found', { status: 404 })
+  async fetch(req) {
+    return handleApiRequest(req)
   },
 })
 

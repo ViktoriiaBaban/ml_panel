@@ -11,9 +11,10 @@ export interface AdminUser {
   status: UserStatus
   registrationDate: string
   lastLogin: string
+  jobTitle?: string
 }
 
-export type IntegrationStatus = 'working' | 'warning' | 'error'
+export type IntegrationStatus = 'not_connected' | 'working' | 'warning' | 'error'
 
 export interface IntegrationDetails {
   url?: string
@@ -25,8 +26,11 @@ export interface IntegrationDetails {
 export interface AdminIntegration {
   id: string
   name: string
+  description?: string
+  connected: boolean
   status: IntegrationStatus
   lastCheck: string
+  healthCheckPath?: string
   details?: IntegrationDetails
 }
 
@@ -87,4 +91,18 @@ export interface ResetUserPasswordPayload {
 export interface SelectOption<T> {
   label: string
   value: T
+}
+
+export interface IntegrationFormState {
+  id: string
+  name: string
+  baseUrl: string
+  healthCheckPath: string
+  version: string
+}
+
+export interface UpdateIntegrationPayload {
+  baseUrl: string
+  healthCheckPath?: string
+  version?: string
 }

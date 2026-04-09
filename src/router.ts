@@ -17,6 +17,9 @@ import EtlFlowsView from '@/views/EtlFlowsView.vue'
 import EtlFlowDetailView from '@/views/EtlFlowDetailView.vue'
 import MonitoringSystemView from '@/views/MonitoringSystemView.vue'
 import AdministrationView from '@/views/AdministrationView.vue'
+import ProfileSettingsView from '@/views/ProfileSettingsView.vue'
+import { getToken } from '@/lib/authToken'
+import LoginView from '@/views/LoginView.vue'
 
 const PlaceholderView = {
   render() {
@@ -45,6 +48,17 @@ function label(
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
+    {
+      path: '/login',
+      name: 'login',
+      component: LoginView,
+      meta: {
+        public: true,
+        section: 'auth',
+        title: 'Вход',
+        breadcrumb: 'Вход',
+      },
+    },
     {
       path: '/home',
       name: 'home',
@@ -315,6 +329,16 @@ export const router = createRouter({
       ],
     },
     {
+      path: '/profile/settings',
+      name: 'profile-settings',
+      component: ProfileSettingsView,
+      meta: {
+        section: 'settings',
+        title: 'Настройки профиля',
+        breadcrumb: 'Настройки профиля',
+      },
+    },
+    {
       path: '/administration',
       name: 'administration-root',
       component: RouterGroup,
@@ -349,6 +373,21 @@ export const router = createRouter({
     },
     { path: '/:pathMatch(.*)*', redirect: '/storage' },
   ],
+})
+
+router.beforeEach((to) => {
+  const publicRoute = to.matched.some((r) => r.meta.public === true)
+  const token = getToken()
+  if (publicRoute) {
+    if (to.name === 'login' && token) {
+      return { path: '/storage' }
+    }
+    return true
+  }
+  if (!token) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+  return true
 })
 
 export function resolveBreadcrumb(

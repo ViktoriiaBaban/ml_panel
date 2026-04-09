@@ -1,5 +1,7 @@
 import axios, { type AxiosError, type AxiosInstance } from 'axios'
 
+import { clearToken, getToken } from '@/lib/authToken'
+
 export type ApiErrorShape = {
   error: string
   message?: string
@@ -53,6 +55,31 @@ export class ApiClient {
       baseURL: opts.baseUrl,
       headers: opts.defaultHeaders,
     })
+
+    this.http.interceptors.request.use((config) => {
+      const token = getToken()
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
+      return config
+    })
+
+    this.http.interceptors.response.use(
+      (res) => res,
+      (err: unknown) => {
+        if (axios.isAxiosError(err) && err.response?.status === 401) {
+          const url = err.config?.url ?? ''
+          if (!url.includes('/auth/login')) {
+            clearToken()
+            const path = typeof window !== 'undefined' ? window.location.pathname : ''
+            if (!path.startsWith('/login')) {
+              window.location.assign(`/login?redirect=${encodeURIComponent(path + (window.location.search ?? ''))}`)
+            }
+          }
+        }
+        return Promise.reject(err)
+      },
+    )
   }
 
   async get<T>(path: string, opts?: { signal?: AbortSignal }): Promise<T> {

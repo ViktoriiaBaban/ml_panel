@@ -5,7 +5,7 @@ export type ServiceStatus = 'running' | 'stopped' | 'error'
 export type FlowStatus = 'running' | 'stopped' | 'error'
 export type UserRole = 'user' | 'admin'
 export type UserStatus = 'active' | 'blocked'
-export type IntegrationStatus = 'working' | 'warning' | 'error'
+export type IntegrationStatus = 'not_connected' | 'working' | 'warning' | 'error'
 export type AlertState = 'firing' | 'ok' | 'pending'
 export type AlertSeverity = 'critical' | 'warning' | 'info'
 
@@ -184,12 +184,17 @@ export type User = {
   status: UserStatus
   registrationDate: string
   lastLogin: string
+  /** Должность / подпись в интерфейсе (хранится на бэке, отдаётся клиенту). */
+  jobTitle?: string
 }
 export type Integration = {
   id: string
   name: string
+  description?: string
+  connected: boolean
   status: IntegrationStatus
   lastCheck: string
+  healthCheckPath?: string
   details?: { url?: string; version?: string; error?: string; lastSuccessfulCall?: string }
 }
 

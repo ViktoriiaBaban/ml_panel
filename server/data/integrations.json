@@ -1,0 +1,9 @@
+[
+  {
+    "id": "gitlab",
+    "baseUrl": "https://gitlab.uno-soft.ru",
+    "healthCheckPath": "/https://gitlab.uno-soft.ru/",
+    "status": "warning",
+    "lastCheck": "—"
+  }
+]

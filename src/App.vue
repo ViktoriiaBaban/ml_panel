@@ -1,7 +1,8 @@
 <template>
   <v-app>
-    <v-layout class="app-layout">
-      <Sidebar :activeSection="activeSection" @navigate="handleNavigate" />
+    <RouterView v-if="isLoginRoute" />
+    <v-layout v-else class="app-layout">
+      <Sidebar :activeSection="activeSection" />
 
       <v-main class="app-main">
         <Header :title="headerProps.title" :breadcrumbs="headerProps.breadcrumbs" />
@@ -15,16 +16,26 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 
 import Sidebar from './components/Sidebar.vue'
 import Header from './components/Header.vue'
 import type { BreadcrumbItem } from './components/AppBreadcrumbs.vue'
 import { resolveBreadcrumb, resolveTitle } from './router'
+import { useSessionStore } from './stores/session'
 
 const route = useRoute()
 const router = useRouter()
+const sessionStore = useSessionStore()
+
+const isLoginRoute = computed(() => route.name === 'login')
+
+onMounted(() => {
+  if (route.name !== 'login') {
+    sessionStore.fetchMe()
+  }
+})
 
 const activeSection = computed(() => String(route.meta.section ?? 'storage'))
 

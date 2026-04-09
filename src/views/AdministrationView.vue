@@ -32,6 +32,7 @@
           :checking-integration-id="adminStore.checkingIntegrationId"
           @toggle-expanded="adminStore.toggleIntegrationExpanded"
           @check-integration="adminStore.checkIntegration"
+          @edit-integration="adminStore.openIntegrationDialog"
         />
       </div>
     </v-sheet>
@@ -59,6 +60,14 @@
       @save="adminStore.saveEditedUser"
       @reset-password="adminStore.resetEditedUserPassword"
     />
+
+    <AdministrationIntegrationDialog
+      :model-value="adminStore.showIntegrationDialog"
+      :form="adminStore.integrationForm"
+      @update:model-value="onIntegrationDialogChange"
+      @setField="adminStore.setIntegrationFormField"
+      @submit="adminStore.saveIntegration"
+    />
   </v-container>
 </template>
 
@@ -67,6 +76,7 @@ import { onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AdministrationAddUserDialog from '@/components/administration/AdministrationAddUserDialog.vue'
 import AdministrationEditUserDialog from '@/components/administration/AdministrationEditUserDialog.vue'
+import AdministrationIntegrationDialog from '@/components/administration/AdministrationIntegrationDialog.vue'
 import AdministrationIntegrationsTable from '@/components/administration/AdministrationIntegrationsTable.vue'
 import AdministrationTabs from '@/components/administration/AdministrationTabs.vue'
 import AdministrationUsersTable from '@/components/administration/AdministrationUsersTable.vue'
@@ -114,6 +124,12 @@ function onDeleteUser(id: number) {
 function onEditDialogChange(open: boolean) {
   if (!open) {
     adminStore.closeEditUserDialog()
+  }
+}
+
+function onIntegrationDialogChange(open: boolean) {
+  if (!open) {
+    adminStore.closeIntegrationDialog()
   }
 }
 </script>

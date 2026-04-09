@@ -8,8 +8,10 @@ import type {
   AdministrationTab,
   HealthCheck,
   InvitationLink,
+  IntegrationFormState,
   RegisterByInvitationPayload,
   ResetUserPasswordPayload,
+  UpdateIntegrationPayload,
   UpdateUserPayload,
   IntegrationStatus,
   SelectOption,
@@ -19,6 +21,7 @@ import type {
 } from '@/types/administration'
 
 const INTEGRATION_STATUS_LABELS: Record<IntegrationStatus, string> = {
+  not_connected: 'Не подключено',
   working: 'Работает',
   warning: 'Проблемы с записью',
   error: 'Не отвечает',
@@ -63,6 +66,14 @@ export const useAdminStore = defineStore('admin', {
     showAddUserDialog: false,
     expandedIntegrationId: null as string | null,
     checkingIntegrationId: null as string | null,
+    showIntegrationDialog: false,
+    integrationForm: {
+      id: '',
+      name: '',
+      baseUrl: '',
+      healthCheckPath: '',
+      version: '',
+    } as IntegrationFormState,
     userForm: {
       email: '',
       name: '',
@@ -247,6 +258,39 @@ export const useAdminStore = defineStore('admin', {
       } finally {
         this.checkingIntegrationId = null
       }
+    },
+    openIntegrationDialog(id: string) {
+      const integration = this.integrations.find((item) => item.id === id)
+      if (!integration) return
+      this.integrationForm = {
+        id: integration.id,
+        name: integration.name,
+        baseUrl: integration.details?.url ?? '',
+        healthCheckPath: integration.healthCheckPath ?? '',
+        version: integration.details?.version ?? '',
+      }
+      this.showIntegrationDialog = true
+    },
+    closeIntegrationDialog() {
+      this.showIntegrationDialog = false
+      this.integrationForm = { id: '', name: '', baseUrl: '', healthCheckPath: '', version: '' }
+    },
+    setIntegrationFormField<K extends keyof IntegrationFormState>(field: K, value: IntegrationFormState[K]) {
+      this.integrationForm[field] = value
+    },
+    async saveIntegration() {
+      const id = this.integrationForm.id
+      const baseUrl = this.integrationForm.baseUrl.trim()
+      if (!id || !baseUrl) return
+      const payload: UpdateIntegrationPayload = {
+        baseUrl,
+        healthCheckPath: this.integrationForm.healthCheckPath.trim() || undefined,
+        version: this.integrationForm.version.trim() || undefined,
+      }
+      const updated = await api.patch<AdminIntegration, UpdateIntegrationPayload>(`/admin/integrations/${id}`, payload)
+      this.integrations = this.integrations.map((item) => (item.id === id ? updated : item))
+      this.closeIntegrationDialog()
+      return updated
     },
   },
 })

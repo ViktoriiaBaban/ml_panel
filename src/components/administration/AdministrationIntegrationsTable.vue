@@ -29,16 +29,39 @@
         </template>
 
         <template #item.actions="{ item }">
-          <v-btn
-            color="primary"
-            variant="flat"
-            size="small"
-            :prepend-icon="checkingIntegrationId === item.id ? 'mdi-loading mdi-spin' : 'mdi-refresh'"
-            :disabled="checkingIntegrationId === item.id"
-            @click="$emit('check-integration', item.id)"
-          >
-            {{ checkingIntegrationId === item.id ? 'Проверка...' : 'Проверить сейчас' }}
-          </v-btn>
+          <div class="actions-wrap">
+            <v-btn
+              v-if="!item.connected"
+              color="primary"
+              variant="flat"
+              size="small"
+              prepend-icon="mdi-plus-circle-outline"
+              @click="$emit('edit-integration', item.id)"
+            >
+              Подключить
+            </v-btn>
+            <template v-else>
+              <v-btn
+                color="primary"
+                variant="flat"
+                size="small"
+                :prepend-icon="checkingIntegrationId === item.id ? 'mdi-loading mdi-spin' : 'mdi-refresh'"
+                :disabled="checkingIntegrationId === item.id"
+                @click="$emit('check-integration', item.id)"
+              >
+                {{ checkingIntegrationId === item.id ? 'Проверка...' : 'Проверить' }}
+              </v-btn>
+              <v-btn
+                color="default"
+                variant="outlined"
+                size="small"
+                prepend-icon="mdi-pencil-outline"
+                @click="$emit('edit-integration', item.id)"
+              >
+                Изменить
+              </v-btn>
+            </template>
+          </div>
         </template>
 
         <template #expanded-row="{ columns, item }">
@@ -46,6 +69,7 @@
             <td :colspan="columns.length">
               <div class="details-wrap" v-if="item.details">
                 <div v-if="item.details.url"><strong>URL:</strong> {{ item.details.url }}</div>
+                <div v-if="item.healthCheckPath"><strong>Health-check:</strong> {{ item.healthCheckPath }}</div>
                 <div v-if="item.details.version"><strong>Версия API:</strong> {{ item.details.version }}</div>
                 <div v-if="item.details.error" class="text-error"><strong>Ошибка:</strong> {{ item.details.error }}</div>
                 <div v-if="item.details.lastSuccessfulCall"><strong>Последний успешный вызов:</strong> {{ item.details.lastSuccessfulCall }}</div>
@@ -81,23 +105,27 @@ const props = defineProps<{
 defineEmits<{
   'toggle-expanded': [id: string]
   'check-integration': [id: string]
+  'edit-integration': [id: string]
 }>()
 
 const expanded = computed(() => (props.expandedIntegrationId ? [props.expandedIntegrationId] : []))
 
 function statusIcon(status: IntegrationStatus) {
+  if (status === 'not_connected') return 'mdi-link-off'
   if (status === 'working') return 'mdi-check-circle'
   if (status === 'warning') return 'mdi-alert'
   return 'mdi-alert-circle'
 }
 
 function statusColor(status: IntegrationStatus) {
+  if (status === 'not_connected') return 'grey'
   if (status === 'working') return 'success'
   if (status === 'warning') return 'warning'
   return 'error'
 }
 
 function statusClass(status: IntegrationStatus) {
+  if (status === 'not_connected') return 'text-medium-emphasis'
   if (status === 'working') return 'text-success'
   if (status === 'warning') return 'text-warning'
   return 'text-error'
@@ -132,5 +160,11 @@ function statusClass(status: IntegrationStatus) {
   display: grid;
   gap: 6px;
   background: #f9fafb;
+}
+
+.actions-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 </style>

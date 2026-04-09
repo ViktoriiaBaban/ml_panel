@@ -1,5 +1,8 @@
+import { requireAuthContext } from '@/auth/context'
 import type { UserRole } from '@/types/domain'
 import { db } from './db'
+import { integrationStore } from './integrationStore'
+import { userStore } from './userStore'
 
 function getPaging(q: URLSearchParams) {
   const page = Math.max(1, Number(q.get('page') ?? '1') || 1)
@@ -268,85 +271,66 @@ export const apiService = {
   },
   getFlowComponents: (id: number) => db.flowComponents[id] ?? [],
   getFlowHistory: (id: number) => db.flowHistory[id] ?? [],
-  listUsers: () => db.users,
-  addUser(input: { email: string; name?: string; role?: UserRole; password?: string }) {
-    const email = input.email.trim()
-    if (!email) return null
-    if (!input.password || input.password.length < 8) return null
-    const nextId = Math.max(...db.users.map((u) => u.id), 0) + 1
-    const name = (input.name ?? '').trim() || email.split('@')[0] || email
-    const role: UserRole = input.role ?? 'user'
-    const registrationDate = new Date().toISOString().split('T')[0] ?? '—'
-    const u = {
-      id: nextId,
-      email,
-      name,
-      role,
-      status: 'active' as const,
-      registrationDate,
-      lastLogin: '—',
-    }
-    db.users.push(u)
-    return u
-  },
-  createInvitationLink(input: { role?: UserRole }) {
-    const role: UserRole = input.role ?? 'user'
-    const code = Math.random().toString(36).slice(2, 10)
-    const createdAt = new Date().toISOString()
-    const expiresAtDate = new Date(Date.now() + 5 * 60 * 60 * 1000)
-    const expiresAt = expiresAtDate.toISOString()
-    db.invitationLinks.push({ code, role, createdAt, expiresAt })
-    return { code, role, url: `https://ml-panel.local/register?code=${code}`, createdAt, expiresAt }
-  },
-  registerByInvitation(input: { code: string; email: string; name?: string; password: string }) {
-    const invite = db.invitationLinks.find((item) => item.code === input.code)
-    if (!invite) return { error: 'invalid_code' as const }
-    if (new Date(invite.expiresAt).getTime() < Date.now()) return { error: 'expired_code' as const }
-    const added = this.addUser({
-      email: input.email,
-      name: input.name,
-      role: invite.role,
-      password: input.password,
-    })
-    if (!added) return { error: 'invalid_payload' as const }
-    db.invitationLinks = db.invitationLinks.filter((item) => item.code !== input.code)
-    return { user: added }
-  },
-  toggleUserStatus(id: number) {
-    const u = db.users.find((x) => x.id === id)
+  async authenticate(email: string, password: string) {
+    const u = await userStore.authenticate(email, password)
     if (!u) return null
-    u.status = u.status === 'active' ? 'blocked' : 'active'
-    return u
+    const user = await userStore.getMeById(u.id)
+    return user ? { user } : null
   },
-  deleteUser(id: number) {
-    const idx = db.users.findIndex((u) => u.id === id)
-    if (idx < 0) return false
-    db.users.splice(idx, 1)
-    return true
+
+  getMe() {
+    const { userId } = requireAuthContext()
+    return userStore.getMeById(userId)
   },
-  updateUser(id: number, input: { email?: string; name?: string; role?: UserRole }) {
-    const user = db.users.find((item) => item.id === id)
-    if (!user) return null
-    const email = input.email?.trim()
-    if (email) user.email = email
-    if (typeof input.name === 'string') user.name = input.name.trim()
-    if (input.role) user.role = input.role
-    return user
+  async listUsers() {
+    return userStore.listPublicUsers()
   },
-  resetUserPassword(id: number, password: string) {
-    const user = db.users.find((item) => item.id === id)
-    if (!user) return null
-    if (!password || password.length < 8) return null
-    return { ok: true as const }
+  async addUser(input: { email: string; name?: string; role?: UserRole; password: string }) {
+    return userStore.addUser(input)
   },
-  listIntegrations: () => db.integrations,
-  listHealthChecks: () => db.healthChecks,
-  checkIntegration(id: string) {
-    const i = db.integrations.find((x) => x.id === id)
-    if (!i) return null
-    i.status = Math.random() > 0.3 ? 'working' : 'warning'
-    i.lastCheck = new Date().toLocaleString('ru-RU').replace(',', '')
-    return i
+  async createInvitationLink(input: { role?: UserRole }) {
+    return userStore.createInvitationLink(input)
+  },
+  async registerByInvitation(input: { code: string; email: string; name?: string; password: string }) {
+    return userStore.registerByInvitation(input)
+  },
+  async toggleUserStatus(id: number) {
+    return userStore.toggleUserStatus(id)
+  },
+  async deleteUser(id: number) {
+    return userStore.deleteUser(id)
+  },
+  async updateUser(id: number, input: { email?: string; name?: string; role?: UserRole; jobTitle?: string }) {
+    return userStore.updateUser(id, input)
+  },
+  async resetUserPassword(id: number, password: string) {
+    return userStore.resetUserPassword(id, password)
+  },
+  async listIntegrations() {
+    return integrationStore.listIntegrations()
+  },
+  async updateIntegration(id: string, payload: { baseUrl?: string; healthCheckPath?: string; version?: string }) {
+    if (!payload.baseUrl?.trim()) return null
+    const updated = await integrationStore.saveIntegrationConfig({
+      id,
+      baseUrl: payload.baseUrl,
+      healthCheckPath: payload.healthCheckPath,
+      version: payload.version,
+    })
+    return updated.find((item) => item.id === id) ?? null
+  },
+  async listHealthChecks() {
+    const integrations = await integrationStore.listIntegrations()
+    return integrations.map((item) => ({
+      name: item.name,
+      command: item.connected
+        ? `GET ${item.details?.url}${item.healthCheckPath ?? ''}`
+        : 'Не настроено. Сначала подключите сервис.',
+    }))
+  },
+  async checkIntegration(id: string) {
+    const updated = await integrationStore.checkIntegration(id)
+    return updated?.find((item) => item.id === id) ?? null
   },
   getMonitoringOverview: () => ({
     keyMetrics: db.monitoring.keyMetrics,
@@ -361,4 +345,29 @@ export const apiService = {
         a.description.toLowerCase().includes(search)
       )
     }),
+  getProfileSettings() {
+    const { userId } = requireAuthContext()
+    return userStore.getProfileByUserId(userId)
+  },
+  updateProfileSettings(payload: { name?: string; email?: string }) {
+    const { userId } = requireAuthContext()
+    return userStore.updateProfileByUserId(userId, payload)
+  },
+  changeProfilePassword(payload: { currentPassword: string; newPassword: string }) {
+    const { userId } = requireAuthContext()
+    return userStore.changePasswordByUserId(userId, payload)
+  },
+  deleteProfileAccount(password: string) {
+    const { userId } = requireAuthContext()
+    return userStore.deleteAccountByUserId(userId, password)
+  },
+  upsertProfileConnection(payload: { serviceId: string; username?: string; token?: string }) {
+    if (!payload.serviceId || !payload.username?.trim() || !payload.token?.trim()) return null
+    const { userId } = requireAuthContext()
+    return userStore.upsertConnectionByUserId(userId, {
+      serviceId: payload.serviceId,
+      username: payload.username!,
+      token: payload.token!,
+    })
+  },
 }

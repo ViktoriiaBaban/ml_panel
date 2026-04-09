@@ -1,0 +1,135 @@
+{
+  "sessionUserId": 1,
+  "invitationLinks": [],
+  "users": [
+    {
+      "id": 1,
+      "email": "vika@example.com",
+      "name": "Виктория",
+      "role": "admin",
+      "status": "active",
+      "registrationDate": "2025-11-03",
+      "lastLogin": "2026-01-16 09:45",
+      "connections": [
+        {
+          "serviceId": "gitlab",
+          "serviceName": "GitLab",
+          "connected": false,
+          "updatedAt": "—"
+        },
+        {
+          "serviceId": "grafana",
+          "serviceName": "Grafana",
+          "connected": false,
+          "updatedAt": "—"
+        },
+        {
+          "serviceId": "nifi",
+          "serviceName": "Apache NiFi",
+          "connected": false,
+          "updatedAt": "—"
+        },
+        {
+          "serviceId": "minio",
+          "serviceName": "Minio",
+          "connected": false,
+          "updatedAt": "—"
+        },
+        {
+          "serviceId": "clickhouse",
+          "serviceName": "ClickHouse",
+          "connected": false,
+          "updatedAt": "—"
+        }
+      ],
+      "jobTitle": "ML-инженер",
+      "password": "changeme123"
+    },
+    {
+      "id": 2,
+      "email": "petrova@example.com",
+      "name": "Петрова Мария",
+      "role": "admin",
+      "status": "active",
+      "registrationDate": "2025-10-15",
+      "lastLogin": "2026-01-16 10:20",
+      "connections": [
+        {
+          "serviceId": "gitlab",
+          "serviceName": "GitLab",
+          "connected": false,
+          "updatedAt": "—"
+        },
+        {
+          "serviceId": "grafana",
+          "serviceName": "Grafana",
+          "connected": false,
+          "updatedAt": "—"
+        },
+        {
+          "serviceId": "nifi",
+          "serviceName": "Apache NiFi",
+          "connected": false,
+          "updatedAt": "—"
+        },
+        {
+          "serviceId": "minio",
+          "serviceName": "Minio",
+          "connected": false,
+          "updatedAt": "—"
+        },
+        {
+          "serviceId": "clickhouse",
+          "serviceName": "ClickHouse",
+          "connected": false,
+          "updatedAt": "—"
+        }
+      ],
+      "jobTitle": "Администратор",
+      "password": "changeme123"
+    },
+    {
+      "id": 3,
+      "email": "sidorov@example.com",
+      "name": "Сидоров Петр",
+      "role": "user",
+      "status": "blocked",
+      "registrationDate": "2025-12-01",
+      "lastLogin": "2026-01-10 14:30",
+      "connections": [
+        {
+          "serviceId": "gitlab",
+          "serviceName": "GitLab",
+          "connected": false,
+          "updatedAt": "—"
+        },
+        {
+          "serviceId": "grafana",
+          "serviceName": "Grafana",
+          "connected": false,
+          "updatedAt": "—"
+        },
+        {
+          "serviceId": "nifi",
+          "serviceName": "Apache NiFi",
+          "connected": false,
+          "updatedAt": "—"
+        },
+        {
+          "serviceId": "minio",
+          "serviceName": "Minio",
+          "connected": false,
+          "updatedAt": "—"
+        },
+        {
+          "serviceId": "clickhouse",
+          "serviceName": "ClickHouse",
+          "connected": false,
+          "updatedAt": "—"
+        }
+      ],
+      "jobTitle": "Специалист",
+      "password": "changeme123"
+    }
+  ]
+}

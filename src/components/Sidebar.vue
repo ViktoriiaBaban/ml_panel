@@ -46,20 +46,20 @@
         <v-card-title class="d-flex ga-2 align-center w-100">
           <v-avatar color="secondary" size="32" icon="mdi-account" />
           <v-card-item v-if="!collapsed" class="pa-2 w-100">
-            <v-card-text class="pa-0">Виктория</v-card-text>
-            <v-card-subtitle class="pa-0">ML-инженер</v-card-subtitle>
+            <v-card-text class="pa-0">
+              <template v-if="sessionStore.loading">…</template>
+              <template v-else>{{ sessionStore.me?.name || '—' }}</template>
+            </v-card-text>
+            <v-card-subtitle v-if="sessionStore.me?.jobTitle" class="pa-0">{{ sessionStore.me.jobTitle }}</v-card-subtitle>
           </v-card-item>
         </v-card-title>
         <v-card-actions class="d-flex ga-2" :class="{ 'flex-column': collapsed }">
-          <v-btn
-            :title="collapsed ? 'Настройки' : ''"
-            icon="mdi-cog-outline"
-            variant="text"
-          />
+          <v-btn :title="collapsed ? 'Настройки' : ''" icon="mdi-cog-outline" variant="text" @click="router.push('/profile/settings')" />
           <v-btn
             :title="collapsed ? 'Выйти' : ''"
             icon="mdi-logout"
             variant="text"
+            @click="onLogout"
           />
         </v-card-actions>
       </v-card>
@@ -69,16 +69,22 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import {
-  Brain, Settings, User, LogOut, ChevronLeft,
-} from 'lucide-vue-next'
+import { Brain } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { useSessionStore } from '@/stores/session'
 
 defineProps<{ activeSection?: string }>()
-defineEmits<{ navigate: [ sectionId: string ] }>()
 
 const collapsed = ref(false)
 const router = useRouter()
+const sessionStore = useSessionStore()
+const authStore = useAuthStore()
+
+function onLogout() {
+  authStore.logout()
+  router.push({ name: 'login' })
+}
 
 function toggleCollapsed() {
   collapsed.value = !collapsed.value
