@@ -26,21 +26,6 @@ import { resolveBreadcrumb, resolveTitle } from './router'
 const route = useRoute()
 const router = useRouter()
 
-const routeMap: Record<string, string> = {
-  home: '/home',
-  storage: '/storage',
-  projects: '/projects',
-  experiments: '/experiments',
-  inference: '/inference',
-  etl: '/etl',
-  monitoring: '/monitoring/dashboard',
-  administration: '/administration/users',
-}
-
-function handleNavigate(sectionId: string) {
-  router.push(routeMap[sectionId] ?? '/storage')
-}
-
 const activeSection = computed(() => String(route.meta.section ?? 'storage'))
 
 const headerProps = computed(() => {

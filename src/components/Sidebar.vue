@@ -2,67 +2,67 @@
   <v-navigation-drawer
     :rail="collapsed"
     permanent
-    color="#1E1E1E"
-    theme="dark"
+    color="white"
     width="272"
-    rail-width="72"
-    class="sidebar"
+    class="align-center"
   >
     <template #prepend>
-      <div class="sidebar-top">
+      <div class="pa-4">
         <v-btn
-          icon
-          size="small"
+          :icon="collapsed ? 'mdi-chevron-right' : 'mdi-chevron-left'"
+          :title="collapsed ? 'Развернуть меню' : 'Свернуть меню'"
+          variant="flat"
+          density="compact"
           color="primary"
           class="toggle-btn"
-          :title="collapsed ? 'Развернуть меню' : 'Свернуть меню'"
           @click="toggleCollapsed"
-        >
-          <ChevronLeft :size="14" :class="{ 'rotated': collapsed }" />
-        </v-btn>
+        />
 
         <div class="logo-row">
           <div class="logo-icon">
             <Brain :size="18" />
           </div>
-          <span v-if="!collapsed" class="logo-title">ML Control Panel</span>
+          <span v-if="!collapsed"
+                class="logo-title">ML Control Panel</span>
         </div>
       </div>
     </template>
 
-    <v-list nav density="comfortable" class="menu-list">
+    <v-list nav density="comfortable">
       <v-list-item
         v-for="item in menuItems"
         :key="item.id"
         :prepend-icon="item.icon"
         :active="item.id === activeSection"
+        :title="item.label"
         color="primary"
         rounded="lg"
-        :title="item.label"
-        @click="$emit('navigate', item.id)"
+        @click="router.push(item.path)"
       />
     </v-list>
 
     <template #append>
-      <div class="sidebar-bottom">
-        <div class="user-row">
-          <v-avatar color="primary" size="32">
-            <User :size="16" />
-          </v-avatar>
-          <div v-if="!collapsed" class="user-text">
-            <div class="user-name">Виктория</div>
-            <div class="user-role">ML-инженер</div>
-          </div>
-        </div>
-        <div class="actions-row" :class="{ stacked: collapsed }">
-          <v-btn icon variant="text" :title="collapsed ? 'Настройки' : ''">
-            <Settings :size="16" />
-          </v-btn>
-          <v-btn icon variant="text" :title="collapsed ? 'Выйти' : ''">
-            <LogOut :size="16" />
-          </v-btn>
-        </div>
-      </div>
+      <v-card class="d-flex flex-column ga-2 align-center justify-center w-100 pa-4" variant="text">
+        <v-card-title class="d-flex ga-2 align-center w-100">
+          <v-avatar color="secondary" size="32" icon="mdi-account" />
+          <v-card-item v-if="!collapsed" class="pa-2 w-100">
+            <v-card-text class="pa-0">Виктория</v-card-text>
+            <v-card-subtitle class="pa-0">ML-инженер</v-card-subtitle>
+          </v-card-item>
+        </v-card-title>
+        <v-card-actions class="d-flex ga-2" :class="{ 'flex-column': collapsed }">
+          <v-btn
+            :title="collapsed ? 'Настройки' : ''"
+            icon="mdi-cog-outline"
+            variant="text"
+          />
+          <v-btn
+            :title="collapsed ? 'Выйти' : ''"
+            icon="mdi-logout"
+            variant="text"
+          />
+        </v-card-actions>
+      </v-card>
     </template>
   </v-navigation-drawer>
 </template>
@@ -70,50 +70,34 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import {
-  Brain, Settings, User, LogOut, ChevronLeft
+  Brain, Settings, User, LogOut, ChevronLeft,
 } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
 
 defineProps<{ activeSection?: string }>()
-defineEmits<{ navigate: [sectionId: string] }>()
+defineEmits<{ navigate: [ sectionId: string ] }>()
 
 const collapsed = ref(false)
+const router = useRouter()
 
 function toggleCollapsed() {
   collapsed.value = !collapsed.value
 }
 
 const menuItems = [
-  { icon: 'mdi-home-outline', label: 'Главная панель',           id: 'home' },
-  { icon: 'mdi-database-outline', label: 'Данные и хранилища',   id: 'storage' },
-  { icon: 'mdi-source-branch', label: 'Проекты и пайплайны',     id: 'projects' },
-  { icon: 'mdi-brain', label: 'Эксперименты и обучение',         id: 'experiments' },
-  { icon: 'mdi-flash-outline', label: 'Инференс и сервисы',      id: 'inference' },
-  { icon: 'mdi-source-merge', label: 'Потоки данных и ETL',      id: 'etl' },
-  { icon: 'mdi-pulse', label: 'Мониторинг и состояние системы',  id: 'monitoring' },
-  { icon: 'mdi-shield-outline', label: 'Администрирование',      id: 'administration' },
+  { icon: 'mdi-home-outline', label: 'Главная панель', path: '/home', id: 'home' },
+  { icon: 'mdi-database-outline', label: 'Данные и хранилища', path: '/storage', id: 'storage' },
+  { icon: 'mdi-source-branch', label: 'Проекты и пайплайны', path: '/projects', id: 'projects' },
+  { icon: 'mdi-brain', label: 'Эксперименты и обучение', path: '/experiments', id: 'experiments' },
+  { icon: 'mdi-flash-outline', label: 'Инференс и сервисы', path: '/inference', id: 'inference' },
+  { icon: 'mdi-source-merge', label: 'Потоки данных и ETL', path: '/etl', id: 'etl' },
+  { icon: 'mdi-pulse', label: 'Мониторинг и состояние системы', path: '/monitoring/dashboard', id: 'monitoring' },
+  { icon: 'mdi-shield-outline', label: 'Администрирование', path: '/administration/users', id: 'administration' },
 ]
 </script>
 
 <style scoped>
-.sidebar {
-  position: relative;
-  height: 100vh !important;
-  max-height: 100vh !important;
-}
-
-.sidebar :deep(.v-navigation-drawer__content) {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.sidebar-top,
-.sidebar-bottom {
-  padding: 16px;
-}
-
-.logo-row,
-.user-row {
+.logo-row {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -134,41 +118,9 @@ const menuItems = [
   font-weight: 600;
 }
 
-.menu-list {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding-inline: 8px;
-}
-
 .toggle-btn {
   position: absolute;
   top: 20px;
-  right: -16px;
-  z-index: 20;
-}
-
-.rotated {
-  transform: rotate(180deg);
-}
-
-.user-name {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.user-role {
-  font-size: 12px;
-  opacity: 0.75;
-}
-
-.actions-row {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.actions-row.stacked {
-  flex-direction: column;
+  right: -20px;
 }
 </style>
