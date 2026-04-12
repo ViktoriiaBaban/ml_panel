@@ -91,7 +91,7 @@ function toggleCollapsed() {
 }
 
 const menuItems = [
-  { icon: 'mdi-home-outline', label: 'Главная панель', path: '/home', id: 'home' },
+  { icon: 'mdi-home-outline', label: 'Главная панель', path: '/', id: 'home' },
   { icon: 'mdi-database-outline', label: 'Данные и хранилища', path: '/storage', id: 'storage' },
   { icon: 'mdi-source-branch', label: 'Проекты и пайплайны', path: '/projects', id: 'projects' },
   { icon: 'mdi-brain', label: 'Эксперименты и обучение', path: '/experiments', id: 'experiments' },

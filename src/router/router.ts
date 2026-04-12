@@ -52,64 +52,43 @@ export const router = createRouter({
       path: '/login',
       name: 'login',
       component: LoginView,
-      meta: {
-        public: true,
-        section: 'auth',
-        title: 'Вход',
-        breadcrumb: 'Вход',
-      },
+      meta: { public: true, section: 'auth', title: 'Вход'},
     },
     {
-      path: '/home',
+      path: '/',
       name: 'home',
       component: PlaceholderView,
-      meta: { section: 'home', title: 'Главная панель', breadcrumb: 'Главная' },
+      meta: { section: 'home', title: 'Главная панель' },
     },
     {
       path: '/storage',
       name: 'storage-root',
       component: RouterGroup,
-      meta: { section: 'storage', title: 'Данные и хранилища', breadcrumb: 'Данные и хранилища' },
+      meta: { section: 'storage', title: 'Данные и хранилища' },
       children: [
         {
           path: '',
           name: 'storage-overview',
           component: FileTable,
-          meta: {
-            section: 'storage',
-            title: 'Данные и хранилища',
-            breadcrumb: 'Данные и хранилища',
-          },
+          meta: {section: 'storage', title: 'Данные и хранилища'},
         },
         {
           path: 'buckets',
           name: 'storage-buckets',
           component: FileTable,
-          meta: {
-            section: 'storage',
-            title: 'Данные и хранилища',
-            breadcrumb: 'Бакеты',
-          },
+          meta: {section: 'storage', title: 'Бакеты', breadcrumb: 'Данные и хранилища'},
         },
         {
           path: 'files',
           name: 'storage-files',
           component: FileTable,
-          meta: {
-            section: 'storage',
-            title: 'Данные и хранилища',
-            breadcrumb: 'Файлы',
-          },
+          meta: {section: 'storage', title: 'Файлы', breadcrumb: 'Данные и хранилища'},
         },
         {
           path: 'tables',
           name: 'storage-tables',
           component: FileTable,
-          meta: {
-            section: 'storage',
-            title: 'Данные и хранилища',
-            breadcrumb: 'Табличные данные',
-          },
+          meta: {section: 'storage', title: 'Табличные данные', breadcrumb: 'Данные и хранилища'},
         },
       ],
     },
@@ -401,7 +380,7 @@ export function resolveTitle(route: RouteLocationNormalizedLoaded) {
   for (let index = route.matched.length - 1; index >= 0; index -= 1) {
     const entry = route.matched[index]
     const metaTitle = entry.meta.title as RouteMetaLabel | undefined
-    if (metaTitle) return label(metaTitle, route, 'ML Control Panel')
+    if (metaTitle) return label(metaTitle, route, import.meta.env.VITE_APP_TITLE)
   }
-  return 'ML Control Panel'
+  return import.meta.env.VITE_APP_TITLE
 }

@@ -32,15 +32,15 @@
             :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
             @click:append-inner="showPassword = !showPassword"
           />
-          <div class="d-flex justify-end mb-6">
-            <button type="button" class="link-like text-body-2" @click.prevent>Забыли пароль?</button>
+          <div class="d-flex justify-center mt-3 mb-6">
+            <p class="text-body-2 text-gray-500" @click.prevent>Забыли пароль - обратитесь к администратору</p>
           </div>
           <v-btn
+            :loading="authStore.loggingIn"
             type="submit"
             color="primary"
             size="large"
             block
-            :loading="authStore.loggingIn"
             rounded="md"
           >
             Войти
@@ -86,14 +86,5 @@ async function onSubmit() {
 .login-card {
   width: 100%;
   max-width: 420px;
-}
-
-.link-like {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: default;
-  color: rgb(var(--v-theme-primary));
-  font: inherit;
 }
 </style>
