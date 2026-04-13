@@ -1,3 +1,4 @@
+import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { api, ApiError } from '@/api/api'
 import type {
@@ -28,60 +29,81 @@ const TYPE_CONFIG: Record<ProjectType, ProjectTypeConfig> = {
   etl: { icon: 'mdi-swap-horizontal', label: 'ETL', iconColor: 'green' },
 }
 
-export const useProjectsStore = defineStore('projects', {
-  state: () => ({
-    items: [] as Project[],
-    loading: false,
-    error: null as string | null,
-    searchTerm: '',
-    statusFilter: 'all' as Required<ProjectsQuery>['status'],
-    lastQuery: { search: '', status: 'all' } as Required<ProjectsQuery>,
-    selectedProject: null as Project | null,
-    dialogs: {
-      gitlab: false,
-      pipelines: false,
-    },
-  }),
-  getters: {
-    statusOptions: () => STATUS_OPTIONS,
-    statusConfig: () => STATUS_CONFIG,
-    typeConfig: () => TYPE_CONFIG,
-  },
-  actions: {
-    async fetchProjects(query?: ProjectsQuery) {
-      const q: Required<ProjectsQuery> = { ...this.lastQuery, ...(query ?? {}) }
-      this.lastQuery = q
-      this.loading = true
-      this.error = null
-      try {
-        const params = new URLSearchParams()
-        params.set('search', q.search ?? '')
-        params.set('status', q.status ?? 'all')
-        this.items = await api.get<Project[]>(`/projects?${params.toString()}`)
-      } catch (e) {
-        this.error = e instanceof ApiError ? e.message : 'Не удалось загрузить проекты'
-      } finally {
-        this.loading = false
-      }
-    },
-    async applyFilters() {
-      await this.fetchProjects({ search: this.searchTerm, status: this.statusFilter })
-    },
-    async setSearchTerm(value: string) {
-      this.searchTerm = value
-      await this.applyFilters()
-    },
-    async setStatusFilter(value: Required<ProjectsQuery>['status']) {
-      this.statusFilter = value
-      await this.applyFilters()
-    },
-    openGitlabDialog(project: Project) {
-      this.selectedProject = project
-      this.dialogs.gitlab = true
-    },
-    closeGitlabDialog() {
-      this.dialogs.gitlab = false
-      this.selectedProject = null
+export const useProjectsStore = defineStore('projects', () => {
+  const items = ref<Project[]>([])
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+  const searchTerm = ref('')
+  const statusFilter = ref<Required<ProjectsQuery>['status']>('all')
+  const lastQuery = ref<Required<ProjectsQuery>>({ search: '', status: 'all' })
+  const selectedProject = ref<Project | null>(null)
+  const dialogs = ref({
+    gitlab: false,
+    pipelines: false,
+  })
+
+  const statusOptions = computed(() => STATUS_OPTIONS)
+  const statusConfig = computed(() => STATUS_CONFIG)
+  const typeConfig = computed(() => TYPE_CONFIG)
+
+  const fetchProjects = async (query?: ProjectsQuery) => {
+    const q: Required<ProjectsQuery> = { ...lastQuery.value, ...(query ?? {}) }
+    lastQuery.value = q
+    loading.value = true
+    error.value = null
+    try {
+      const params = new URLSearchParams()
+      params.set('search', q.search ?? '')
+      params.set('status', q.status ?? 'all')
+      items.value = await api.get<Project[]>(`/projects?${params.toString()}`)
+    } catch (e) {
+      error.value = e instanceof ApiError ? e.message : 'Не удалось загрузить проекты'
+    } finally {
+      loading.value = false
     }
-  },
+  }
+
+  const applyFilters = async () => {
+    await fetchProjects({ search: searchTerm.value, status: statusFilter.value })
+  }
+
+  const setSearchTerm = async (value: string) => {
+    searchTerm.value = value
+    await applyFilters()
+  }
+
+  const setStatusFilter = async (value: Required<ProjectsQuery>['status']) => {
+    statusFilter.value = value
+    await applyFilters()
+  }
+
+  const openGitlabDialog = (project: Project) => {
+    selectedProject.value = project
+    dialogs.value.gitlab = true
+  }
+
+  const closeGitlabDialog = () => {
+    dialogs.value.gitlab = false
+    selectedProject.value = null
+  }
+
+  return {
+    items,
+    loading,
+    error,
+    searchTerm,
+    statusFilter,
+    lastQuery,
+    selectedProject,
+    dialogs,
+    statusOptions,
+    statusConfig,
+    typeConfig,
+    fetchProjects,
+    applyFilters,
+    setSearchTerm,
+    setStatusFilter,
+    openGitlabDialog,
+    closeGitlabDialog,
+  }
 })

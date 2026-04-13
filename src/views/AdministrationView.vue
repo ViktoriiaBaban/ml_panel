@@ -73,6 +73,7 @@
 
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 import AdministrationAddUserDialog from '@/components/administration/AdministrationAddUserDialog.vue'
 import AdministrationEditUserDialog from '@/components/administration/AdministrationEditUserDialog.vue'
@@ -83,6 +84,7 @@ import AdministrationUsersTable from '@/components/administration/Administration
 import { useAdminStore } from '@/stores/admin'
 
 const adminStore = useAdminStore()
+const { activeTab } = storeToRefs(adminStore)
 const route = useRoute()
 const router = useRouter()
 
@@ -94,7 +96,7 @@ watch(
   () => route.name,
   (name) => {
     const next = name === 'administration-integrations' ? 'integrations' : 'users'
-    if (adminStore.activeTab !== next) {
+    if (activeTab.value !== next) {
       adminStore.setActiveTab(next)
     }
   },

@@ -47,10 +47,10 @@
           <v-avatar color="secondary" size="32" icon="mdi-account" />
           <v-card-item v-if="!collapsed" class="pa-2 w-100">
             <v-card-text class="pa-0">
-              <template v-if="sessionStore.loading">…</template>
-              <template v-else>{{ sessionStore.me?.name || '—' }}</template>
+              <template v-if="loading">…</template>
+              <template v-else>{{ me?.name || '—' }}</template>
             </v-card-text>
-            <v-card-subtitle v-if="sessionStore.me?.jobTitle" class="pa-0">{{ sessionStore.me.jobTitle }}</v-card-subtitle>
+            <v-card-subtitle v-if="me?.jobTitle" class="pa-0">{{ me.jobTitle }}</v-card-subtitle>
           </v-card-item>
         </v-card-title>
         <v-card-actions class="d-flex ga-2" :class="{ 'flex-column': collapsed }">
@@ -69,6 +69,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { Brain } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
@@ -79,6 +80,7 @@ defineProps<{ activeSection?: string }>()
 const collapsed = ref(false)
 const router = useRouter()
 const sessionStore = useSessionStore()
+const { me, loading } = storeToRefs(sessionStore)
 const authStore = useAuthStore()
 
 function onLogout() {

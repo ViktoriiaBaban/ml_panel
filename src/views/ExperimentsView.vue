@@ -149,11 +149,20 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import type { DataTableHeader } from 'vuetify'
 import { useExperimentsStore } from '@/stores/experiments'
 
 const store = useExperimentsStore()
+const {
+  availableTags,
+  availableProjects,
+  sort,
+  sortDirection,
+  totalPages,
+  page,
+} = storeToRefs(store)
 const router = useRouter()
 
 const headers = computed<DataTableHeader[]>(() => [
@@ -168,30 +177,30 @@ const headers = computed<DataTableHeader[]>(() => [
 
 const tagFilterItems = computed(() => [
   { title: 'Все теги', value: 'all' },
-  ...store.availableTags.map((tag) => ({ title: tag, value: tag })),
+  ...availableTags.value.map((tag) => ({ title: tag, value: tag })),
 ])
 
 const projectFilterItems = computed(() => [
   { title: 'Все проекты', value: 'all' },
-  ...store.availableProjects.map((project) => ({ title: project, value: project })),
+  ...availableProjects.value.map((project) => ({ title: project, value: project })),
 ])
 
 
 
 
 const sortBy = ref<Array<{ key: string; order: 'asc' | 'desc' }>>([
-  { key: store.sort, order: store.sortDirection },
+  { key: sort.value, order: sortDirection.value },
 ])
 
 watch(sortBy, async (value) => {
   const first = value[0]
   if (!first) return
   if (first.key !== 'name' && first.key !== 'updatedAt' && first.key !== 'createdAt') return
-  if (store.sort === first.key && store.sortDirection === first.order) return
+  if (sort.value === first.key && sortDirection.value === first.order) return
   await store.setSortFromTable(first.key, first.order)
 }, { deep: true })
 
-watch(() => [store.sort, store.sortDirection] as const, ([key, order]) => {
+watch(() => [sort.value, sortDirection.value] as const, ([key, order]) => {
   const first = sortBy.value[0]
   if (first && first.key === key && first.order === order) return
   sortBy.value = [{ key, order }]
@@ -206,8 +215,8 @@ function openExperiment(item: { id: number; name: string }) {
 }
 
 const pagesToShow = computed<Array<number | '...'>>(() => {
-  const total = store.totalPages
-  const current = store.page
+  const total = totalPages.value
+  const current = page.value
   if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1)
   if (current <= 3) return [1, 2, 3, '...', total]
   if (current >= total - 2) return [1, '...', total - 2, total - 1, total]

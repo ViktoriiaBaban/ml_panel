@@ -35,6 +35,7 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 
 import { useProjectsStore } from '@/stores/projects'
 import ProjectsFilters from '@/components/projects/ProjectsFilters.vue'
@@ -42,9 +43,10 @@ import ProjectCard from '@/components/projects/ProjectCard.vue'
 import ProjectsActionDialogs from '@/components/projects/ProjectsActionDialogs.vue'
 
 const projectsStore = useProjectsStore()
+const { searchTerm, statusFilter } = storeToRefs(projectsStore)
 
 onMounted(async () => {
-  await projectsStore.fetchProjects({ search: projectsStore.searchTerm, status: projectsStore.statusFilter })
+  await projectsStore.fetchProjects({ search: searchTerm.value, status: statusFilter.value })
 })
 
 const handleGitlabConfirm = () => {
@@ -63,5 +65,4 @@ const handleGitlabConfirm = () => {
   padding: 40px 0;
 }
 </style>
-
 

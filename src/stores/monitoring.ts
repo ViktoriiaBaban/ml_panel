@@ -1,3 +1,4 @@
+import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { api, ApiError } from '@/api/api'
 
@@ -22,42 +23,39 @@ export type Alert = {
   description: string
 }
 
-export const useMonitoringStore = defineStore('monitoring', {
-  state: () => ({
-    keyMetrics: [] as MonitoringMetric[],
-    servicesStatus: [] as MonitoringServiceUptime[],
-    alerts: [] as Alert[],
-    loading: false,
-    error: null as string | null,
-    alertSearch: '',
-  }),
-  actions: {
-    async fetchOverview() {
-      this.loading = true
-      this.error = null
-      try {
-        const res = await api.get<{ keyMetrics: MonitoringMetric[]; servicesStatus: MonitoringServiceUptime[] }>(
-          '/monitoring/overview',
-        )
-        this.keyMetrics = res.keyMetrics
-        this.servicesStatus = res.servicesStatus
-      } catch (e) {
-        this.error = e instanceof ApiError ? e.message : 'Не удалось загрузить мониторинг'
-      } finally {
-        this.loading = false
-      }
-    },
-    async fetchAlerts(search?: string) {
-      const q = search ?? this.alertSearch
-      this.alertSearch = q
-      try {
-        const params = new URLSearchParams()
-        params.set('search', q)
-        this.alerts = await api.get<Alert[]>(`/monitoring/alerts?${params.toString()}`)
-      } catch (e) {
-        this.error = e instanceof ApiError ? e.message : 'Не удалось загрузить алерты'
-      }
-    },
-  },
-})
+export const useMonitoringStore = defineStore('monitoring', () => {
+  const keyMetrics = ref<MonitoringMetric[]>([])
+  const servicesStatus = ref<MonitoringServiceUptime[]>([])
+  const alerts = ref<Alert[]>([])
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+  const alertSearch = ref('')
 
+  const fetchOverview = async () => {
+    loading.value = true
+    error.value = null
+    try {
+      const res = await api.get<{ keyMetrics: MonitoringMetric[]; servicesStatus: MonitoringServiceUptime[] }>('/monitoring/overview')
+      keyMetrics.value = res.keyMetrics
+      servicesStatus.value = res.servicesStatus
+    } catch (e) {
+      error.value = e instanceof ApiError ? e.message : 'Не удалось загрузить мониторинг'
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const fetchAlerts = async (search?: string) => {
+    const q = search ?? alertSearch.value
+    alertSearch.value = q
+    try {
+      const params = new URLSearchParams()
+      params.set('search', q)
+      alerts.value = await api.get<Alert[]>(`/monitoring/alerts?${params.toString()}`)
+    } catch (e) {
+      error.value = e instanceof ApiError ? e.message : 'Не удалось загрузить алерты'
+    }
+  }
+
+  return { keyMetrics, servicesStatus, alerts, loading, error, alertSearch, fetchOverview, fetchAlerts }
+})

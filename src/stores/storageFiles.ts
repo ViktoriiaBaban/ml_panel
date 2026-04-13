@@ -1,3 +1,4 @@
+import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { api, ApiError } from '@/api/api'
 
@@ -28,53 +29,51 @@ type StorageFilesResponse = {
   perPage: number
 }
 
-export const useStorageFilesStore = defineStore('storageFiles', {
-  state: () => ({
-    items: [] as StorageFile[],
-    total: 0,
+export const useStorageFilesStore = defineStore('storageFiles', () => {
+  const items = ref<StorageFile[]>([])
+  const total = ref(0)
+  const page = ref(1)
+  const perPage = ref(10)
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+  const lastQuery = ref<Required<StorageFilesQuery>>({
+    search: '',
+    type: 'Все типы',
+    sortField: null,
+    sortDirection: 'asc',
     page: 1,
     perPage: 10,
-    loading: false,
-    error: null as string | null,
-    lastQuery: {
-      search: '',
-      type: 'Все типы',
-      sortField: null,
-      sortDirection: 'asc',
-      page: 1,
-      perPage: 10,
-    } as Required<StorageFilesQuery>,
-  }),
-  actions: {
-    async fetchFiles(query?: StorageFilesQuery) {
-      const q: Required<StorageFilesQuery> = {
-        ...this.lastQuery,
-        ...(query ?? {}),
-      }
-      this.lastQuery = q
-      this.loading = true
-      this.error = null
-      try {
-        const params = new URLSearchParams()
-        params.set('search', q.search ?? '')
-        params.set('type', q.type ?? 'Все типы')
-        if (q.sortField) params.set('sortField', q.sortField)
-        params.set('sortDirection', q.sortDirection ?? 'asc')
-        params.set('page', String(q.page ?? 1))
-        params.set('perPage', String(q.perPage ?? 10))
+  })
 
-        const res = await api.get<StorageFilesResponse>(`/storage/files?${params.toString()}`)
-        this.items = res.items
-        this.total = res.total
-        this.page = res.page
-        this.perPage = res.perPage
-      } catch (e) {
-        const err = e as unknown
-        this.error = err instanceof ApiError ? err.message : 'Не удалось загрузить файлы'
-      } finally {
-        this.loading = false
-      }
-    },
-  },
+  const fetchFiles = async (query?: StorageFilesQuery) => {
+    const q: Required<StorageFilesQuery> = {
+      ...lastQuery.value,
+      ...(query ?? {}),
+    }
+    lastQuery.value = q
+    loading.value = true
+    error.value = null
+    try {
+      const params = new URLSearchParams()
+      params.set('search', q.search ?? '')
+      params.set('type', q.type ?? 'Все типы')
+      if (q.sortField) params.set('sortField', q.sortField)
+      params.set('sortDirection', q.sortDirection ?? 'asc')
+      params.set('page', String(q.page ?? 1))
+      params.set('perPage', String(q.perPage ?? 10))
+
+      const res = await api.get<StorageFilesResponse>(`/storage/files?${params.toString()}`)
+      items.value = res.items
+      total.value = res.total
+      page.value = res.page
+      perPage.value = res.perPage
+    } catch (e) {
+      const err = e as unknown
+      error.value = err instanceof ApiError ? err.message : 'Не удалось загрузить файлы'
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return { items, total, page, perPage, loading, error, lastQuery, fetchFiles }
 })
-
