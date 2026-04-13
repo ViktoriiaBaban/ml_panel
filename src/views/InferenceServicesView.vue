@@ -141,7 +141,6 @@ function goToMonitoring(serviceId: number, serviceName: string) {
 
 
 async function changeStatus(service: { id: number; name: string; status: ServiceStatus }, next: ServiceStatus, action: string) {
-  notificationsStore.trackProcessStart('inference', service.name, action)
   await new Promise((resolve) => setTimeout(resolve, 500))
   const isError = Math.random() < 0.15
   if (isError) {

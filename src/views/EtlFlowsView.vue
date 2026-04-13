@@ -129,7 +129,6 @@ function goToFlowDetail(flowId: number) {
 
 
 async function changeFlowStatus(flow: EtlFlow, next: FlowStatus, action: string) {
-  notificationsStore.trackProcessStart('etl', flow.name, action)
   await new Promise((resolve) => setTimeout(resolve, 400))
   const isError = Math.random() < 0.15
   if (isError) {

@@ -219,12 +219,10 @@ function openExperiment(item: { id: number; name: string }) {
 
 
 function createExperiment() {
-  notificationsStore.trackProcessStart('experiments', 'Эксперимент', 'Создание')
   setTimeout(() => notificationsStore.trackProcessResult('experiments', 'Эксперимент', 'Создание', true), 350)
 }
 
 function removeExperiment(item: { name: string }) {
-  notificationsStore.trackProcessStart('experiments', item.name, 'Удаление')
   setTimeout(() => notificationsStore.trackProcessResult('experiments', item.name, 'Удаление', true), 350)
 }
 

@@ -282,7 +282,6 @@ async function saveVariable(key: string) {
 
 async function notifyAction(action: string) {
   const name = String(route.query.serviceName ?? route.params.flowId ?? route.params.serviceId ?? 'Сущность')
-  notificationsStore.trackProcessStart('etl', name, action)
   await new Promise((resolve) => setTimeout(resolve, 350))
   const failed = Math.random() < 0.12
   notificationsStore.trackProcessResult('etl', name, action, !failed, failed ? `Операция ${action} завершилась ошибкой исполнения.` : undefined)

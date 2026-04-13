@@ -290,7 +290,6 @@ const filteredLogs = computed(() => {
 
 async function notifyAction(action: string) {
   const name = String(route.query.serviceName ?? route.params.flowId ?? route.params.serviceId ?? 'Сущность')
-  notificationsStore.trackProcessStart('inference', name, action)
   await new Promise((resolve) => setTimeout(resolve, 350))
   const failed = Math.random() < 0.12
   notificationsStore.trackProcessResult('inference', name, action, !failed, failed ? `Операция ${action} завершилась ошибкой исполнения.` : undefined)
