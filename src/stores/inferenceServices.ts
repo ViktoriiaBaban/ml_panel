@@ -21,15 +21,29 @@ export type InferenceServicesQuery = {
   search?: string
   status?: string
   project?: string
+  page?: number
+  perPage?: number
+}
+
+type InferenceServicesResponse = {
+  items: InferenceService[]
+  total: number
+  page: number
+  perPage: number
+  availableProjects: string[]
 }
 
 export const useInferenceServicesStore = defineStore('inferenceServices', () => {
   const items = ref<InferenceService[]>([])
+  const total = ref(0)
+  const page = ref(1)
+  const perPage = ref(10)
+  const availableProjects = ref<string[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
-  const lastQuery = ref<Required<InferenceServicesQuery>>({ search: '', status: 'all', project: 'all' })
+  const lastQuery = ref<Required<InferenceServicesQuery>>({ search: '', status: 'all', project: 'all', page: 1, perPage: 10 })
 
-  const uniqueProjects = computed(() => [...new Set(items.value.map((s) => s.project))])
+  const uniqueProjects = computed(() => availableProjects.value)
 
   const fetchServices = async (query?: InferenceServicesQuery) => {
     const q: Required<InferenceServicesQuery> = { ...lastQuery.value, ...(query ?? {}) }
@@ -41,7 +55,14 @@ export const useInferenceServicesStore = defineStore('inferenceServices', () => 
       params.set('search', q.search ?? '')
       params.set('status', q.status ?? 'all')
       params.set('project', q.project ?? 'all')
-      items.value = await api.get<InferenceService[]>(`/inference/services?${params.toString()}`)
+      params.set('page', String(q.page ?? 1))
+      params.set('perPage', String(q.perPage ?? 10))
+      const response = await api.get<InferenceServicesResponse>(`/inference/services?${params.toString()}`)
+      items.value = response.items
+      total.value = response.total
+      page.value = response.page
+      perPage.value = response.perPage
+      availableProjects.value = response.availableProjects
     } catch (e) {
       error.value = e instanceof ApiError ? e.message : 'Не удалось загрузить инференс-сервисы'
     } finally {
@@ -49,5 +70,5 @@ export const useInferenceServicesStore = defineStore('inferenceServices', () => 
     }
   }
 
-  return { items, loading, error, lastQuery, uniqueProjects, fetchServices }
+  return { items, total, page, perPage, loading, error, lastQuery, uniqueProjects, fetchServices }
 })
