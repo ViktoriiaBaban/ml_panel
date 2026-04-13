@@ -3,7 +3,7 @@
     <div class="flex-1 bg-[#F5F7FA] p-6">
       <div class="bg-white rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.08)] max-w-[1360px] mx-auto">
         <div class="p-4 border-b border-gray-200">
-          <div class="grid grid-cols-1 md:grid-cols-[minmax(280px,1fr)_180px_220px] gap-3 items-center">
+          <div class="d-flex w-100 justify-space-around ga-3">
             <v-text-field
               v-model="searchTerm"
               prepend-inner-icon="mdi-magnify"
@@ -19,6 +19,7 @@
               item-value="value"
               variant="outlined"
               density="compact"
+              max-width="300"
               hide-details
             />
             <v-select
@@ -28,6 +29,7 @@
               item-value="value"
               variant="outlined"
               density="compact"
+              max-width="300"
               hide-details
             />
           </div>
