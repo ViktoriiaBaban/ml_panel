@@ -53,7 +53,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
     items.value.unshift(entry)
     toastQueue.value.push(entry)
     if (typeof window !== 'undefined') {
-      window.setTimeout(() => dismissToast(entry.id), 6000)
+      window.setTimeout(() => dismissToast(entry.id), 4000)
     }
     persist()
   }
@@ -90,11 +90,31 @@ export const useNotificationsStore = defineStore('notifications', () => {
   }
 
   function trackProcessResult(source: string, name: string, action: string, ok: boolean, details?: string) {
+    const actionMap: Record<string, { ok: string; fail: string }> = {
+      'Запуск': { ok: 'успешно запущен', fail: 'не удалось запустить' },
+      'Остановка': { ok: 'успешно остановлен', fail: 'не удалось остановить' },
+      'Перезапуск': { ok: 'успешно перезапущен', fail: 'не удалось перезапустить' },
+      'Создание': { ok: 'успешно создан', fail: 'не удалось создать' },
+      'Удаление': { ok: 'успешно удален', fail: 'не удалось удалить' },
+    }
+
+    const sourceLabel = source === 'inference'
+      ? 'Сервис'
+      : source === 'etl'
+        ? 'Поток'
+        : source === 'experiments'
+          ? 'Эксперимент'
+          : 'Объект'
+
+    const actionLabel = actionMap[action] ?? { ok: 'операция выполнена', fail: 'операция завершилась ошибкой' }
+
     push({
       source,
       severity: ok ? 'success' : 'error',
-      title: `${name}: ${action}`,
-      message: ok ? `Операция «${action}» успешно завершена` : `Операция «${action}» завершилась ошибкой`,
+      title: name,
+      message: ok
+        ? `${sourceLabel} ${actionLabel.ok}`
+        : `${sourceLabel} ${actionLabel.fail}`,
       details,
     })
   }

@@ -4,9 +4,9 @@
       v-for="toast in notificationsStore.toastQueue"
       :key="toast.id"
       :type="toVuetifyType(toast.severity)"
-      variant="tonal"
+      variant="flat"
       border="start"
-      class="toast-item"
+      class="toast-item text-white"
       closable
       @click:close="notificationsStore.dismissToast(toast.id)"
     >
@@ -40,5 +40,6 @@ function toVuetifyType(severity: NotificationSeverity): 'success' | 'info' | 'wa
 
 .toast-item {
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
+  opacity: 1;
 }
 </style>
