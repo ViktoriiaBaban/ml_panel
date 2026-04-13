@@ -110,55 +110,118 @@ export const inferenceServices: InferenceService[] = [
   },
 ]
 
-export const inferenceMonitoring: InferenceServiceMonitoring[] = [
-  {
-    serviceId: 1,
-    history: [
-      { timestamp: '10:00', rps: 22, latency: 110, errors: 0 },
-      { timestamp: '10:05', rps: 27, latency: 107, errors: 1 },
-      { timestamp: '10:10', rps: 31, latency: 103, errors: 0 },
-      { timestamp: '10:15', rps: 30, latency: 101, errors: 0 },
-      { timestamp: '10:20', rps: 37, latency: 104, errors: 1 },
+export const inferenceMonitoringByServiceId: Record<number, InferenceServiceMonitoring> = {
+  1: {
+    recentCalls: [
+      { id: 1, time: '10:20', latency: 104, status: 'success' },
+      { id: 2, time: '10:19', latency: 102, status: 'success' },
+      { id: 3, time: '10:18', latency: 109, status: 'error' },
+      { id: 4, time: '10:17', latency: 101, status: 'success' },
+      { id: 5, time: '10:16', latency: 103, status: 'success' },
+    ],
+    logs: [
+      { id: 1, timestamp: '10:20:09', level: 'INFO', message: 'Prediction batch accepted: 128 records' },
+      { id: 2, timestamp: '10:18:44', level: 'WARNING', message: 'Temporary spike in feature lookup latency' },
+      { id: 3, timestamp: '10:18:41', level: 'ERROR', message: 'Single request timed out at downstream fraud-features cache' },
+    ],
+    charts: [
+      { title: 'CPU', color: '#7c3aed', data: [{ pct: 62 }] },
+      { title: 'Memory', color: '#16a34a', data: [{ pct: 48 }] },
+      { title: 'GPU', color: '#0284c7', data: [{ pct: 0 }] },
+    ],
+    modelArtifacts: ['fraud_xgb_v241.pkl', 'fraud_preproc_v19.onnx', 'fraud_features_schema_v12.json'],
+    relatedSystems: [
+      { icon: 'Database', name: 'Feature Store', desc: 'fraud-features (ClickHouse)' },
+      { icon: 'FlaskConical', name: 'Model Registry', desc: 'fraud-detection:20260411-0920' },
+      { icon: 'RefreshCw', name: 'Bento Runtime', desc: 'bento-fraud /predict health: OK' },
     ],
   },
-  {
-    serviceId: 2,
-    history: [
-      { timestamp: '10:00', rps: 41, latency: 87, errors: 0 },
-      { timestamp: '10:05', rps: 44, latency: 85, errors: 0 },
-      { timestamp: '10:10', rps: 46, latency: 82, errors: 1 },
-      { timestamp: '10:15', rps: 48, latency: 80, errors: 0 },
-      { timestamp: '10:20', rps: 51, latency: 83, errors: 0 },
+  2: {
+    recentCalls: [
+      { id: 1, time: '10:20', latency: 83, status: 'success' },
+      { id: 2, time: '10:19', latency: 84, status: 'success' },
+      { id: 3, time: '10:18', latency: 81, status: 'success' },
+      { id: 4, time: '10:17', latency: 80, status: 'success' },
+      { id: 5, time: '10:16', latency: 86, status: 'error' },
+    ],
+    logs: [
+      { id: 1, timestamp: '10:20:14', level: 'INFO', message: 'Top-N recommendation generated for feed/home' },
+      { id: 2, timestamp: '10:16:52', level: 'ERROR', message: 'Cold-start request exceeded timeout, fallback returned' },
+      { id: 3, timestamp: '10:16:49', level: 'INFO', message: 'Embedding cache refresh completed' },
+    ],
+    charts: [
+      { title: 'CPU', color: '#7c3aed', data: [{ pct: 71 }] },
+      { title: 'Memory', color: '#16a34a', data: [{ pct: 64 }] },
+      { title: 'GPU', color: '#0284c7', data: [{ pct: 22 }] },
+    ],
+    modelArtifacts: ['recsys_ranker_v88.onnx', 'recsys_candidate_gen_v31.pkl', 'embedding_space_v7.faiss'],
+    relatedSystems: [
+      { icon: 'Database', name: 'Events Lake', desc: 'recsys-events (S3 + Athena)' },
+      { icon: 'FlaskConical', name: 'Feature Pipeline', desc: 'daily-recsys-features @ 10:00 UTC' },
+      { icon: 'RefreshCw', name: 'Bento Runtime', desc: 'bento-recsys /recommend health: OK' },
     ],
   },
-  {
-    serviceId: 3,
-    history: [
-      { timestamp: '10:00', rps: 0, latency: 0, errors: 0 },
-      { timestamp: '10:05', rps: 0, latency: 0, errors: 0 },
-      { timestamp: '10:10', rps: 0, latency: 0, errors: 0 },
-      { timestamp: '10:15', rps: 0, latency: 0, errors: 0 },
-      { timestamp: '10:20', rps: 0, latency: 0, errors: 0 },
+  3: {
+    recentCalls: [],
+    logs: [
+      { id: 1, timestamp: '09:42:01', level: 'INFO', message: 'Service manually stopped by on-call engineer' },
+      { id: 2, timestamp: '09:41:58', level: 'WARNING', message: 'No traffic observed for 30 minutes' },
+    ],
+    charts: [
+      { title: 'CPU', color: '#7c3aed', data: [{ pct: 0 }] },
+      { title: 'Memory', color: '#16a34a', data: [{ pct: 3 }] },
+      { title: 'GPU', color: '#0284c7', data: [{ pct: 0 }] },
+    ],
+    modelArtifacts: ['support_intent_ru_v14.onnx', 'tokenizer_sentencepiece_ru.model'],
+    relatedSystems: [
+      { icon: 'Database', name: 'Tickets DWH', desc: 'support_tickets_raw / ticket_intent_labels' },
+      { icon: 'RefreshCw', name: 'Bento Runtime', desc: 'bento-nlp currently stopped' },
     ],
   },
-  {
-    serviceId: 4,
-    history: [
-      { timestamp: '10:00', rps: 0, latency: 0, errors: 5 },
-      { timestamp: '10:05', rps: 0, latency: 0, errors: 4 },
-      { timestamp: '10:10', rps: 0, latency: 0, errors: 6 },
-      { timestamp: '10:15', rps: 0, latency: 0, errors: 4 },
-      { timestamp: '10:20', rps: 0, latency: 0, errors: 3 },
+  4: {
+    recentCalls: [
+      { id: 1, time: '10:20', latency: 0, status: 'error' },
+      { id: 2, time: '10:19', latency: 0, status: 'error' },
+      { id: 3, time: '10:18', latency: 0, status: 'error' },
+    ],
+    logs: [
+      { id: 1, timestamp: '10:20:33', level: 'ERROR', message: 'CUDA device not available, inference process aborted' },
+      { id: 2, timestamp: '10:19:15', level: 'ERROR', message: 'Container restart failed: model artifact mount missing' },
+      { id: 3, timestamp: '10:18:02', level: 'WARNING', message: 'Healthcheck endpoint reports repeated crash loop' },
+    ],
+    charts: [
+      { title: 'CPU', color: '#7c3aed', data: [{ pct: 2 }] },
+      { title: 'Memory', color: '#16a34a', data: [{ pct: 9 }] },
+      { title: 'GPU', color: '#0284c7', data: [{ pct: 0 }] },
+    ],
+    modelArtifacts: ['vision_detector_v42.engine', 'defect_labels_v9.json'],
+    relatedSystems: [
+      { icon: 'FlaskConical', name: 'Model Registry', desc: 'quality-vision:20260410-1220' },
+      { icon: 'RefreshCw', name: 'Bento Runtime', desc: 'bento-vision in crash loop' },
     ],
   },
-  {
-    serviceId: 5,
-    history: [
-      { timestamp: '10:00', rps: 11, latency: 153, errors: 0 },
-      { timestamp: '10:05', rps: 12, latency: 151, errors: 0 },
-      { timestamp: '10:10', rps: 13, latency: 150, errors: 0 },
-      { timestamp: '10:15', rps: 13, latency: 148, errors: 1 },
-      { timestamp: '10:20', rps: 15, latency: 149, errors: 0 },
+  5: {
+    recentCalls: [
+      { id: 1, time: '10:20', latency: 149, status: 'success' },
+      { id: 2, time: '10:19', latency: 151, status: 'success' },
+      { id: 3, time: '10:18', latency: 148, status: 'error' },
+      { id: 4, time: '10:17', latency: 150, status: 'success' },
+      { id: 5, time: '10:16', latency: 147, status: 'success' },
+    ],
+    logs: [
+      { id: 1, timestamp: '10:20:08', level: 'INFO', message: 'Scoring request completed for churn campaign batch' },
+      { id: 2, timestamp: '10:18:56', level: 'ERROR', message: 'Transient Redis timeout when reading user features' },
+      { id: 3, timestamp: '10:17:12', level: 'INFO', message: 'Loaded model churn-predictor:20260409-1115' },
+    ],
+    charts: [
+      { title: 'CPU', color: '#7c3aed', data: [{ pct: 58 }] },
+      { title: 'Memory', color: '#16a34a', data: [{ pct: 54 }] },
+      { title: 'GPU', color: '#0284c7', data: [{ pct: 0 }] },
+    ],
+    modelArtifacts: ['churn_gbm_v13.pkl', 'churn_calibration_v4.json', 'churn_features_v21.yaml'],
+    relatedSystems: [
+      { icon: 'Database', name: 'Analytics Mart', desc: 'sales_orders_mart + customer_features_wide' },
+      { icon: 'RefreshCw', name: 'Bento Runtime', desc: 'bento-churn /predict health: OK' },
     ],
   },
-]
+}
