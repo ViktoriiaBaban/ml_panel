@@ -1,7 +1,7 @@
 <template>
-  <div class="login-page">
-    <v-card class="login-card" elevation="4" rounded="lg">
-      <v-card-text class="pa-8">
+  <div class="h-100 d-flex justify-center align-center pa-6 bg-background">
+    <v-card class="w-100" max-width="560" elevation="4" rounded="lg">
+      <v-card-text class="px-8 py-12 d-flex flex-column align-center">
         <h1 class="text-h4 font-weight-bold mb-2">Добро пожаловать</h1>
         <p class="text-body-1 text-medium-emphasis mb-6">Авторизуйтесь, чтобы продолжить</p>
 
@@ -9,7 +9,7 @@
           {{ authStore.loginError }}
         </v-alert>
 
-        <v-form @submit.prevent="onSubmit">
+        <v-form class="w-100" @submit.prevent="onSubmit">
           <v-text-field
             v-model="email"
             label="Email"
@@ -74,17 +74,4 @@ async function onSubmit() {
 </script>
 
 <style scoped>
-.login-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f0f2f5;
-  padding: 24px;
-}
-
-.login-card {
-  width: 100%;
-  max-width: 420px;
-}
 </style>
