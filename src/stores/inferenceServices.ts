@@ -1,3 +1,4 @@
+import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { api, ApiError } from '@/api/api'
 
@@ -22,36 +23,31 @@ export type InferenceServicesQuery = {
   project?: string
 }
 
-export const useInferenceServicesStore = defineStore('inferenceServices', {
-  state: () => ({
-    items: [] as InferenceService[],
-    loading: false,
-    error: null as string | null,
-    lastQuery: { search: '', status: 'all', project: 'all' } as Required<InferenceServicesQuery>,
-  }),
-  getters: {
-    uniqueProjects(state) {
-      return [...new Set(state.items.map((s) => s.project))]
-    },
-  },
-  actions: {
-    async fetchServices(query?: InferenceServicesQuery) {
-      const q: Required<InferenceServicesQuery> = { ...this.lastQuery, ...(query ?? {}) }
-      this.lastQuery = q
-      this.loading = true
-      this.error = null
-      try {
-        const params = new URLSearchParams()
-        params.set('search', q.search ?? '')
-        params.set('status', q.status ?? 'all')
-        params.set('project', q.project ?? 'all')
-        this.items = await api.get<InferenceService[]>(`/inference/services?${params.toString()}`)
-      } catch (e) {
-        this.error = e instanceof ApiError ? e.message : 'Не удалось загрузить инференс-сервисы'
-      } finally {
-        this.loading = false
-      }
-    },
-  },
-})
+export const useInferenceServicesStore = defineStore('inferenceServices', () => {
+  const items = ref<InferenceService[]>([])
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+  const lastQuery = ref<Required<InferenceServicesQuery>>({ search: '', status: 'all', project: 'all' })
 
+  const uniqueProjects = computed(() => [...new Set(items.value.map((s) => s.project))])
+
+  const fetchServices = async (query?: InferenceServicesQuery) => {
+    const q: Required<InferenceServicesQuery> = { ...lastQuery.value, ...(query ?? {}) }
+    lastQuery.value = q
+    loading.value = true
+    error.value = null
+    try {
+      const params = new URLSearchParams()
+      params.set('search', q.search ?? '')
+      params.set('status', q.status ?? 'all')
+      params.set('project', q.project ?? 'all')
+      items.value = await api.get<InferenceService[]>(`/inference/services?${params.toString()}`)
+    } catch (e) {
+      error.value = e instanceof ApiError ? e.message : 'Не удалось загрузить инференс-сервисы'
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return { items, loading, error, lastQuery, uniqueProjects, fetchServices }
+})

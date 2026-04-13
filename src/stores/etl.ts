@@ -1,3 +1,4 @@
+import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { api, ApiError } from '@/api/api'
 
@@ -36,83 +37,99 @@ export type FlowHistoryItem = {
   status: 'success' | 'error'
 }
 
-export const useEtlStore = defineStore('etl', {
-  state: () => ({
-    flows: [] as EtlFlow[],
-    flowsLoading: false,
-    flowsError: null as string | null,
+export const useEtlStore = defineStore('etl', () => {
+  const flows = ref<EtlFlow[]>([])
+  const flowsLoading = ref(false)
+  const flowsError = ref<string | null>(null)
 
-    flowById: {} as Record<number, EtlFlow>,
-    flowLoading: {} as Record<number, boolean>,
-    flowError: {} as Record<number, string | null>,
+  const flowById = ref<Record<number, EtlFlow>>({})
+  const flowLoading = ref<Record<number, boolean>>({})
+  const flowError = ref<Record<number, string | null>>({})
 
-    variablesByFlowId: {} as Record<number, FlowVariable[]>,
-    variablesLoading: {} as Record<number, boolean>,
-    variablesError: {} as Record<number, string | null>,
+  const variablesByFlowId = ref<Record<number, FlowVariable[]>>({})
+  const variablesLoading = ref<Record<number, boolean>>({})
+  const variablesError = ref<Record<number, string | null>>({})
 
-    componentsByFlowId: {} as Record<number, FlowComponent[]>,
-    historyByFlowId: {} as Record<number, FlowHistoryItem[]>,
-  }),
-  actions: {
-    async fetchFlows() {
-      this.flowsLoading = true
-      this.flowsError = null
-      try {
-        this.flows = await api.get<EtlFlow[]>('/etl/flows')
-      } catch (e) {
-        this.flowsError = e instanceof ApiError ? e.message : 'Не удалось загрузить потоки'
-      } finally {
-        this.flowsLoading = false
-      }
-    },
+  const componentsByFlowId = ref<Record<number, FlowComponent[]>>({})
+  const historyByFlowId = ref<Record<number, FlowHistoryItem[]>>({})
 
-    async fetchFlow(id: number) {
-      this.flowLoading[id] = true
-      this.flowError[id] = null
-      try {
-        const flow = await api.get<EtlFlow>(`/etl/flows/${id}`)
-        this.flowById[id] = flow
-        return flow
-      } catch (e) {
-        this.flowError[id] = e instanceof ApiError ? e.message : 'Не удалось загрузить поток'
-        return null
-      } finally {
-        this.flowLoading[id] = false
-      }
-    },
+  const fetchFlows = async () => {
+    flowsLoading.value = true
+    flowsError.value = null
+    try {
+      flows.value = await api.get<EtlFlow[]>('/etl/flows')
+    } catch (e) {
+      flowsError.value = e instanceof ApiError ? e.message : 'Не удалось загрузить потоки'
+    } finally {
+      flowsLoading.value = false
+    }
+  }
 
-    async fetchVariables(flowId: number) {
-      this.variablesLoading[flowId] = true
-      this.variablesError[flowId] = null
-      try {
-        this.variablesByFlowId[flowId] = await api.get<FlowVariable[]>(`/etl/flows/${flowId}/variables`)
-      } catch (e) {
-        this.variablesError[flowId] = e instanceof ApiError ? e.message : 'Не удалось загрузить переменные'
-      } finally {
-        this.variablesLoading[flowId] = false
-      }
-    },
+  const fetchFlow = async (id: number) => {
+    flowLoading.value[id] = true
+    flowError.value[id] = null
+    try {
+      const flow = await api.get<EtlFlow>(`/etl/flows/${id}`)
+      flowById.value[id] = flow
+      return flow
+    } catch (e) {
+      flowError.value[id] = e instanceof ApiError ? e.message : 'Не удалось загрузить поток'
+      return null
+    } finally {
+      flowLoading.value[id] = false
+    }
+  }
 
-    async updateVariable(flowId: number, key: string, value: string) {
-      const updated = await api.patch<FlowVariable, { value: string }>(
-        `/etl/flows/${flowId}/variables/${encodeURIComponent(key)}`,
-        { value },
-      )
-      const list = this.variablesByFlowId[flowId] ?? []
-      const idx = list.findIndex((v) => v.key === key)
-      if (idx >= 0) list[idx] = updated
-      else list.push(updated)
-      this.variablesByFlowId[flowId] = [...list]
-      return updated
-    },
+  const fetchVariables = async (flowId: number) => {
+    variablesLoading.value[flowId] = true
+    variablesError.value[flowId] = null
+    try {
+      variablesByFlowId.value[flowId] = await api.get<FlowVariable[]>(`/etl/flows/${flowId}/variables`)
+    } catch (e) {
+      variablesError.value[flowId] = e instanceof ApiError ? e.message : 'Не удалось загрузить переменные'
+    } finally {
+      variablesLoading.value[flowId] = false
+    }
+  }
 
-    async fetchComponents(flowId: number) {
-      this.componentsByFlowId[flowId] = await api.get<FlowComponent[]>(`/etl/flows/${flowId}/components`)
-    },
+  const updateVariable = async (flowId: number, key: string, value: string) => {
+    const updated = await api.patch<FlowVariable, { value: string }>(
+      `/etl/flows/${flowId}/variables/${encodeURIComponent(key)}`,
+      { value },
+    )
+    const list = variablesByFlowId.value[flowId] ?? []
+    const idx = list.findIndex((v) => v.key === key)
+    if (idx >= 0) list[idx] = updated
+    else list.push(updated)
+    variablesByFlowId.value[flowId] = [...list]
+    return updated
+  }
 
-    async fetchHistory(flowId: number) {
-      this.historyByFlowId[flowId] = await api.get<FlowHistoryItem[]>(`/etl/flows/${flowId}/history`)
-    },
-  },
+  const fetchComponents = async (flowId: number) => {
+    componentsByFlowId.value[flowId] = await api.get<FlowComponent[]>(`/etl/flows/${flowId}/components`)
+  }
+
+  const fetchHistory = async (flowId: number) => {
+    historyByFlowId.value[flowId] = await api.get<FlowHistoryItem[]>(`/etl/flows/${flowId}/history`)
+  }
+
+  return {
+    flows,
+    flowsLoading,
+    flowsError,
+    flowById,
+    flowLoading,
+    flowError,
+    variablesByFlowId,
+    variablesLoading,
+    variablesError,
+    componentsByFlowId,
+    historyByFlowId,
+    fetchFlows,
+    fetchFlow,
+    fetchVariables,
+    updateVariable,
+    fetchComponents,
+    fetchHistory,
+  }
 })
-

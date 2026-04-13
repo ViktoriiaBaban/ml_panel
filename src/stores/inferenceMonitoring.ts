@@ -1,3 +1,4 @@
+import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { api, ApiError } from '@/api/api'
 
@@ -48,30 +49,28 @@ export type InferenceService = {
   errorRate: number
 }
 
-export const useInferenceMonitoringStore = defineStore('inferenceMonitoring', {
-  state: () => ({
-    service: null as InferenceService | null,
-    monitoring: null as InferenceServiceMonitoring | null,
-    loading: false,
-    error: null as string | null,
-  }),
-  actions: {
-    async fetchAll(serviceId: number) {
-      this.loading = true
-      this.error = null
-      try {
-        const [service, monitoring] = await Promise.all([
-          api.get<InferenceService>(`/inference/services/${serviceId}`),
-          api.get<InferenceServiceMonitoring>(`/inference/services/${serviceId}/monitoring`),
-        ])
-        this.service = service
-        this.monitoring = monitoring
-      } catch (e) {
-        this.error = e instanceof ApiError ? e.message : 'Не удалось загрузить мониторинг сервиса'
-      } finally {
-        this.loading = false
-      }
-    },
-  },
-})
+export const useInferenceMonitoringStore = defineStore('inferenceMonitoring', () => {
+  const service = ref<InferenceService | null>(null)
+  const monitoring = ref<InferenceServiceMonitoring | null>(null)
+  const loading = ref(false)
+  const error = ref<string | null>(null)
 
+  const fetchAll = async (serviceId: number) => {
+    loading.value = true
+    error.value = null
+    try {
+      const [serviceData, monitoringData] = await Promise.all([
+        api.get<InferenceService>(`/inference/services/${serviceId}`),
+        api.get<InferenceServiceMonitoring>(`/inference/services/${serviceId}/monitoring`),
+      ])
+      service.value = serviceData
+      monitoring.value = monitoringData
+    } catch (e) {
+      error.value = e instanceof ApiError ? e.message : 'Не удалось загрузить мониторинг сервиса'
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return { service, monitoring, loading, error, fetchAll }
+})
