@@ -5,9 +5,17 @@
         <h2 class="text-h5 mb-1">Уведомления</h2>
         <p class="text-medium-emphasis">История событий системы с фильтром до 30 дней.</p>
       </div>
-      <v-btn variant="text" prepend-icon="mdi-check-all" :disabled="!notificationsStore.unreadCount" @click="notificationsStore.markAllRead()">
-        Прочитать все
-      </v-btn>
+      <div class="d-flex ga-2">
+        <v-btn variant="text" prepend-icon="mdi-check-all" :disabled="!notificationsStore.unreadCount" @click="notificationsStore.markAllRead()">
+          Прочитать все
+        </v-btn>
+        <v-btn variant="text" prepend-icon="mdi-check" :disabled="!selectedIds.length" @click="markSelectedRead">
+          Прочитать выбранные
+        </v-btn>
+        <v-btn variant="text" color="error" prepend-icon="mdi-delete" :disabled="!selectedIds.length" @click="deleteSelected">
+          Удалить выбранные
+        </v-btn>
+      </div>
     </div>
 
     <v-card class="mb-4 pa-4">
@@ -22,21 +30,22 @@
     <v-card v-for="item in filteredItems" :key="item.id" class="mb-3">
       <v-card-text>
         <div class="d-flex justify-space-between ga-4">
-          <div>
-            <div class="d-flex align-center ga-2">
-              <v-chip size="small" :color="chipColor(item.severity)" variant="tonal">{{ severityLabel(item.severity) }}</v-chip>
-              <v-chip size="small" :color="item.read ? 'default' : 'primary'" variant="outlined">{{ item.read ? 'Прочитано' : 'Непрочитано' }}</v-chip>
-              <span class="text-caption text-medium-emphasis">{{ new Date(item.createdAt).toLocaleString('ru-RU') }}</span>
+          <div class="d-flex ga-3 align-start">
+            <v-checkbox-btn :model-value="selectedIds.includes(item.id)" @update:model-value="toggleSelected(item.id)" />
+            <div>
+              <div class="d-flex align-center ga-2">
+                <v-icon :icon="item.read ? 'mdi-checkbox-blank-circle-outline' : 'mdi-circle'" :color="item.read ? 'grey' : 'primary'" size="10" />
+                <v-chip size="small" :color="chipColor(item.severity)" variant="tonal">{{ severityLabel(item.severity) }}</v-chip>
+                <span class="text-caption text-medium-emphasis">{{ new Date(item.createdAt).toLocaleString('ru-RU') }}</span>
+              </div>
+              <div class="text-subtitle-1 font-weight-medium mt-2">{{ item.title }}</div>
+              <div class="text-body-2 text-medium-emphasis">{{ item.message }}</div>
             </div>
-            <div class="text-subtitle-1 font-weight-medium mt-2">{{ item.title }}</div>
-            <div class="text-body-2 text-medium-emphasis">{{ item.message }}</div>
           </div>
           <div class="d-flex flex-column ga-2 align-end">
-            <v-btn size="small" variant="text" @click="notificationsStore.markRead(item.id, !item.read)">
-              {{ item.read ? 'Отметить непрочитанным' : 'Отметить прочитанным' }}
-            </v-btn>
-            <v-btn v-if="item.severity === 'error' && item.details" size="small" variant="text" color="error" @click="openDetails(item)">Подробнее</v-btn>
-            <v-btn size="small" variant="text" color="error" @click="notificationsStore.remove(item.id)">Удалить</v-btn>
+            <v-btn icon="mdi-eye-check" size="small" variant="text" :title="item.read ? 'Отметить непрочитанным' : 'Отметить прочитанным'" @click="notificationsStore.markRead(item.id, !item.read)" />
+            <v-btn v-if="item.severity === 'error' && item.details" icon="mdi-information-outline" size="small" variant="text" color="error" title="Подробнее" @click="openDetails(item)" />
+            <v-btn icon="mdi-delete-outline" size="small" variant="text" color="error" title="Удалить" @click="notificationsStore.remove(item.id)" />
           </div>
         </div>
       </v-card-text>
@@ -53,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useNotificationsStore, type AppNotification, type NotificationSeverity } from '@/stores/notifications'
 
 const notificationsStore = useNotificationsStore()
@@ -62,6 +71,7 @@ const periodDays = ref(7)
 const statusFilter = ref<'all' | 'unread' | 'error'>('all')
 const detailsOpen = ref(false)
 const detailsText = ref('')
+const selectedIds = ref<string[]>([])
 
 const periodOptions = [
   { title: '1 день', value: 1 },
@@ -84,6 +94,28 @@ const filteredItems = computed(() => {
     return true
   })
 })
+
+watch(filteredItems, (list) => {
+  const ids = new Set(list.map((item) => item.id))
+  selectedIds.value = selectedIds.value.filter((id) => ids.has(id))
+})
+
+function toggleSelected(id: string) {
+  if (selectedIds.value.includes(id)) {
+    selectedIds.value = selectedIds.value.filter((item) => item !== id)
+    return
+  }
+  selectedIds.value = [...selectedIds.value, id]
+}
+
+function deleteSelected() {
+  selectedIds.value.forEach((id) => notificationsStore.remove(id))
+  selectedIds.value = []
+}
+
+function markSelectedRead() {
+  selectedIds.value.forEach((id) => notificationsStore.markRead(id, true))
+}
 
 function severityLabel(s: NotificationSeverity) {
   return { success: 'Успех', info: 'Инфо', warning: 'Предупреждение', error: 'Ошибка' }[s]

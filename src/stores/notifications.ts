@@ -52,6 +52,9 @@ export const useNotificationsStore = defineStore('notifications', () => {
     }
     items.value.unshift(entry)
     toastQueue.value.push(entry)
+    if (typeof window !== 'undefined') {
+      window.setTimeout(() => dismissToast(entry.id), 6000)
+    }
     persist()
   }
 
