@@ -10,8 +10,8 @@
         <v-btn icon variant="text">
           <HelpCircle :size="20" />
         </v-btn>
-        <v-badge dot color="error" location="top end">
-          <v-btn icon variant="text">
+        <v-badge :content="notificationsStore.unreadCount" :model-value="notificationsStore.unreadCount > 0" color="error" location="top end">
+          <v-btn icon variant="text" @click="router.push({ name: 'notifications' })">
             <Bell :size="20" />
           </v-btn>
         </v-badge>
@@ -22,7 +22,12 @@
 
 <script setup lang="ts">
 import { HelpCircle, Bell } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
 import AppBreadcrumbs, { type BreadcrumbItem } from './AppBreadcrumbs.vue'
+import { useNotificationsStore } from '@/stores/notifications'
+
+const router = useRouter()
+const notificationsStore = useNotificationsStore()
 
 withDefaults(defineProps<{
   title?: string

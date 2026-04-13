@@ -20,6 +20,7 @@ import AdministrationView from '@/views/AdministrationView.vue'
 import ProfileSettingsView from '@/views/ProfileSettingsView.vue'
 import { getToken } from '@/api/authToken.ts'
 import LoginView from '@/views/LoginView.vue'
+import NotificationsView from '@/views/NotificationsView.vue'
 
 const PlaceholderView = {
   render() {
@@ -307,6 +308,17 @@ export const router = createRouter({
         },
       ],
     },
+    {
+      path: '/notifications',
+      name: 'notifications',
+      component: NotificationsView,
+      meta: {
+        section: 'notifications',
+        title: 'Уведомления',
+        breadcrumb: 'Уведомления',
+      },
+    },
+
     {
       path: '/profile/settings',
       name: 'profile-settings',

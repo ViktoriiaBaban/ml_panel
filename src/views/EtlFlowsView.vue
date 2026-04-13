@@ -74,13 +74,13 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ flow.lastUpdated }}</td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center gap-2">
-                  <v-btn v-if="flow.status === 'running'" class="p-2 text-red-600 hover:bg-red-50 rounded transition-colors" title="Остановить">
+                  <v-btn v-if="flow.status === 'running'" class="p-2 text-red-600 hover:bg-red-50 rounded transition-colors" title="Остановить" @click="changeFlowStatus(flow, 'stopped', 'Остановка')">
                     <Square class="w-4 h-4" />
                   </v-btn>
-                  <v-btn v-else class="p-2 text-green-600 hover:bg-green-50 rounded transition-colors" title="Запустить">
+                  <v-btn v-else class="p-2 text-green-600 hover:bg-green-50 rounded transition-colors" title="Запустить" @click="changeFlowStatus(flow, 'running', 'Запуск')">
                     <Play class="w-4 h-4" />
                   </v-btn>
-                  <v-btn class="p-2 text-[#409EFF] hover:bg-blue-50 rounded transition-colors" title="Перезапустить">
+                  <v-btn class="p-2 text-[#409EFF] hover:bg-blue-50 rounded transition-colors" title="Перезапустить" @click="changeFlowStatus(flow, 'running', 'Перезапуск')">
                     <RotateCw class="w-4 h-4" />
                   </v-btn>
                 </div>
@@ -107,10 +107,12 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, Play, Square, RotateCw, Activity, TrendingUp, AlertTriangle, CheckCircle, XCircle, MinusCircle, RefreshCw } from 'lucide-vue-next'
 import { useEtlStore, type EtlFlow, type FlowStatus } from '@/stores/etl'
+import { useNotificationsStore } from '@/stores/notifications'
 
 const router = useRouter()
 
 const etlStore = useEtlStore()
+const notificationsStore = useNotificationsStore()
 etlStore.fetchFlows()
 const flowHeaders = ['Название потока', 'Статус', 'Группы процессов', 'Активные потоки', 'В очереди', 'Throughput', 'Обновлено', 'Действия']
 
@@ -122,6 +124,21 @@ function statusText(s: FlowStatus) { return { running: 'Работает', stopp
 
 function goToFlowDetail(flowId: number) {
   router.push({ name: 'etl-flow-metrics', params: { flowId } })
+}
+
+
+
+async function changeFlowStatus(flow: EtlFlow, next: FlowStatus, action: string) {
+  notificationsStore.trackProcessStart('etl', flow.name, action)
+  await new Promise((resolve) => setTimeout(resolve, 400))
+  const isError = Math.random() < 0.15
+  if (isError) {
+    flow.status = 'error'
+    notificationsStore.trackProcessResult('etl', flow.name, action, false, `Flow ${flow.name}: ошибка изменения состояния.`)
+    return
+  }
+  flow.status = next
+  notificationsStore.trackProcessResult('etl', flow.name, action, true)
 }
 
 const stats = computed(() => ({

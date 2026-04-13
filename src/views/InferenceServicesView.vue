@@ -74,13 +74,13 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center gap-2">
-                  <v-btn :disabled="service.status === 'running'" class="p-1.5 hover:bg-green-50 rounded transition-colors disabled:opacity-50" title="Запустить">
+                  <v-btn :disabled="service.status === 'running'" class="p-1.5 hover:bg-green-50 rounded transition-colors disabled:opacity-50" title="Запустить" @click="changeStatus(service, 'running', 'Запуск')">
                     <Play class="w-4 h-4 text-green-600" />
                   </v-btn>
-                  <v-btn :disabled="service.status === 'stopped'" class="p-1.5 hover:bg-red-50 rounded transition-colors disabled:opacity-50" title="Остановить">
+                  <v-btn :disabled="service.status === 'stopped'" class="p-1.5 hover:bg-red-50 rounded transition-colors disabled:opacity-50" title="Остановить" @click="changeStatus(service, 'stopped', 'Остановка')">
                     <Square class="w-4 h-4 text-red-600" />
                   </v-btn>
-                  <v-btn :disabled="service.status === 'stopped'" class="p-1.5 hover:bg-blue-50 rounded transition-colors disabled:opacity-50" title="Перезапустить">
+                  <v-btn :disabled="service.status === 'stopped'" class="p-1.5 hover:bg-blue-50 rounded transition-colors disabled:opacity-50" title="Перезапустить" @click="changeStatus(service, 'running', 'Перезапуск')">
                     <RotateCw class="w-4 h-4 text-[#409EFF]" />
                   </v-btn>
                 </div>
@@ -103,6 +103,7 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, Play, Square, RotateCw, Bot, CheckCircle, XCircle, MinusCircle } from 'lucide-vue-next'
 import { useInferenceServicesStore, type ServiceStatus } from '@/stores/inferenceServices'
+import { useNotificationsStore } from '@/stores/notifications'
 
 const router = useRouter()
 
@@ -111,6 +112,7 @@ const statusFilter = ref('all')
 const projectFilter = ref('all')
 
 const servicesStore = useInferenceServicesStore()
+const notificationsStore = useNotificationsStore()
 servicesStore.fetchServices({ search: '', status: 'all', project: 'all' })
 const serviceHeaders = ['Название', 'Проект', 'Модель', 'Endpoint', 'Версия', 'Статус', 'RPS', 'Latency (p95)', 'Ошибки (%)', 'Действия']
 
@@ -135,5 +137,19 @@ const filteredServices = computed(() => servicesStore.items)
 
 function goToMonitoring(serviceId: number, serviceName: string) {
   router.push({ name: 'inference-service-metrics', params: { serviceId }, query: { serviceName } })
+}
+
+
+async function changeStatus(service: { id: number; name: string; status: ServiceStatus }, next: ServiceStatus, action: string) {
+  notificationsStore.trackProcessStart('inference', service.name, action)
+  await new Promise((resolve) => setTimeout(resolve, 500))
+  const isError = Math.random() < 0.15
+  if (isError) {
+    notificationsStore.trackProcessResult('inference', service.name, action, false, `Сервис ${service.name} не смог выполнить операцию: таймаут API.`)
+    service.status = 'error'
+    return
+  }
+  service.status = next
+  notificationsStore.trackProcessResult('inference', service.name, action, true)
 }
 </script>
