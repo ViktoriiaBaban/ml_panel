@@ -160,11 +160,11 @@
                         <MoreVertical class="w-4 h-4 text-gray-600" />
                       </v-btn>
                       <div v-if="openMenuId === alert.id" class="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                        <v-btn class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">Редактировать</v-btn>
-                        <v-btn class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">{{ alert.status === 'active' ? 'Приостановить' : 'Активировать' }}</v-btn>
-                        <v-btn class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">История срабатываний</v-btn>
+                        <v-btn class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50" @click="notifyAlertAction(alert, 'Редактирование')">Редактировать</v-btn>
+                        <v-btn class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50" @click="toggleAlertStatus(alert)">{{ alert.status === 'active' ? 'Приостановить' : 'Активировать' }}</v-btn>
+                        <v-btn class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50" @click="notifyAlertAction(alert, 'Просмотр истории')">История срабатываний</v-btn>
                         <hr class="my-1 border-gray-200" />
-                        <v-btn class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50">Удалить</v-btn>
+                        <v-btn class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50" @click="deleteAlert(alert)">Удалить</v-btn>
                       </div>
                     </div>
                   </td>
@@ -193,6 +193,7 @@ import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Search, Plus, MoreVertical, AlertTriangle, CheckCircle, XCircle, Activity, Cpu, HardDrive, Network, TrendingUp, TrendingDown, Info, AlertCircle } from 'lucide-vue-next'
 import { useMonitoringStore } from '@/stores/monitoring'
+import { useNotificationsStore } from '@/stores/notifications'
 
 const route = useRoute()
 const router = useRouter()
@@ -227,6 +228,7 @@ const searchQuery = ref('')
 const openMenuId = ref<number | null>(null)
 
 const monitoringStore = useMonitoringStore()
+const notificationsStore = useNotificationsStore()
 monitoringStore.fetchOverview()
 monitoringStore.fetchAlerts('')
 
@@ -288,4 +290,39 @@ const keyMetrics = computed(() => {
 })
 
 const servicesStatus = computed(() => monitoringStore.servicesStatus)
+
+
+function notifyAlertAction(alert: Alert, action: string) {
+  notificationsStore.push({
+    source: 'monitoring',
+    severity: 'info',
+    title: `${alert.name}: ${action}`,
+    message: `Для правила «${alert.name}» выполнено действие «${action}».`,
+  })
+  openMenuId.value = null
+}
+
+function toggleAlertStatus(alert: Alert) {
+  const next = alert.status === 'active' ? 'paused' : 'active'
+  alert.status = next
+  notificationsStore.push({
+    source: 'monitoring',
+    severity: 'info',
+    title: `${alert.name}: ${next === 'active' ? 'Активирован' : 'Приостановлен'}`,
+    message: `Правило мониторинга теперь ${next === 'active' ? 'активно' : 'приостановлено'}.`,
+  })
+  openMenuId.value = null
+}
+
+function deleteAlert(alert: Alert) {
+  monitoringStore.alerts = monitoringStore.alerts.filter((item) => item.id !== alert.id) as any
+  notificationsStore.push({
+    source: 'monitoring',
+    severity: 'warning',
+    title: `${alert.name}: удален`,
+    message: 'Правило алерта было удалено.',
+  })
+  openMenuId.value = null
+}
+
 </script>

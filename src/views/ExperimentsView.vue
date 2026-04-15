@@ -1,7 +1,7 @@
 <template>
   <v-container fluid class="experiments-view">
     <div class="toolbar">
-      <v-btn color="primary" prepend-icon="mdi-plus" class="text-none">Создать эксперимент</v-btn>
+      <v-btn color="primary" prepend-icon="mdi-plus" class="text-none" @click="createExperiment">Создать эксперимент</v-btn>
 
       <v-text-field
         :model-value="store.search"
@@ -118,7 +118,7 @@
                 <v-list density="compact">
                   <v-list-item title="Открыть" prepend-icon="mdi-open-in-new" @click="openExperiment(item)" />
                   <v-list-item title="Редактировать" prepend-icon="mdi-pencil-outline" />
-                  <v-list-item title="Удалить" prepend-icon="mdi-delete-outline" base-color="error" />
+                  <v-list-item title="Удалить" prepend-icon="mdi-delete-outline" base-color="error" @click="removeExperiment(item)" />
                 </v-list>
               </v-menu>
             </div>
@@ -153,6 +153,7 @@ import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import type { DataTableHeader } from 'vuetify'
 import { useExperimentsStore } from '@/stores/experiments'
+import { useNotificationsStore } from '@/stores/notifications'
 
 const store = useExperimentsStore()
 const {
@@ -164,6 +165,7 @@ const {
   page,
 } = storeToRefs(store)
 const router = useRouter()
+const notificationsStore = useNotificationsStore()
 
 const headers = computed<DataTableHeader[]>(() => [
   { title: '', key: 'select', sortable: false, width: 44 },
@@ -212,6 +214,16 @@ onMounted(async () => {
 
 function openExperiment(item: { id: number; name: string }) {
   router.push({ name: 'experiment-detail', params: { experimentId: item.id }, query: { experimentName: item.name } })
+}
+
+
+
+function createExperiment() {
+  setTimeout(() => notificationsStore.trackProcessResult('experiments', 'Эксперимент', 'Создание', true), 350)
+}
+
+function removeExperiment(item: { name: string }) {
+  setTimeout(() => notificationsStore.trackProcessResult('experiments', item.name, 'Удаление', true), 350)
 }
 
 const pagesToShow = computed<Array<number | '...'>>(() => {

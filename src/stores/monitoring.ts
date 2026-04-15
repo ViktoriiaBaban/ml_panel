@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { api, ApiError } from '@/api/api'
+import { useNotificationsStore } from '@/stores/notifications'
 
 export type MonitoringMetric = {
   label: string
@@ -30,6 +31,7 @@ export const useMonitoringStore = defineStore('monitoring', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const alertSearch = ref('')
+  const knownAlertStates = ref<Record<number, AlertState>>({})
 
   const fetchOverview = async () => {
     loading.value = true
@@ -51,7 +53,32 @@ export const useMonitoringStore = defineStore('monitoring', () => {
     try {
       const params = new URLSearchParams()
       params.set('search', q)
-      alerts.value = await api.get<Alert[]>(`/monitoring/alerts?${params.toString()}`)
+      const incoming = await api.get<Alert[]>(`/monitoring/alerts?${params.toString()}`)
+      const notificationsStore = useNotificationsStore()
+      incoming.forEach((alert) => {
+        const prev = knownAlertStates.value[alert.id]
+        if (prev !== alert.state) {
+          if (alert.state === 'firing') {
+            notificationsStore.push({
+              source: 'monitoring',
+              severity: alert.severity === 'critical' ? 'error' : 'warning',
+              title: `Сработал алерт: ${alert.name}`,
+              message: alert.description,
+              details: `Состояние: ${alert.state}. Последнее изменение: ${alert.lastChanged}`,
+            })
+          }
+          if (prev === 'firing' && alert.state === 'ok') {
+            notificationsStore.push({
+              source: 'monitoring',
+              severity: 'success',
+              title: `Алерт восстановлен: ${alert.name}`,
+              message: 'Состояние вернулось в OK.',
+            })
+          }
+        }
+        knownAlertStates.value[alert.id] = alert.state
+      })
+      alerts.value = incoming
     } catch (e) {
       error.value = e instanceof ApiError ? e.message : 'Не удалось загрузить алерты'
     }

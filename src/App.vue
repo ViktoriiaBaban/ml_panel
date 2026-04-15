@@ -10,6 +10,7 @@
         <v-container fluid class="content-container">
           <RouterView />
         </v-container>
+        <ToastNotifications />
       </v-main>
     </v-layout>
   </v-app>
@@ -24,14 +25,18 @@ import Header from './components/Header.vue'
 import type { BreadcrumbItem } from './components/AppBreadcrumbs.vue'
 import { resolveBreadcrumb, resolveTitle } from './router/router.ts'
 import { useSessionStore } from './stores/session'
+import { useNotificationsStore } from './stores/notifications'
+import ToastNotifications from './components/ToastNotifications.vue'
 
 const route = useRoute()
 const router = useRouter()
 const sessionStore = useSessionStore()
+const notificationsStore = useNotificationsStore()
 
 const isLoginRoute = computed(() => route.name === 'login')
 
 onMounted(() => {
+  notificationsStore.load()
   if (route.name !== 'login') {
     sessionStore.fetchMe()
   }
