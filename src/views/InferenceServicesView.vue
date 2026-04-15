@@ -94,17 +94,17 @@
                 </v-btn>
               </template>
               <v-list density="compact" min-width="168">
-                <v-list-item :disabled="item.status === 'running'" title="Запустить">
+                <v-list-item :disabled="item.status === 'running'" title="Запустить" @click="changeStatus(item, 'running', 'Запуск')">
                   <template #prepend>
                     <Play class="w-4 h-4 text-green-600" />
                   </template>
                 </v-list-item>
-                <v-list-item :disabled="item.status === 'stopped'" title="Остановить">
+                <v-list-item :disabled="item.status === 'stopped'" title="Остановить" @click="changeStatus(item, 'stopped', 'Остановка')">
                   <template #prepend>
                     <Square class="w-4 h-4 text-red-600" />
                   </template>
                 </v-list-item>
-                <v-list-item :disabled="item.status === 'stopped'" title="Перезапустить">
+                <v-list-item :disabled="item.status === 'stopped'" title="Перезапустить" @click="changeStatus(item, 'running', 'Перезапуск')">
                   <template #prepend>
                     <RotateCw class="w-4 h-4 text-[#409EFF]" />
                   </template>
@@ -127,6 +127,7 @@ import { useRouter } from 'vue-router'
 import type { DataTableHeader, DataTableOptions } from 'vuetify'
 import { Play, Square, RotateCw, Bot, CheckCircle, XCircle, MinusCircle, MoreHorizontal } from 'lucide-vue-next'
 import { useInferenceServicesStore, type ServiceStatus } from '@/stores/inferenceServices'
+import { useNotificationsStore } from '@/stores/notifications'
 
 const router = useRouter()
 
@@ -135,6 +136,8 @@ const statusFilter = ref('all')
 const projectFilter = ref('all')
 
 const servicesStore = useInferenceServicesStore()
+const notificationsStore = useNotificationsStore()
+
 servicesStore.fetchServices({ search: '', status: 'all', project: 'all', page: 1, perPage: 10 })
 const currentPage = computed(() => servicesStore.page)
 const itemsPerPage = computed(() => servicesStore.perPage)
@@ -181,5 +184,18 @@ function onTableOptionsUpdate(options: DataTableOptions) {
 
 function goToMonitoring(serviceId: number, serviceName: string) {
   router.push({ name: 'inference-service-metrics', params: { serviceId }, query: { serviceName } })
+}
+
+
+async function changeStatus(service: { id: number; name: string; status: ServiceStatus }, next: ServiceStatus, action: string) {
+  await new Promise((resolve) => setTimeout(resolve, 500))
+  const isError = Math.random() < 0.15
+  if (isError) {
+    notificationsStore.trackProcessResult('inference', service.name, action, false, `Сервис ${service.name} не смог выполнить операцию: таймаут API.`)
+    service.status = 'error'
+    return
+  }
+  service.status = next
+  notificationsStore.trackProcessResult('inference', service.name, action, true)
 }
 </script>

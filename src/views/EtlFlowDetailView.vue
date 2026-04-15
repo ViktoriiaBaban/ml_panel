@@ -25,9 +25,9 @@
             </div>
           </div>
           <div class="flex gap-2">
-            <v-btn class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center gap-2"><Play class="w-4 h-4" />Запустить</v-btn>
-            <v-btn class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center gap-2"><Square class="w-4 h-4" />Остановить</v-btn>
-            <v-btn class="px-4 py-2 bg-[#409EFF] text-white rounded hover:bg-[#3a8eef] transition-colors flex items-center gap-2"><RotateCw class="w-4 h-4" />Перезапустить</v-btn>
+            <v-btn class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center gap-2" @click="notifyAction('Запуск')"><Play class="w-4 h-4" />Запустить</v-btn>
+            <v-btn class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center gap-2" @click="notifyAction('Остановка')"><Square class="w-4 h-4" />Остановить</v-btn>
+            <v-btn class="px-4 py-2 bg-[#409EFF] text-white rounded hover:bg-[#3a8eef] transition-colors flex items-center gap-2" @click="notifyAction('Перезапуск')"><RotateCw class="w-4 h-4" />Перезапустить</v-btn>
           </div>
         </div>
       </div>
@@ -179,9 +179,11 @@ import { ref, reactive, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, Play, Square, RotateCw, Save, X, AlertCircle, Activity, Database, Clock, Settings, CheckCircle, Info, XCircle, MinusCircle } from 'lucide-vue-next'
 import { useEtlStore, type FlowVariable, type FlowStatus } from '@/stores/etl'
+import { useNotificationsStore } from '@/stores/notifications'
 
 const props = defineProps<{ flowId: number }>()
 const route = useRoute()
+const notificationsStore = useNotificationsStore()
 const router = useRouter()
 const etlStore = useEtlStore()
 
@@ -275,5 +277,13 @@ async function saveVariable(key: string) {
   if (!flow.value) return
   await etlStore.updateVariable(flow.value.id, key, variableValues[key] ?? '')
   editingVariable.value = null
+}
+
+
+async function notifyAction(action: string) {
+  const name = String(route.query.serviceName ?? route.params.flowId ?? route.params.serviceId ?? 'Сущность')
+  await new Promise((resolve) => setTimeout(resolve, 350))
+  const failed = Math.random() < 0.12
+  notificationsStore.trackProcessResult('etl', name, action, !failed, failed ? `Операция ${action} завершилась ошибкой исполнения.` : undefined)
 }
 </script>
