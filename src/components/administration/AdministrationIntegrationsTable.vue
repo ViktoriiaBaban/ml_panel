@@ -1,170 +1,151 @@
 <template>
-  <div class="integrations-layout">
-    <v-card flat rounded="lg" class="admin-card">
-      <v-card-text class="text-medium-emphasis pb-0">
-        Мониторинг состояния глобальных подключений, используемых всей платформой.
-      </v-card-text>
+  <v-card flat rounded="lg" class="admin-card">
+    <v-data-table-server
+      :headers="headers"
+      :items="integrations"
+      :items-length="integrations.length"
+      :loading="loading"
+      item-value="id"
+      class="admin-table"
+      density="comfortable"
+      hover
+    >
+      <template #item.name="{ item }">
+        <div class="name-cell">{{ item.name }}</div>
+      </template>
 
-      <v-data-table-server
-        :headers="headers"
-        :items="integrations"
-        :items-length="integrations.length"
-        :loading="loading"
-        item-value="id"
-        :expanded="expanded"
-        class="admin-table"
-        density="comfortable"
-      >
-        <template #item.name="{ item }">
-          <v-btn variant="text" color="default" class="name-btn" @click="$emit('toggle-expanded', item.id)">
-            {{ item.name }}
+      <template #item.status="{ item }">
+        <div class="icon-text">
+          <v-icon :icon="statusIcon(item.status)" :color="statusColor(item.status)" size="22" />
+          <span :class="statusClass(item.status)">{{ statusLabels[item.status] }}</span>
+        </div>
+      </template>
+
+      <template #item.actions="{ item }">
+        <div class="actions-wrap">
+          <v-btn
+            v-if="!item.connected"
+            color="primary"
+            variant="flat"
+            size="small"
+            prepend-icon="mdi-plus"
+            class="action-btn"
+            @click="$emit('edit-integration', item.id)"
+          >
+            Подключить
           </v-btn>
-        </template>
 
-        <template #item.status="{ item }">
-          <div class="icon-text">
-            <v-icon :icon="statusIcon(item.status)" :color="statusColor(item.status)" size="18" />
-            <span :class="statusClass(item.status)">{{ statusLabels[item.status] }}</span>
-          </div>
-        </template>
-
-        <template #item.actions="{ item }">
-          <div class="actions-wrap">
+          <template v-else>
             <v-btn
-              v-if="!item.connected"
               color="primary"
               variant="flat"
               size="small"
-              prepend-icon="mdi-plus-circle-outline"
-              @click="$emit('edit-integration', item.id)"
+              :prepend-icon="checkingIntegrationId === item.id ? 'mdi-loading mdi-spin' : 'mdi-refresh'"
+              :disabled="checkingIntegrationId === item.id"
+              class="action-btn"
+              @click="$emit('check-integration', item.id)"
             >
-              Подключить
+              {{ checkingIntegrationId === item.id ? 'Проверка...' : 'Проверить' }}
             </v-btn>
-            <template v-else>
-              <v-btn
-                color="primary"
-                variant="flat"
-                size="small"
-                :prepend-icon="checkingIntegrationId === item.id ? 'mdi-loading mdi-spin' : 'mdi-refresh'"
-                :disabled="checkingIntegrationId === item.id"
-                @click="$emit('check-integration', item.id)"
-              >
-                {{ checkingIntegrationId === item.id ? 'Проверка...' : 'Проверить' }}
-              </v-btn>
-              <v-btn
-                color="default"
-                variant="outlined"
-                size="small"
-                prepend-icon="mdi-pencil-outline"
-                @click="$emit('edit-integration', item.id)"
-              >
-                Изменить
-              </v-btn>
-            </template>
-          </div>
-        </template>
 
-        <template #expanded-row="{ columns, item }">
-          <tr>
-            <td :colspan="columns.length">
-              <div class="details-wrap" v-if="item.details">
-                <div v-if="item.details.url"><strong>URL:</strong> {{ item.details.url }}</div>
-                <div v-if="item.healthCheckPath"><strong>Health-check:</strong> {{ item.healthCheckPath }}</div>
-                <div v-if="item.details.version"><strong>Версия API:</strong> {{ item.details.version }}</div>
-                <div v-if="item.details.error" class="text-error"><strong>Ошибка:</strong> {{ item.details.error }}</div>
-                <div v-if="item.details.lastSuccessfulCall"><strong>Последний успешный вызов:</strong> {{ item.details.lastSuccessfulCall }}</div>
-              </div>
-            </td>
-          </tr>
-        </template>
-      </v-data-table-server>
-    </v-card>
-
-    <v-alert type="info" variant="tonal" border="start" class="health-checks">
-      <div class="font-weight-medium mb-2">Health-check проверки:</div>
-      <div v-for="check in healthChecks" :key="check.name"><strong>{{ check.name }}:</strong> {{ check.command }}</div>
-    </v-alert>
-  </div>
+            <v-btn icon="mdi-cog-outline" size="small" variant="text" color="default" @click="$emit('edit-integration', item.id)" />
+            <v-btn icon="mdi-delete-outline" size="small" variant="text" color="error" @click="$emit('delete-integration', item.id)" />
+          </template>
+        </div>
+      </template>
+    </v-data-table-server>
+  </v-card>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import type { DataTableHeader } from 'vuetify'
-import type { AdminIntegration, HealthCheck, IntegrationStatus } from '@/types/administration'
+import type { AdminIntegration, IntegrationStatus } from '@/types/administration'
 
-const props = defineProps<{
+defineProps<{
   headers: DataTableHeader[]
   integrations: AdminIntegration[]
-  healthChecks: HealthCheck[]
   statusLabels: Record<IntegrationStatus, string>
   loading: boolean
-  expandedIntegrationId: string | null
   checkingIntegrationId: string | null
 }>()
 
 defineEmits<{
-  'toggle-expanded': [id: string]
   'check-integration': [id: string]
   'edit-integration': [id: string]
+  'delete-integration': [id: string]
 }>()
 
-const expanded = computed(() => (props.expandedIntegrationId ? [props.expandedIntegrationId] : []))
-
 function statusIcon(status: IntegrationStatus) {
-  if (status === 'not_connected') return 'mdi-link-off'
-  if (status === 'working') return 'mdi-check-circle'
-  if (status === 'warning') return 'mdi-alert'
-  return 'mdi-alert-circle'
+  if (status === 'not_connected') return 'mdi-alert-circle-outline'
+  if (status === 'working') return 'mdi-check-circle-outline'
+  if (status === 'warning') return 'mdi-alert-outline'
+  return 'mdi-close-circle-outline'
 }
 
 function statusColor(status: IntegrationStatus) {
-  if (status === 'not_connected') return 'grey'
-  if (status === 'working') return 'success'
-  if (status === 'warning') return 'warning'
-  return 'error'
+  if (status === 'not_connected') return '#9ca3af'
+  if (status === 'working') return '#16a34a'
+  if (status === 'warning') return '#d97706'
+  return '#ef4444'
 }
 
 function statusClass(status: IntegrationStatus) {
-  if (status === 'not_connected') return 'text-medium-emphasis'
-  if (status === 'working') return 'text-success'
-  if (status === 'warning') return 'text-warning'
-  return 'text-error'
+  if (status === 'not_connected') return 'status-not-connected'
+  if (status === 'working') return 'status-working'
+  if (status === 'warning') return 'status-warning'
+  return 'status-error'
 }
 </script>
 
 <style scoped>
-.integrations-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
 .admin-card {
   border: 1px solid #e5e7eb;
 }
 
-.name-btn {
-  justify-content: flex-start;
-  text-transform: none;
-  letter-spacing: normal;
+.name-cell {
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.25;
 }
 
 .icon-text {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.details-wrap {
-  padding: 12px;
-  display: grid;
-  gap: 6px;
-  background: #f9fafb;
+  gap: 10px;
+  font-size: 1.125rem;
+  font-weight: 500;
 }
 
 .actions-wrap {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+}
+
+.action-btn {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.status-working {
+  color: #16a34a;
+}
+
+.status-warning {
+  color: #d97706;
+}
+
+.status-not-connected {
+  color: #64748b;
+}
+
+.status-error {
+  color: #ef4444;
+}
+
+:deep(.admin-table .v-data-table-header__content) {
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #64748b;
 }
 </style>

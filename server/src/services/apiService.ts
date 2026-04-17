@@ -309,15 +309,20 @@ export const apiService = {
   async listIntegrations() {
     return integrationStore.listIntegrations()
   },
-  async updateIntegration(id: string, payload: { baseUrl?: string; healthCheckPath?: string; version?: string }) {
+  async updateIntegration(id: string, payload: { baseUrl?: string; healthCheckPath?: string; version?: string; description?: string }) {
     if (!payload.baseUrl?.trim()) return null
     const updated = await integrationStore.saveIntegrationConfig({
       id,
       baseUrl: payload.baseUrl,
       healthCheckPath: payload.healthCheckPath,
       version: payload.version,
+      description: payload.description,
     })
     return updated.find((item) => item.id === id) ?? null
+  },
+
+  async deleteIntegration(id: string) {
+    return integrationStore.removeIntegrationConfig(id)
   },
   async listHealthChecks() {
     const integrations = await integrationStore.listIntegrations()

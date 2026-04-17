@@ -7,6 +7,7 @@ type StoredIntegration = {
   baseUrl: string
   healthCheckPath?: string
   version?: string
+  description?: string
   status: Integration['status']
   lastCheck: string
   lastSuccessfulCall?: string
@@ -97,6 +98,7 @@ async function writeStoredIntegrations(items: StoredIntegration[]) {
 function mapToPublic(entry: StoredIntegration, fallback: Integration): Integration {
   return {
     ...fallback,
+    description: entry.description ?? fallback.description,
     connected: true,
     status: entry.status,
     lastCheck: entry.lastCheck || '—',
@@ -130,7 +132,7 @@ export const integrationStore = {
       return mapToPublic(match, item)
     })
   },
-  async saveIntegrationConfig(input: { id: string; baseUrl: string; healthCheckPath?: string; version?: string }) {
+  async saveIntegrationConfig(input: { id: string; baseUrl: string; healthCheckPath?: string; version?: string; description?: string }) {
     const stored = await readStoredIntegrations()
     const idx = stored.findIndex((item) => item.id === input.id)
     const baseUrl = input.baseUrl.trim().replace(/\/+$/, '')
@@ -139,6 +141,7 @@ export const integrationStore = {
       baseUrl,
       healthCheckPath: normalizePath(input.healthCheckPath),
       version: input.version?.trim() || undefined,
+      description: input.description?.trim() || undefined,
       status: 'warning',
       lastCheck: '—',
     }
@@ -154,6 +157,13 @@ export const integrationStore = {
     }
     await writeStoredIntegrations(stored)
     return this.listIntegrations()
+  },
+  async removeIntegrationConfig(id: string) {
+    const stored = await readStoredIntegrations()
+    const next = stored.filter((item) => item.id !== id)
+    if (next.length === stored.length) return false
+    await writeStoredIntegrations(next)
+    return true
   },
   async checkIntegration(id: string) {
     const stored = await readStoredIntegrations()

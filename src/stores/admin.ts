@@ -22,7 +22,7 @@ import type {
 } from '@/types/administration'
 
 const INTEGRATION_STATUS_LABELS: Record<IntegrationStatus, string> = {
-  not_connected: 'Не подключено',
+  not_connected: 'Не подключен',
   working: 'Работает',
   warning: 'Проблемы с записью',
   error: 'Не отвечает',
@@ -59,8 +59,9 @@ const DEFAULT_INTEGRATION_FORM: IntegrationFormState = {
   id: '',
   name: '',
   baseUrl: '',
-  healthCheckPath: '',
-  version: '',
+  healthCheckUrl: '',
+  apiToken: '',
+  description: '',
 }
 
 const DEFAULT_USER_FORM: UserFormState = {
@@ -286,8 +287,11 @@ export const useAdminStore = defineStore('admin', () => {
       id: integration.id,
       name: integration.name,
       baseUrl: integration.details?.url ?? '',
-      healthCheckPath: integration.healthCheckPath ?? '',
-      version: integration.details?.version ?? '',
+      healthCheckUrl: integration.healthCheckPath
+        ? `${integration.details?.url ?? ''}${integration.healthCheckPath}`
+        : '',
+      apiToken: '',
+      description: integration.description ?? '',
     }
     showIntegrationDialog.value = true
   }
@@ -301,15 +305,46 @@ export const useAdminStore = defineStore('admin', () => {
     integrationForm.value[field] = value
   }
 
+
+  const removeIntegration = async (id: string) => {
+    const removed = await api.del<{ ok: true }>(`/admin/integrations/${id}`)
+    if (!removed.ok) return
+    integrations.value = integrations.value.map((item) =>
+      item.id === id
+        ? {
+            ...item,
+            connected: false,
+            status: 'not_connected',
+            lastCheck: '—',
+            healthCheckPath: undefined,
+            details: undefined,
+          }
+        : item,
+    )
+  }
+
   const saveIntegration = async () => {
     const id = integrationForm.value.id
-    const baseUrl = integrationForm.value.baseUrl.trim()
+    const baseUrl = integrationForm.value.baseUrl.trim().replace(/\/+$/, '')
     if (!id || !baseUrl) return
+
+    const healthCheckUrl = integrationForm.value.healthCheckUrl.trim()
+    let healthCheckPath: string | undefined
+
+    if (healthCheckUrl.startsWith(baseUrl)) {
+      healthCheckPath = healthCheckUrl.slice(baseUrl.length) || '/'
+    } else if (healthCheckUrl.startsWith('/')) {
+      healthCheckPath = healthCheckUrl
+    } else if (healthCheckUrl.length > 0) {
+      healthCheckPath = `/${healthCheckUrl}`
+    }
+
     const payload: UpdateIntegrationPayload = {
       baseUrl,
-      healthCheckPath: integrationForm.value.healthCheckPath.trim() || undefined,
-      version: integrationForm.value.version.trim() || undefined,
+      healthCheckPath,
+      description: integrationForm.value.description.trim() || undefined,
     }
+
     const updated = await api.patch<AdminIntegration, UpdateIntegrationPayload>(`/admin/integrations/${id}`, payload)
     integrations.value = integrations.value.map((item) => (item.id === id ? updated : item))
     closeIntegrationDialog()
@@ -364,6 +399,7 @@ export const useAdminStore = defineStore('admin', () => {
     fetchIntegrations,
     toggleIntegrationExpanded,
     checkIntegration,
+    removeIntegration,
     openIntegrationDialog,
     closeIntegrationDialog,
     setIntegrationFormField,

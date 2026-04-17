@@ -25,14 +25,12 @@
           v-else
           :headers="adminStore.integrationHeaders"
           :integrations="adminStore.integrations"
-          :health-checks="adminStore.healthChecks"
           :status-labels="adminStore.integrationStatusLabels"
           :loading="adminStore.loadingIntegrations"
-          :expanded-integration-id="adminStore.expandedIntegrationId"
           :checking-integration-id="adminStore.checkingIntegrationId"
-          @toggle-expanded="adminStore.toggleIntegrationExpanded"
           @check-integration="adminStore.checkIntegration"
           @edit-integration="adminStore.openIntegrationDialog"
+          @delete-integration="onDeleteIntegration"
         />
       </div>
     </v-sheet>
@@ -115,6 +113,13 @@ function onDialogChange(open: boolean) {
     return
   }
   adminStore.closeAddUserDialog()
+}
+
+
+function onDeleteIntegration(id: string) {
+  if (confirm('Отключить интеграцию и удалить параметры подключения?')) {
+    adminStore.removeIntegration(id)
+  }
 }
 
 function onDeleteUser(id: number) {

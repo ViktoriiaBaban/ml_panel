@@ -38,7 +38,10 @@ export const ROUTES: RouteDef[] = [
     POST: (req) => adminController.addUser(req),
   }),
   r('/api/admin/integrations/:id/check', { POST: (req) => adminController.checkIntegration(req) }),
-  r('/api/admin/integrations/:id', { PATCH: (req) => adminController.updateIntegration(req) }),
+  r('/api/admin/integrations/:id', {
+    PATCH: (req) => adminController.updateIntegration(req),
+    DELETE: (req) => adminController.deleteIntegration(req),
+  }),
   r('/api/admin/integrations', { GET: (_req) => adminController.listIntegrations() }),
   r('/api/admin/health-checks', { GET: (_req) => adminController.listHealthChecks() }),
 
