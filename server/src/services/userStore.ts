@@ -1,6 +1,6 @@
 import { mkdir } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
-import type { User, UserRole, UserStatus } from '@/types/domain'
+import type { AppSection, SectionIntegrationRequirement, User, UserRole, UserStatus } from '@/types/domain'
 import { users as seedUsersFixture } from './fixtures/adminMonitoring'
 
 export type ProfileConnection = {
@@ -55,12 +55,22 @@ const DEFAULT_PASSWORD = 'changeme123'
 function defaultConnections(): ProfileConnection[] {
   return [
     { serviceId: 'gitlab', serviceName: 'GitLab', connected: false, updatedAt: '—' },
+    { serviceId: 'mlflow', serviceName: 'MLflow', connected: false, updatedAt: '—' },
     { serviceId: 'grafana', serviceName: 'Grafana', connected: false, updatedAt: '—' },
     { serviceId: 'nifi', serviceName: 'Apache NiFi', connected: false, updatedAt: '—' },
     { serviceId: 'minio', serviceName: 'Minio', connected: false, updatedAt: '—' },
     { serviceId: 'clickhouse', serviceName: 'ClickHouse', connected: false, updatedAt: '—' },
   ]
 }
+
+const SECTION_REQUIREMENTS: Array<{ section: AppSection; sectionTitle: string; serviceIds: string[] }> = [
+  { section: 'storage', sectionTitle: 'Данные и хранилища', serviceIds: ['minio', 'clickhouse'] },
+  { section: 'projects', sectionTitle: 'Проекты и пайплайны', serviceIds: ['gitlab'] },
+  { section: 'experiments', sectionTitle: 'Эксперименты и обучение', serviceIds: ['mlflow', 'gitlab'] },
+  { section: 'inference', sectionTitle: 'Инференс и сервисы', serviceIds: ['grafana', 'minio'] },
+  { section: 'etl', sectionTitle: 'Потоки данных и ETL', serviceIds: ['nifi', 'clickhouse'] },
+  { section: 'monitoring', sectionTitle: 'Мониторинг и состояние системы', serviceIds: ['grafana'] },
+]
 
 function jobTitleForSeedRole(role: UserRole): string {
   if (role === 'admin') return 'Администратор'
@@ -98,6 +108,22 @@ function nowRu() {
 
 function sanitizeConnections(list: ProfileConnection[]): ProfileConnection[] {
   return list.map((c) => ({ ...c, token: undefined }))
+}
+
+function mergeWithDefaultConnections(list: ProfileConnection[]): ProfileConnection[] {
+  const base = defaultConnections()
+  const byId = new Map(list.map((item) => [item.serviceId, item]))
+  return base.map((item) => {
+    const current = byId.get(item.serviceId)
+    if (!current) return item
+    return {
+      ...item,
+      ...current,
+      serviceId: item.serviceId,
+      serviceName: item.serviceName,
+      token: current.token,
+    }
+  })
 }
 
 /** Публичная модель пользователя для админки и списков (без пароля и токенов). */
@@ -183,7 +209,9 @@ async function readFile(): Promise<UsersFile> {
           status: base.status,
           registrationDate: base.registrationDate,
           lastLogin: base.lastLogin,
-          connections: Array.isArray(base.connections) ? base.connections : defaultConnections(),
+          connections: Array.isArray(base.connections)
+            ? mergeWithDefaultConnections(base.connections)
+            : defaultConnections(),
           jobTitle: typeof base.jobTitle === 'string' ? base.jobTitle : jobTitleForSeedRole(base.role),
           password: typeof base.password === 'string' ? base.password : DEFAULT_PASSWORD,
         }
@@ -204,6 +232,29 @@ async function writeFile(data: UsersFile) {
 
 function getUserById(data: UsersFile, userId: number): StoredUser | null {
   return data.users.find((x) => x.id === userId) ?? null
+}
+
+function sectionRequirementsFromConnections(connections: ProfileConnection[]): SectionIntegrationRequirement[] {
+  const serviceNameById = new Map(connections.map((item) => [item.serviceId, item.serviceName]))
+  const connectedIds = new Set(connections.filter((item) => item.connected).map((item) => item.serviceId))
+
+  return SECTION_REQUIREMENTS.map((item) => {
+    const connectedServiceIds = item.serviceIds.filter((serviceId) => connectedIds.has(serviceId))
+    const missingServiceIds = item.serviceIds.filter((serviceId) => !connectedIds.has(serviceId))
+
+    const getServiceName = (serviceId: string) => serviceNameById.get(serviceId) ?? serviceId
+
+    return {
+      section: item.section,
+      sectionTitle: item.sectionTitle,
+      requiredServiceIds: [...item.serviceIds],
+      requiredServices: item.serviceIds.map(getServiceName),
+      connectedServiceIds,
+      missingServiceIds,
+      missingServices: missingServiceIds.map(getServiceName),
+      isReady: missingServiceIds.length === 0,
+    }
+  })
 }
 
 export const userStore = {
@@ -318,6 +369,13 @@ export const userStore = {
     }
     await writeFile(data)
     return (await this.getProfileByUserId(userId))!
+  },
+
+  async getSectionRequirementsByUserId(userId: number): Promise<SectionIntegrationRequirement[] | null> {
+    const data = await readFile()
+    const user = getUserById(data, userId)
+    if (!user) return null
+    return sectionRequirementsFromConnections(user.connections)
   },
 
   async addUser(input: { email: string; name?: string; role?: UserRole; password: string }) {

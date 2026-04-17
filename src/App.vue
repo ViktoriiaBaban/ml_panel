@@ -8,7 +8,12 @@
         <Header :title="headerProps.title" :breadcrumbs="headerProps.breadcrumbs" />
 
         <v-container fluid class="content-container">
-          <RouterView />
+          <SectionEmptyState
+            v-if="sectionRequirement && !sectionRequirement.isReady"
+            :missing-services="sectionRequirement.missingServices"
+            @open-connections="openConnectionsSettings"
+          />
+          <RouterView v-else />
         </v-container>
         <ToastNotifications />
       </v-main>
@@ -17,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 
 import Sidebar from './components/Sidebar.vue'
@@ -26,12 +31,16 @@ import type { BreadcrumbItem } from './components/AppBreadcrumbs.vue'
 import { resolveBreadcrumb, resolveTitle } from './router/router.ts'
 import { useSessionStore } from './stores/session'
 import { useNotificationsStore } from './stores/notifications'
+import { useIntegrationRequirementsStore } from './stores/integrationRequirements'
+import type { AppSection } from './types/integrations'
 import ToastNotifications from './components/ToastNotifications.vue'
+import SectionEmptyState from './components/SectionEmptyState.vue'
 
 const route = useRoute()
 const router = useRouter()
 const sessionStore = useSessionStore()
 const notificationsStore = useNotificationsStore()
+const integrationRequirementsStore = useIntegrationRequirementsStore()
 
 const isLoginRoute = computed(() => route.name === 'login')
 
@@ -39,10 +48,31 @@ onMounted(() => {
   notificationsStore.load()
   if (route.name !== 'login') {
     sessionStore.fetchMe()
+    integrationRequirementsStore.fetchRequirements()
   }
 })
 
+watch(
+  () => route.fullPath,
+  () => {
+    if (route.name !== 'login') {
+      integrationRequirementsStore.fetchRequirements()
+    }
+  },
+)
+
 const activeSection = computed(() => String(route.meta.section ?? 'storage'))
+
+const sectionRequirement = computed(() => {
+  const section = route.meta.section
+  if (typeof section !== 'string') return null
+  if (!['storage', 'projects', 'experiments', 'inference', 'etl', 'monitoring'].includes(section)) return null
+  return integrationRequirementsStore.getRequirementForSection(section as AppSection)
+})
+
+function openConnectionsSettings() {
+  router.push({ name: 'profile-settings', query: { tab: 'connections' } })
+}
 
 const headerProps = computed(() => {
   const breadcrumbs = route.matched
