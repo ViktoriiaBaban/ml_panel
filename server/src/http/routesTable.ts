@@ -4,6 +4,7 @@ import { commonController } from '@/controllers/commonController'
 import { etlController } from '@/controllers/etlController'
 import { experimentsController } from '@/controllers/experimentsController'
 import { inferenceController } from '@/controllers/inferenceController'
+import { integrationsController } from '@/controllers/integrationsController'
 import { monitoringController } from '@/controllers/monitoringController'
 import { projectsController } from '@/controllers/projectsController'
 import { meController } from '@/controllers/meController'
@@ -83,6 +84,7 @@ export const ROUTES: RouteDef[] = [
   r('/api/profile/password', { PATCH: (req) => profileController.changePassword(req) }),
   r('/api/profile/delete-account', { POST: (req) => profileController.deleteAccount(req) }),
   r('/api/profile/connections', { POST: (req) => profileController.upsertConnection(req) }),
+  r('/api/integrations/section-requirements', { GET: (_req) => integrationsController.getSectionRequirements() }),
 
   r('/api/health', { GET: (_req) => commonController.health() }),
 ]

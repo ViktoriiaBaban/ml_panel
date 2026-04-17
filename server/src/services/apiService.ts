@@ -370,4 +370,8 @@ export const apiService = {
       token: payload.token!,
     })
   },
+  getSectionRequirements() {
+    const { userId } = requireAuthContext()
+    return userStore.getSectionRequirementsByUserId(userId)
+  },
 }

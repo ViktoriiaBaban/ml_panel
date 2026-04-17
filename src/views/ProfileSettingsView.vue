@@ -201,8 +201,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import type { DataTableHeader } from 'vuetify'
 import { useAuthStore } from '@/stores/auth'
 import { useProfileStore } from '@/stores/profile'
@@ -212,6 +212,7 @@ const profileStore = useProfileStore()
 const sessionStore = useSessionStore()
 const authStore = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 
 const activeTab = ref<'profile' | 'security' | 'connections'>('profile')
 
@@ -220,6 +221,10 @@ const tabs = [
   { title: 'Безопасность', value: 'security', icon: 'mdi-shield-outline' },
   { title: 'Подключения', value: 'connections', icon: 'mdi-link-variant' },
 ] as const
+
+function normalizeTab(value: unknown): 'profile' | 'security' | 'connections' {
+  return value === 'connections' || value === 'security' || value === 'profile' ? value : 'profile'
+}
 
 const connectionHeaders: DataTableHeader[] = [
   { title: 'Сервис', key: 'serviceName' },
@@ -230,8 +235,16 @@ const connectionHeaders: DataTableHeader[] = [
 ]
 
 onMounted(() => {
+  activeTab.value = normalizeTab(route.query.tab)
   profileStore.fetchSettings()
 })
+
+watch(
+  () => route.query.tab,
+  (value) => {
+    activeTab.value = normalizeTab(value)
+  },
+)
 
 async function onSaveProfile() {
   await profileStore.saveProfile()

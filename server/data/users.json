@@ -18,6 +18,12 @@
           "updatedAt": "—"
         },
         {
+          "serviceId": "mlflow",
+          "serviceName": "MLflow",
+          "connected": false,
+          "updatedAt": "—"
+        },
+        {
           "serviceId": "grafana",
           "serviceName": "Grafana",
           "connected": false,
@@ -61,6 +67,12 @@
           "updatedAt": "—"
         },
         {
+          "serviceId": "mlflow",
+          "serviceName": "MLflow",
+          "connected": false,
+          "updatedAt": "—"
+        },
+        {
           "serviceId": "grafana",
           "serviceName": "Grafana",
           "connected": false,
@@ -100,6 +112,12 @@
         {
           "serviceId": "gitlab",
           "serviceName": "GitLab",
+          "connected": false,
+          "updatedAt": "—"
+        },
+        {
+          "serviceId": "mlflow",
+          "serviceName": "MLflow",
           "connected": false,
           "updatedAt": "—"
         },

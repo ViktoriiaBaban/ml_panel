@@ -6,6 +6,13 @@ export type FlowStatus = 'running' | 'stopped' | 'error'
 export type UserRole = 'user' | 'admin'
 export type UserStatus = 'active' | 'blocked'
 export type IntegrationStatus = 'not_connected' | 'working' | 'warning' | 'error'
+export type AppSection =
+  | 'storage'
+  | 'projects'
+  | 'experiments'
+  | 'inference'
+  | 'etl'
+  | 'monitoring'
 export type AlertState = 'firing' | 'ok' | 'pending'
 export type AlertSeverity = 'critical' | 'warning' | 'info'
 
@@ -196,6 +203,17 @@ export type Integration = {
   lastCheck: string
   healthCheckPath?: string
   details?: { url?: string; version?: string; error?: string; lastSuccessfulCall?: string }
+}
+
+export type SectionIntegrationRequirement = {
+  section: AppSection
+  sectionTitle: string
+  requiredServiceIds: string[]
+  requiredServices: string[]
+  connectedServiceIds: string[]
+  missingServiceIds: string[]
+  missingServices: string[]
+  isReady: boolean
 }
 
 export type HealthCheck = { name: string; command: string }
