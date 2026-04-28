@@ -97,12 +97,13 @@ export interface IntegrationFormState {
   id: string
   name: string
   baseUrl: string
-  healthCheckPath: string
-  version: string
+  healthCheckUrl: string
+  apiToken: string
+  description: string
 }
 
 export interface UpdateIntegrationPayload {
   baseUrl: string
   healthCheckPath?: string
-  version?: string
+  description?: string
 }

@@ -64,11 +64,15 @@ export const adminController = {
   },
   listIntegrations: async () => json((await apiService.listIntegrations()) as unknown as Json),
   updateIntegration: async (req: RouteReq) => {
-    const body = await readJson<{ baseUrl?: string; healthCheckPath?: string; version?: string }>(req)
+    const body = await readJson<{ baseUrl?: string; healthCheckPath?: string; version?: string; description?: string }>(req)
     const integration = await apiService.updateIntegration(req.params.id ?? '', body ?? {})
     return integration
       ? json(integration as unknown as Json)
       : apiError(400, { error: 'bad_request', message: 'baseUrl is required' })
+  },
+  deleteIntegration: async (req: RouteReq) => {
+    const removed = await apiService.deleteIntegration(req.params.id ?? '')
+    return removed ? json({ ok: true } as unknown as Json) : apiError(404, { error: 'not_found', message: 'Integration not found' })
   },
   checkIntegration: async (req: RouteReq) => {
     const integration = await apiService.checkIntegration(req.params.id ?? '')
