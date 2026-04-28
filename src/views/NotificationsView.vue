@@ -1,83 +1,120 @@
 <template>
-  <v-container fluid class="pa-6">
-    <div class="d-flex justify-space-between align-center mb-4">
-      <div>
-        <h2 class="text-h5 mb-1">Уведомления</h2>
-        <p class="text-medium-emphasis">История событий системы с фильтром до 30 дней.</p>
+  <v-container fluid class="notifications-page pa-3 pa-md-6">
+    <v-card class="notifications-shell" rounded="xl" elevation="0" border>
+      <div class="notifications-header">
+        <div>
+          <h2 class="text-h4 font-weight-bold mb-2">Уведомления</h2>
+          <p class="text-body-1 text-medium-emphasis">История событий системы с фильтром до 30 дней</p>
+        </div>
+        <v-chip
+          v-if="notificationsStore.unreadCount"
+          color="primary"
+          variant="flat"
+          class="font-weight-bold text-uppercase"
+          rounded="pill"
+        >
+          {{ notificationsStore.unreadCount }} новых
+        </v-chip>
       </div>
-      <div class="d-flex ga-2">
-        <v-btn variant="text" prepend-icon="mdi-check-all" :disabled="!notificationsStore.unreadCount" @click="notificationsStore.markAllRead()">
-          Прочитать все
-        </v-btn>
-        <v-btn variant="text" prepend-icon="mdi-check" :disabled="!selectedIds.length" @click="markSelectedRead">
-          Прочитать выбранные
-        </v-btn>
-        <v-btn variant="text" color="error" prepend-icon="mdi-delete" :disabled="!selectedIds.length" @click="deleteSelected">
-          Удалить выбранные
-        </v-btn>
-      </div>
-    </div>
 
-    <v-card class="mb-4 pa-4">
-      <div class="d-flex ga-4 flex-wrap">
-        <v-select v-model="periodDays" :items="periodOptions" label="Период" hide-details density="comfortable" style="max-width: 220px" />
-        <v-select v-model="statusFilter" :items="statusOptions" label="Статус" hide-details density="comfortable" style="max-width: 220px" />
-      </div>
-    </v-card>
+      <div class="notifications-toolbar">
+        <div class="d-flex ga-3 flex-wrap">
+          <v-btn variant="outlined" rounded="lg" prepend-icon="mdi-check" @click="selectAllVisible">Выбрать все</v-btn>
+          <v-btn variant="outlined" rounded="lg" prepend-icon="mdi-eye-outline" :disabled="!selectedIds.length" @click="markSelectedRead">
+            Прочитать ({{ selectedIds.length }})
+          </v-btn>
+          <v-btn variant="outlined" color="error" rounded="lg" prepend-icon="mdi-delete-outline" :disabled="!selectedIds.length" @click="deleteSelected">
+            Удалить ({{ selectedIds.length }})
+          </v-btn>
+        </div>
 
-    <v-alert v-if="!filteredItems.length" type="info" variant="tonal">За выбранный период уведомлений нет.</v-alert>
-
-    <v-card v-for="item in filteredItems" :key="item.id" class="mb-3">
-      <v-card-text>
-        <div class="d-flex justify-space-between ga-4">
-          <div class="d-flex ga-3 align-start">
-            <v-checkbox-btn :model-value="selectedIds.includes(item.id)" @update:model-value="toggleSelected(item.id)" />
-            <div>
-              <div class="d-flex align-center ga-2">
-                <v-icon :icon="item.read ? 'mdi-checkbox-blank-circle-outline' : 'mdi-circle'" :color="item.read ? 'grey' : 'primary'" size="10" />
-                <v-chip size="small" :color="chipColor(item.severity)" variant="tonal">{{ severityLabel(item.severity) }}</v-chip>
-                <span class="text-caption text-medium-emphasis">{{ new Date(item.createdAt).toLocaleString('ru-RU') }}</span>
-              </div>
-              <div class="text-subtitle-1 font-weight-medium mt-2">{{ item.title }}</div>
-              <div class="text-body-2 text-medium-emphasis">{{ item.message }}</div>
-            </div>
+        <div class="d-flex ga-4 align-center flex-wrap">
+          <div class="d-flex align-center ga-2">
+            <span class="text-h6">Период:</span>
+            <v-select
+              v-model="periodDays"
+              :items="periodOptions"
+              variant="outlined"
+              density="compact"
+              hide-details
+              style="width: 180px"
+            />
           </div>
-          <div class="d-flex flex-column ga-2 align-end">
-            <v-btn icon="mdi-eye-check" size="small" variant="text" :title="item.read ? 'Отметить непрочитанным' : 'Отметить прочитанным'" @click="notificationsStore.markRead(item.id, !item.read)" />
-            <v-btn v-if="item.severity === 'error' && item.details" icon="mdi-information-outline" size="small" variant="text" color="error" title="Подробнее" @click="openDetails(item)" />
-            <v-btn icon="mdi-delete-outline" size="small" variant="text" color="error" title="Удалить" @click="notificationsStore.remove(item.id)" />
+          <div class="d-flex align-center ga-2">
+            <span class="text-h6">Статус:</span>
+            <v-select
+              v-model="statusFilter"
+              :items="statusOptions"
+              variant="outlined"
+              density="compact"
+              hide-details
+              style="width: 200px"
+            />
           </div>
         </div>
-      </v-card-text>
+      </div>
+
+      <div v-if="!filteredItems.length" class="pa-6">
+        <v-alert type="info" variant="tonal">За выбранный период уведомлений нет.</v-alert>
+      </div>
+
+      <div v-else>
+        <article v-for="item in filteredItems" :key="item.id" class="notification-row" :class="{ 'notification-row--read': item.read }">
+          <div class="d-flex align-start ga-3 ga-md-4 flex-grow-1">
+            <v-checkbox-btn :model-value="selectedIds.includes(item.id)" @update:model-value="toggleSelected(item.id)" />
+
+            <div class="status-icon" :class="`status-icon--${item.severity}`">
+              <v-icon :icon="statusIcon(item.severity)" size="28" :color="statusColor(item.severity)" />
+            </div>
+
+            <div class="notification-content flex-grow-1">
+              <div class="d-flex align-center ga-3 flex-wrap">
+                <v-icon icon="mdi-circle" :color="statusColor(item.severity)" size="12" />
+                <h3 class="notification-title">{{ item.title }}</h3>
+                <v-chip :color="statusColor(item.severity)" variant="tonal" size="small">{{ severityLabel(item.severity) }}</v-chip>
+              </div>
+              <p class="text-h6 text-medium-emphasis font-weight-regular mt-2">{{ item.message }}</p>
+              <p class="text-body-1 text-medium-emphasis mt-4">Источник: {{ sourceLabel(item.source) }}</p>
+            </div>
+          </div>
+
+          <div class="d-flex flex-column justify-space-between align-end ga-4">
+            <div class="text-h5 text-medium-emphasis">{{ formatRelative(item.createdAt) }}</div>
+            <div class="d-flex align-center ga-4">
+              <v-btn
+                v-if="!item.read"
+                icon="mdi-eye-outline"
+                variant="text"
+                size="small"
+                color="grey-darken-2"
+                title="Прочитать"
+                @click="notificationsStore.markRead(item.id, true)"
+              />
+              <v-btn icon="mdi-delete-outline" variant="text" size="small" color="error" title="Удалить" @click="notificationsStore.remove(item.id)" />
+            </div>
+          </div>
+        </article>
+      </div>
     </v-card>
 
-    <v-dialog v-model="detailsOpen" max-width="720">
-      <v-card>
-        <v-card-title>Подробности ошибки</v-card-title>
-        <v-card-text class="text-body-2" style="white-space: pre-wrap">{{ detailsText }}</v-card-text>
-        <v-card-actions><v-spacer /><v-btn variant="flat" color="primary" @click="detailsOpen = false">Закрыть</v-btn></v-card-actions>
-      </v-card>
-    </v-dialog>
   </v-container>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useNotificationsStore, type AppNotification, type NotificationSeverity } from '@/stores/notifications'
+import { useNotificationsStore, type NotificationSeverity } from '@/stores/notifications'
 
 const notificationsStore = useNotificationsStore()
 
 const periodDays = ref(7)
 const statusFilter = ref<'all' | 'unread' | 'error'>('all')
-const detailsOpen = ref(false)
-const detailsText = ref('')
 const selectedIds = ref<string[]>([])
 
 const periodOptions = [
   { title: '1 день', value: 1 },
   { title: '7 дней', value: 7 },
   { title: '14 дней', value: 14 },
-  { title: '30 дней (макс)', value: 30 },
+  { title: '30 дней', value: 30 },
 ]
 const statusOptions = [
   { title: 'Все', value: 'all' },
@@ -108,6 +145,12 @@ function toggleSelected(id: string) {
   selectedIds.value = [...selectedIds.value, id]
 }
 
+function selectAllVisible() {
+  const visibleIds = filteredItems.value.map((item) => item.id)
+  const allSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.value.includes(id))
+  selectedIds.value = allSelected ? selectedIds.value.filter((id) => !visibleIds.includes(id)) : Array.from(new Set([...selectedIds.value, ...visibleIds]))
+}
+
 function deleteSelected() {
   selectedIds.value.forEach((id) => notificationsStore.remove(id))
   selectedIds.value = []
@@ -117,15 +160,114 @@ function markSelectedRead() {
   selectedIds.value.forEach((id) => notificationsStore.markRead(id, true))
 }
 
+function sourceLabel(source: string) {
+  const sourceMap: Record<string, string> = {
+    pipelines: 'GitLab CI/CD',
+    storage: 'MinIO Storage',
+    inference: 'BentoML',
+  }
+  return sourceMap[source] ?? source
+}
+
 function severityLabel(s: NotificationSeverity) {
   return { success: 'Успех', info: 'Инфо', warning: 'Предупреждение', error: 'Ошибка' }[s]
 }
-function chipColor(s: NotificationSeverity) {
+
+function statusIcon(s: NotificationSeverity) {
+  return { success: 'mdi-check-circle-outline', info: 'mdi-information-outline', warning: 'mdi-alert-outline', error: 'mdi-alert-circle-outline' }[s]
+}
+
+function statusColor(s: NotificationSeverity) {
   return { success: 'success', info: 'info', warning: 'warning', error: 'error' }[s]
 }
 
-function openDetails(item: AppNotification) {
-  detailsText.value = item.details ?? 'Нет дополнительных данных.'
-  detailsOpen.value = true
+function formatRelative(isoDate: string) {
+  const diffHours = Math.max(1, Math.floor((Date.now() - new Date(isoDate).getTime()) / (1000 * 60 * 60)))
+  return `${diffHours} ч назад`
 }
 </script>
+
+<style scoped>
+.notifications-shell {
+  overflow: hidden;
+  background: rgb(var(--v-theme-surface));
+}
+
+.notifications-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 30px;
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+.notifications-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 30px;
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+.notification-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 30px;
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+.notification-row--read {
+  opacity: 0.85;
+}
+
+.status-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid;
+}
+
+.status-icon--success {
+  background: rgba(var(--v-theme-success), 0.12);
+  border-color: rgba(var(--v-theme-success), 0.35);
+}
+
+.status-icon--info {
+  background: rgba(var(--v-theme-info), 0.12);
+  border-color: rgba(var(--v-theme-info), 0.35);
+}
+
+.status-icon--warning {
+  background: rgba(var(--v-theme-warning), 0.12);
+  border-color: rgba(var(--v-theme-warning), 0.35);
+}
+
+.status-icon--error {
+  background: rgba(var(--v-theme-error), 0.08);
+  border-color: rgba(var(--v-theme-error), 0.25);
+}
+
+.notification-title {
+  font-size: 34px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+@media (max-width: 1100px) {
+  .notifications-toolbar,
+  .notification-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .notification-title {
+    font-size: 28px;
+  }
+}
+</style>
