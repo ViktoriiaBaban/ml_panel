@@ -244,8 +244,9 @@ export const apiService = {
     db.tables.splice(index, 1)
     return true
   },
-  listInferenceServices: (q: URLSearchParams) =>
-    db.inferenceServices.filter((s) => {
+  listInferenceServices: (q: URLSearchParams) => {
+    const { page, perPage } = getPaging(q)
+    const filtered = db.inferenceServices.filter((s) => {
       const search = (q.get('search') ?? '').trim().toLowerCase()
       const status = q.get('status') ?? 'all'
       const project = q.get('project') ?? 'all'
@@ -257,7 +258,13 @@ export const apiService = {
         (status === 'all' || s.status === status) &&
         (project === 'all' || s.project === project)
       )
-    }),
+    })
+    const pageData = paginate(filtered, page, perPage)
+    return {
+      ...pageData,
+      availableProjects: [...new Set(db.inferenceServices.map((item) => item.project))],
+    }
+  },
   getInferenceService: (id: number) => db.inferenceServices.find((s) => s.id === id) ?? null,
   getInferenceMonitoring: (id: number) => db.inferenceMonitoringByServiceId[id] ?? null,
   listEtlFlows: () => db.etlFlows,
