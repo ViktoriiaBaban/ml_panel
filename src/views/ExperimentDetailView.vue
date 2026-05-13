@@ -67,6 +67,7 @@
         <v-window v-model="activeTab">
           <v-window-item value="runs">
             <v-data-table-server
+              v-model="selectedRuns"
               :headers="runsHeaders"
               :items="detail.runs"
               :items-length="detail.runs.length"
@@ -75,7 +76,15 @@
               class="inner-table"
               density="comfortable"
             >
-              <template #item.select><v-checkbox-btn /></template>
+              <template #item.select="{ item }">
+                <v-checkbox-btn
+                  :model-value="selectedRuns.includes(item.id)"
+                  @update:model-value="($event) => {
+                    if ($event) selectedRuns = [...new Set([...selectedRuns, item.id])]
+                    else selectedRuns = selectedRuns.filter((id) => id !== item.id)
+                  }"
+                />
+              </template>
               <template #item.status="{ item }">
                 <v-chip size="small" :color="item.status === 'completed' ? 'green' : 'blue'">
                   {{ item.status === 'completed' ? 'Завершен' : 'В процессе' }}
@@ -128,6 +137,19 @@
           <v-btn icon variant="text"><v-icon icon="mdi-chevron-right" /></v-btn>
           <v-btn icon variant="text"><v-icon icon="mdi-page-last" /></v-btn>
         </div>
+
+        <div v-if="activeTab === 'runs' && selectedRuns.length > 1" class="selection-actions">
+          <v-chip class="mr-2" color="grey-lighten-3" variant="flat">Выбрано запусков: {{ selectedRuns.length }}</v-chip>
+          <v-btn variant="tonal" class="text-none action-btn clear-btn" prepend-icon="mdi-close-circle-outline" @click="selectedRuns = []">
+            Снять выделение
+          </v-btn>
+          <v-btn variant="tonal" class="text-none action-btn compare-btn" prepend-icon="mdi-compare-horizontal">
+            Сравнить
+          </v-btn>
+          <v-btn variant="tonal" class="text-none action-btn delete-btn" prepend-icon="mdi-delete-outline">
+            Удалить
+          </v-btn>
+        </div>
       </section>
     </div>
   </v-container>
@@ -146,6 +168,7 @@ const route = useRoute()
 const router = useRouter()
 const detail = ref<ExperimentDetailResponse | null>(null)
 const activeTab = ref<'runs' | 'models'>('runs')
+const selectedRuns = ref<number[]>([])
 const error = ref<string | null>(null)
 const tagSearch = ref('')
 
@@ -156,6 +179,7 @@ const runsHeaders = computed<DataTableHeader[]>(() => [
   { title: 'Датасет', key: 'dataset', sortable: false },
   { title: 'Продолжительность', key: 'duration', sortable: false },
   { title: 'Модель', key: 'model', sortable: false },
+  { title: 'Метрики', key: 'metrics', sortable: false },
   { title: 'Статус', key: 'status', sortable: false },
   { title: '', key: 'actions', sortable: false, width: 52 },
 ])
@@ -165,6 +189,7 @@ const modelsHeaders = computed<DataTableHeader[]>(() => [
   { title: 'Название', key: 'name', sortable: false },
   { title: 'Дата изменения', key: 'updatedAt', sortable: false },
   { title: 'Последняя версия', key: 'version', sortable: false },
+  { title: 'Качество', key: 'quality', sortable: false },
   { title: '', key: 'actions', sortable: false, width: 52 },
 ])
 
@@ -220,6 +245,9 @@ async function handleCreateTag() {
 
 onMounted(fetchDetail)
 watch(() => props.experimentId, fetchDetail)
+watch(activeTab, () => {
+  selectedRuns.value = []
+})
 </script>
 
 <style scoped>
@@ -237,4 +265,9 @@ watch(() => props.experimentId, fetchDetail)
 .actions-col { text-align: right; }
 .table-pagination { display: flex; justify-content: center; align-items: center; margin-top: 12px; }
 .page-pill { width: 42px; height: 42px; border-radius: 10px; background: #eceff4; display: inline-flex; align-items: center; justify-content: center; }
+.selection-actions { margin-top: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.action-btn { font-weight: 600; }
+.clear-btn { color: #008b8b; }
+.compare-btn { color: #1f6feb; }
+.delete-btn { color: #c0392b; }
 </style>
