@@ -87,6 +87,7 @@ export const apiService = {
           dataset: '--',
           duration: '2.0 c',
           model: 'Название модели',
+          metrics: 'Accuracy 0.89 · F1 0.87',
           status: 'completed' as const,
         },
       ],
@@ -96,6 +97,7 @@ export const apiService = {
           name: 'Название модели',
           updatedAt: experiment.updatedAt,
           version: 'model-name-v1.0',
+          quality: 'F1 0.87 · AUC 0.91',
         },
       ],
     }

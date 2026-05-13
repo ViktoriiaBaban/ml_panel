@@ -14,6 +14,7 @@ export type ExperimentRun = {
   dataset: string
   duration: string
   model: string
+  metrics: string
   status: 'completed' | 'running'
 }
 
@@ -22,6 +23,7 @@ export type ExperimentModel = {
   name: string
   updatedAt: string
   version: string
+  quality: string
 }
 
 export type ExperimentDetailResponse = {
